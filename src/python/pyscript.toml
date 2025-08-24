@@ -1,0 +1,14 @@
+# Copyright (C) 2025 Julian Valentin
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+interpreter = "deps/pyodide/pyodide.mjs"
+
+[files]
+"disce/__init__.py" = "./disce/"
+"disce/main.py" = "./disce/"
+"disce/py.typed" = "./disce/"
+"disce/test1.py" = "./disce/"
+"disce/test2.py" = "./disce/"

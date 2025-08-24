@@ -1,0 +1,74 @@
+# Copyright (C) 2025 Julian Valentin
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+name: CI/CD
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+concurrency:
+    group: "pages"
+    cancel-in-progress: false
+jobs:
+    ci:
+        name: CI
+        runs-on: ubuntu-latest
+        steps:
+            - &checkout
+              name: checkout
+              uses: actions/checkout@v5
+            - &set_up_node
+              name: set up Node.js
+              uses: actions/setup-node@v4
+            - &install_uv
+              name: install uv
+              run: curl --fail --location https://astral.sh/uv/install.sh | sh
+            - &install_deps
+              name: install deps
+              run: uv run python scripts/install_deps.py
+            - name: sync PyScript files
+              run: |
+                  uv run python scripts/sync_pyscript.py
+                  git diff --exit-code -- src/python/pyscript.toml || (echo "pyscript.toml is out of date, \
+                  please run 'python scripts/sync_pyscript.py' and commit the changes" && exit 1)
+            - name: install Prettier
+              run: npm install --no-save prettier
+            - name: run prettier
+              run: npx prettier --check .
+            - name: run ruff format
+              run: uv run ruff format --diff
+            - name: run ruff check
+              run: uv run ruff check
+            - name: run mypy
+              run: uv run mypy
+            - name: run pylint
+              run: uv run pylint scripts src
+    cd:
+        name: CD
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs: ci
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deploy_pages.outputs.page_url }}
+        steps:
+            - *checkout
+            - *set_up_node
+            - *install_uv
+            - *install_deps
+            - name: configure Pages
+              uses: actions/configure-pages@v5
+            - name: upload Pages artifact
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: src
+            - name: deploy Pages
+              id: deploy_pages
+              uses: actions/deploy-pages@v4

@@ -1,0 +1,9 @@
+{
+    "arrayAutoCollapse": false,
+    "attributeGroups": ["^(id|name)$", "^class$", "^(href|src)$", "$DEFAULT", "^aria-"],
+    "attributeSort": "ASC",
+    "cssDeclarationSorterKeepOverrides": false,
+    "plugins": ["prettier-plugin-css-order", "prettier-plugin-organize-attributes", "prettier-plugin-toml"],
+    "printWidth": 120,
+    "tabWidth": 4
+}

@@ -1,0 +1,22 @@
+{
+    "devDependencies": {
+        "prettier": ">=3.6.2",
+        "prettier-plugin-css-order": "^2.1.2",
+        "prettier-plugin-organize-attributes": "^1.0.0",
+        "prettier-plugin-toml": ">=2.0.6"
+    },
+    "scripts": {
+        "fmt": "npm run fmt:prettier && npm run fmt:ruff",
+        "fmt:check": "npx prettier --check . && uv run ruff format --diff",
+        "fmt:prettier": "npx prettier --write .",
+        "fmt:ruff": "uv run ruff format",
+        "lint": "npm run lint:mypy && npm run lint:pylint && npm run lint:pyscript && npm run lint:ruff",
+        "lint:fix": "npm run lint:fix:pyscript && npm run lint:fix:ruff",
+        "lint:fix:pyscript": "uv run python scripts/sync_pyscript.py",
+        "lint:fix:ruff": "uv run ruff check --fix",
+        "lint:mypy": "uv run mypy",
+        "lint:pylint": "uv run pylint scripts src",
+        "lint:pyscript": "uv run python scripts/sync_pyscript.py --check",
+        "lint:ruff": "uv run ruff check"
+    }
+}

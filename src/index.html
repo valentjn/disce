@@ -1,0 +1,54 @@
+<!-- Copyright (C) 2025 Julian Valentin
+   -
+   - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at https://mozilla.org/MPL/2.0/.
+   -->
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+        <title>Disce</title>
+        <link href="css/style.css" rel="stylesheet" />
+        <link
+            href="https://pyscript.net/releases/2024.2.1/core.css"
+            integrity="sha384-CVTwnglzq2CtMq51qUwFC7MTxvIN1RJK3496Q72xPQl3MSfgdmnhSsjGvwswoKpJ"
+            rel="stylesheet"
+        />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+            crossorigin="anonymous"
+            integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div id="loading-screen">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="main">
+            <div id="main-menu" class="d-flex flex-column align-items-center justify-content-center">
+                <h1 class="mb-5">Disce</h1>
+                <p id="main-menu-status-text"></p>
+                <div class="d-flex flex-column gap-4 w-100 align-items-center">
+                    <button id="learn-btn" class="btn btn-primary btn-lg main-menu-btn w-75">Learn</button>
+                    <button id="edit-btn" class="btn btn-primary btn-lg main-menu-btn w-75">Edit</button>
+                </div>
+            </div>
+        </div>
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            crossorigin="anonymous"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        ></script>
+        <script
+            src="https://pyscript.net/releases/2024.2.1/core.js"
+            integrity="sha384-3XHKwpOblNf54KHrwV8qardBZbSlZ8GErzODL6wR1D3qfO3n3EGQ/eBM/uJm2sQx"
+            type="module"
+        ></script>
+        <script src="python/disce/main.py" config="python/pyscript.toml" type="py"></script>
+    </body>
+</html>

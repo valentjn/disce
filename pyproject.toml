@@ -1,0 +1,52 @@
+# Copyright (C) 2025 Julian Valentin
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+[project]
+name = "disce"
+version = "1.0.0"
+description = "Learn flashcards by heart, in the browser, without server state."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.11.7",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "packaging>=25.0",
+    "pylint>=3.3.8",
+    "ruff>=0.12.11",
+    "tomlkit>=0.13.3",
+]
+
+[tool.mypy]
+files = [
+    "scripts",
+    "src",
+]
+strict = true
+
+[tool.pylint]
+ignored-modules = ["pyscript"]
+init-hook = "import sys; sys.path.insert(0, 'src/python')"
+max-line-length = 120
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+ignore = [
+    "COM812",
+    "D203",
+    "D213",
+    "S310",
+    "S607",
+]
+select = ["ALL"]
+
+[tool.uv.build-backend]
+module-root = "src/python"

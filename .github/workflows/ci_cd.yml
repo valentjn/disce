@@ -1,0 +1,55 @@
+# Copyright (C) 2025 Julian Valentin
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+name: CI/CD
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+concurrency:
+    group: "pages"
+    cancel-in-progress: false
+jobs:
+    ci:
+        name: CI
+        runs-on: ubuntu-latest
+        steps:
+            - &checkout
+              name: checkout
+              uses: actions/checkout@v5
+            - name: set up Node.js
+              uses: actions/setup-node@v4
+            - name: install uv
+              run: curl --fail --location https://astral.sh/uv/install.sh | sh
+            - name: install NPM deps
+              run: npm install
+            - name: lint
+              run: npm run lint
+            - name: check formatting
+              run: npm run fmt:check
+    cd:
+        name: CD
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs: ci
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deploy_pages.outputs.page_url }}
+        steps:
+            - *checkout
+            - name: configure Pages
+              uses: actions/configure-pages@v5
+            - name: upload Pages artifact
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: src
+            - name: deploy Pages
+              id: deploy_pages
+              uses: actions/deploy-pages@v4

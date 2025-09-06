@@ -58,7 +58,12 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* edit screen */
-#edit-screen {
+/* edit decks screen */
+#edit-decks-screen {
+    display: none;
+}
+
+/* edit deck screen */
+#edit-deck-screen {
     display: none;
 }

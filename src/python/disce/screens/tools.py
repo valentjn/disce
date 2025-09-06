@@ -25,12 +25,27 @@ def create_element(tag: str, text: str | None = None, html: str | None = None, *
     return element
 
 
+def append_child(
+    parent: Any,  # noqa: ANN401
+    tag: str,
+    text: str | None = None,
+    html: str | None = None,
+    **attributes: str,
+) -> Any:  # noqa: ANN401
+    """Create a new HTML element with given attributes and append it to the parent."""
+    element = create_element(tag, text=text, html=html, **attributes)
+    parent.appendChild(element)
+    return element
+
+
 def hide_all() -> None:
     """Hide all screens."""
+    from disce.screens import edit_deck as edit_deck_screen  # noqa: PLC0415
     from disce.screens import edit_decks as edit_decks_screen  # noqa: PLC0415
     from disce.screens import load as load_screen  # noqa: PLC0415
     from disce.screens import main as main_screen  # noqa: PLC0415
 
+    edit_deck_screen.hide()
     edit_decks_screen.hide()
     main_screen.hide()
     load_screen.hide()

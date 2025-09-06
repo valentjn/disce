@@ -18,7 +18,6 @@ dependencies = [
 dev = [
     "mypy>=1.17.1",
     "packaging>=25.0",
-    "pylint>=3.3.8",
     "ruff>=0.12.11",
     "tomlkit>=0.13.3",
 ]
@@ -29,11 +28,6 @@ files = [
     "src",
 ]
 strict = true
-
-[tool.pylint]
-ignored-modules = ["pyscript"]
-init-hook = "import sys; sys.path.insert(0, 'src/python')"
-max-line-length = 120
 
 [tool.ruff]
 line-length = 120

@@ -11,13 +11,12 @@
         "fmt:prettier": "npx prettier --write .",
         "fmt:misc": "",
         "fmt:ruff": "uv run ruff format",
-        "lint": "npm run lint:mypy && npm run lint:pylint && npm run lint:ruff && npm run lint:misc",
+        "lint": "npm run lint:mypy && npm run lint:ruff && npm run lint:misc",
         "lint:fix": "npm run lint:fix:ruff && npm run lint:fix:misc",
         "lint:fix:misc": "uv run python scripts/sync_pyscript.py",
         "lint:fix:ruff": "uv run ruff check --fix",
         "lint:misc": "uv run python scripts/sync_pyscript.py --check",
         "lint:mypy": "uv run mypy",
-        "lint:pylint": "uv run pylint scripts src",
         "lint:ruff": "uv run ruff check"
     }
 }

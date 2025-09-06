@@ -8,7 +8,13 @@ packages = ["pydantic"]
 
 [files]
 "disce/__init__.py" = "./disce/"
+"disce/__main__.py" = "./disce/"
 "disce/data.py" = "./disce/"
 "disce/main.py" = "./disce/"
 "disce/py.typed" = "./disce/"
+"disce/screens/__init__.py" = "./disce/screens/"
+"disce/screens/edit_decks.py" = "./disce/screens/"
+"disce/screens/load.py" = "./disce/screens/"
+"disce/screens/main.py" = "./disce/screens/"
+"disce/screens/tools.py" = "./disce/screens/"
 "disce/util.py" = "./disce/"

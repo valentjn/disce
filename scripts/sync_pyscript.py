@@ -58,8 +58,12 @@ def read_config_toml() -> str:
 def update_files(config: tomlkit.TOMLDocument) -> None:
     """Update the [files] section of the pyscript.toml file."""
     python_dir = get_python_dir()
-    disce_files = sorted(entry for entry in (python_dir / "disce").rglob("*") if entry.is_file())
-    config["files"] = {str(file.relative_to(python_dir).as_posix()): "./disce/" for file in disce_files}
+    files = {}
+    for entry in sorted((python_dir / "disce").rglob("*")):
+        if entry.is_file():
+            relative_file = entry.relative_to(python_dir)
+            files[relative_file.as_posix()] = f"./{relative_file.parent.as_posix()}/"
+    config["files"] = files
 
 
 def update_packages(config: tomlkit.TOMLDocument) -> None:

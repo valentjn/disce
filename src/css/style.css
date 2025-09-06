@@ -31,22 +31,19 @@ body {
     height: 3rem;
 }
 
-#main {
-    display: none;
-}
-
 /* main menu */
-#main-menu {
+#main-screen {
+    display: none;
     height: 80vh;
 }
 
-#main-menu h1 {
+#main-screen h1 {
     font-weight: bold;
     font-size: 3rem;
     letter-spacing: 0.05em;
 }
 
-#main-menu button {
+#main-screen button {
     transition:
         transform 0.1s,
         box-shadow 0.1s;
@@ -55,8 +52,13 @@ body {
     font-size: 2rem;
 }
 
-#main-menu button:hover,
-#main-menu button:focus {
+#main-screen button:hover,
+#main-screen button:focus {
     transform: scale(1.04);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* edit screen */
+#edit-screen {
+    display: none;
 }

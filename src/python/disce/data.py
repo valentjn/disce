@@ -17,6 +17,8 @@ class Card(BaseModel):
     """Text on the front side of the card (e.g., question or term in foreign language)."""
     back: str
     """Text on the back side of the card (e.g., answer or term in native language)."""
+    enabled: bool = True
+    """Whether the card is enabled for review."""
     answer_history: list[bool] = []
     """History of answers (True for correct, False for incorrect, most recent last, reset when card is edited)."""
 

@@ -12,9 +12,9 @@
         <title>Disce</title>
         <link href="css/style.css" rel="stylesheet" />
         <link
-            href="https://pyscript.net/releases/2024.2.1/core.css"
+            href="https://pyscript.net/releases/2025.8.1/core.css"
             crossorigin="anonymous"
-            integrity="sha384-CVTwnglzq2CtMq51qUwFC7MTxvIN1RJK3496Q72xPQl3MSfgdmnhSsjGvwswoKpJ"
+            integrity="sha384-C7Vo5fjeYiyN27fdJgeiteaUwrLVW0+I9EbpT1kBxsxac8+kxV5zYrLayugNSu1q"
             rel="stylesheet"
         />
         <link
@@ -60,6 +60,7 @@
                 <button id="copy-cards-btn" class="btn btn-primary btn-sm me-2">Copy Selected to Deck</button>
                 <button id="delete-cards-btn" class="btn btn-danger btn-sm me-2">Delete Selected</button>
             </div>
+            <input type="text" class="card-front-textbox"/>
             <div id="cards"></div>
             <button id="discard-cards-btn" class="btn btn-secondary mt-4 me-2">Discard Changes</button>
             <button id="save-deck-btn" class="btn btn-success mt-4">Save Deck</button>
@@ -70,8 +71,9 @@
             integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         ></script>
         <script
-            src="https://pyscript.net/releases/2024.2.1/core.js"
-            integrity="sha384-3XHKwpOblNf54KHrwV8qardBZbSlZ8GErzODL6wR1D3qfO3n3EGQ/eBM/uJm2sQx"
+            src="https://pyscript.net/releases/2025.8.1/core.js"
+            crossorigin="anonymous"
+            integrity="sha384-3iTboEo+2h87xDhKzYs49FbFFhi1sOZV/X7TQG7Bf9A0Lo1ZO98j9P0LBbu8GrW4"
             type="module"
         ></script>
         <script src="python/disce/__main__.py" config="python/pyscript.toml" type="py"></script>

@@ -37,6 +37,7 @@ def render_cards(deck_index: int | None) -> None:
     empty_card = data.Card(front="", back="", enabled=True, answer_history=[])
     for card_index, card in enumerate([*deck.cards, empty_card]):
         cards_div.appendChild(create_card_div(card_index, card))
+    when("change", ".card-front-textbox")(card_text_changed)  # type: ignore[misc]
 
 
 def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
@@ -59,7 +60,6 @@ def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
         data_card_index=str(card_index),
     )
     # front_textbox.addEventListener("change", card_text_changed)
-    when(front_textbox, "change", card_text_changed)  # type: ignore[misc]
     back_textbox = append_child(
         card_div,
         "input",
@@ -90,8 +90,11 @@ def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
     return card_div
 
 
+#@when("change", ".card-front-textbox")  # type: ignore[misc]
 def card_text_changed() -> None:
     """Make sure there's always an empty card at the end."""
+    select_element("body").style = "color: red;"  # For debugging
+    return
     cards_div = select_element("#cards")
     card_rows = cards_div.querySelectorAll(".card-row")
     if not card_rows:

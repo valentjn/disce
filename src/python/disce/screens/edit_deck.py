@@ -141,6 +141,7 @@ def save_deck() -> None:
     saved_data = data.SavedData.load_from_local_storage()
     saved_data.set_deck(get_deck())
     saved_data.save_to_local_storage()
+    window.bootstrap.Toast.new(select_element("#disce-edit-deck-screen .disce-deck-saved-toast")).show()
 
 
 @when("click", "#disce-edit-deck-screen .disce-back-to-decks-screen-btn")

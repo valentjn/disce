@@ -10,7 +10,7 @@ from pyscript import when  # type: ignore[import-not-found]
 
 from disce import data
 from disce.screens import tools as screen_tools
-from disce.screens.tools import create_element, select_element
+from disce.screens.tools import append_child, create_element, select_element
 
 
 @when("click", "#edit-btn")  # type: ignore[misc]
@@ -32,25 +32,31 @@ def render_decks_list() -> None:
     decks_div.innerHTML = ""
     saved_data = data.SavedData.load_from_local_storage()
     for deck_index, deck in enumerate(saved_data.decks):
-        deck_div = create_element("div", className="deck-item d-flex align-items-center mb-2")
-        deck_div.appendChild(
-            create_element("input", type="checkbox", className="form-check-input me-2", data_idx=str(deck_index))
+        deck_div = create_element("div", class_="deck-item d-flex align-items-center mb-2")
+        append_child(
+            deck_div, "input", type="checkbox", class_="form-check-input me-2", data_deck_index=str(deck_index)
         )
-        deck_div.appendChild(create_element("span", className="me-3", innerText=deck.name))
-        deck_div.appendChild(
-            create_element(
-                "button", className="btn btn-outline-primary btn-sm me-2", innerText="Edit", data_idx=str(deck_index)
-            )
+        append_child(deck_div, "span", class_="me-3", innerText=deck.name)
+        append_child(
+            deck_div,
+            "button",
+            class_="edit-deck-btn btn btn-outline-primary btn-sm me-2",
+            innerText="Edit",
+            data_deck_index=str(deck_index),
         )
-        deck_div.appendChild(
-            create_element(
-                "button", className="btn btn-outline-secondary btn-sm me-2", innerText="Copy", data_idx=str(deck_index)
-            )
+        append_child(
+            deck_div,
+            "button",
+            class_="duplicate-deck-btn btn btn-outline-secondary btn-sm me-2",
+            innerText="Duplicate",
+            data_deck_index=str(deck_index),
         )
-        deck_div.appendChild(
-            create_element(
-                "button", className="btn btn-outline-danger btn-sm", innerText="Delete", data_idx=str(deck_index)
-            )
+        append_child(
+            deck_div,
+            "button",
+            class_="delete-deck-btn btn btn-outline-danger btn-sm",
+            innerText="Delete",
+            data_deck_index=str(deck_index),
         )
         decks_div.appendChild(deck_div)
     if not saved_data.decks:

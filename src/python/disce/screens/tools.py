@@ -17,11 +17,24 @@ def create_element(tag: str, text: str | None = None, html: str | None = None, *
     """Create a new HTML element with given attributes."""
     element = document.createElement(tag)
     for name, value in attributes.items():
-        element.setAttribute(name.replace("_", "-"), value)
+        element.setAttribute(name.removesuffix("_").replace("_", "-"), value)
     if text is not None:
         element.innerText = text
     if html is not None:
         element.innerHTML = html
+    return element
+
+
+def append_child(
+    parent: Any,  # noqa: ANN401
+    tag: str,
+    text: str | None = None,
+    html: str | None = None,
+    **attributes: str,
+) -> Any:  # noqa: ANN401
+    """Create a new HTML element with given attributes and append it to the parent."""
+    element = create_element(tag, text=text, html=html, **attributes)
+    parent.appendChild(element)
     return element
 
 

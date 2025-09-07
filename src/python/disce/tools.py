@@ -6,29 +6,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Utility functions."""
 
-import logging
-import sys
 from collections.abc import Sequence
-from typing import Any, override
-
-
-class LoggingFormatter(logging.Formatter):
-    """Custom logging formatter to adjust format based on log level."""
-
-    @override
-    def format(self, record: logging.LogRecord) -> str:
-        format_ = (
-            "%(name)s - %(levelname)s: %(message)s" if record.levelno >= logging.WARNING else "%(name)s: %(message)s"
-        )
-        self._style._fmt = format_  # noqa: SLF001
-        return super().format(record)
-
-
-def set_up_logging() -> None:
-    """Set up logging with a custom formatter."""
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(LoggingFormatter())
-    logging.basicConfig(level=logging.DEBUG, format="%(name)s:%(levelname)s - %(message)s", handlers=[handler])
+from typing import Any
 
 
 def format_number(number_or_sequence: int | Sequence[Any], singular: str, plural: str | None = None) -> str:

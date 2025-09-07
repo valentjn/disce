@@ -61,7 +61,7 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            text="Edit",
+            html='<i class="bi bi-pencil me-1"></i>Edit',
             event_handlers={"click": edit_deck},
             class_="disce-edit-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck.uuid,
@@ -69,7 +69,7 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            text="Duplicate",
+            html='<i class="bi bi-copy me-1"></i>Duplicate',
             event_handlers={"click": duplicate_deck},
             class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck.uuid,
@@ -77,7 +77,7 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            text="Delete",
+            html='<i class="bi bi-trash me-1"></i>Delete',
             event_handlers={"click": delete_deck},
             class_="disce-delete-deck-btn btn btn-outline-danger",
             data_deck_uuid=deck.uuid,
@@ -196,8 +196,7 @@ def update_bulk_buttons() -> None:
     """Update the bulk action buttons based on selection."""
     deck_uuids = get_deck_uuids()
     selected_deck_uuids = get_selected_deck_uuids()
-    select_all_btn = select_element("#disce-edit-decks-screen .disce-select-all-btn")
-    select_all_btn.innerText = (
+    select_element("#disce-edit-decks-screen .disce-select-all-btn .disce-text").innerText = (
         "Deselect All" if len(selected_deck_uuids) == len(deck_uuids) and deck_uuids else "Select All"
     )
     select_element("#disce-edit-decks-screen .disce-merge-decks-btn").disabled = (

@@ -172,8 +172,7 @@ def update_bulk_buttons() -> None:
     """Update the bulk action buttons based on selection."""
     card_uuids = get_card_uuids()
     selected_card_uuids = get_selected_card_uuids()
-    select_all_btn = select_element("#disce-edit-deck-screen .disce-select-all-btn")
-    select_all_btn.innerText = (
+    select_element("#disce-edit-deck-screen .disce-select-all-btn .disce-text").innerText = (
         "Deselect All" if len(selected_card_uuids) >= len(card_uuids) and card_uuids else "Select All"
     )
     select_element("#disce-edit-deck-screen .disce-delete-cards-btn").disabled = len(selected_card_uuids) == 0

@@ -23,6 +23,12 @@
             integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
             rel="stylesheet"
         />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+            crossorigin="anonymous"
+            integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk"
+            rel="stylesheet"
+        />
     </head>
     <body>
         <div id="disce-load-screen" class="disce-screen">
@@ -35,23 +41,37 @@
                 <h1 class="mb-5">Disce</h1>
                 <p class="disce-status-text"></p>
                 <div class="d-flex flex-column gap-4 w-100 align-items-center">
-                    <button class="disce-learn-btn btn btn-primary btn-lg main-screen-btn w-75">Learn</button>
-                    <button class="disce-edit-decks-btn btn btn-primary btn-lg main-screen-btn w-75">Edit</button>
+                    <button class="disce-learn-btn btn btn-primary btn-lg main-screen-btn w-75">
+                        <i class="bi bi-lightbulb me-3"></i>Learn
+                    </button>
+                    <button class="disce-edit-decks-btn btn btn-primary btn-lg main-screen-btn w-75">
+                        <i class="bi bi-pencil me-3"></i>Edit
+                    </button>
                 </div>
             </div>
         </div>
         <div id="disce-edit-decks-screen" class="disce-screen">
             <h2 class="mb-4">Edit Decks</h2>
             <div class="mb-3">
-                <button class="disce-add-deck-btn btn btn-primary">Add Deck</button>
-                <button class="disce-import-decks-btn btn btn-primary">Import</button>
-                <button class="disce-select-all-btn btn btn-primary">Select All</button>
-                <button class="disce-merge-decks-btn btn btn-primary">Merge Selected</button>
-                <button class="disce-export-decks-btn btn btn-primary">Export Selected</button>
-                <button class="disce-delete-decks-btn btn btn-danger">Delete Selected</button>
+                <button class="disce-add-deck-btn btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Deck</button>
+                <button class="disce-import-decks-btn btn btn-primary"><i class="bi bi-upload me-1"></i>Import</button>
+                <button class="disce-select-all-btn btn btn-primary">
+                    <i class="bi bi-check2-square me-1"></i><span class="disce-text">Select All</span>
+                </button>
+                <button class="disce-merge-decks-btn btn btn-primary">
+                    <i class="bi bi-layers me-1"></i>Merge Selected
+                </button>
+                <button class="disce-export-decks-btn btn btn-primary">
+                    <i class="bi bi-download me-1"></i>Export Selected
+                </button>
+                <button class="disce-delete-decks-btn btn btn-danger">
+                    <i class="bi bi-trash me-1"></i>Delete Selected
+                </button>
             </div>
             <div class="disce-decks"></div>
-            <button class="disce-back-to-main-screen-btn btn btn-secondary mt-4">Back to Main Screen</button>
+            <button class="disce-back-to-main-screen-btn btn btn-secondary mt-4">
+                <i class="bi bi-arrow-left me-1"></i>Back to Main Screen
+            </button>
         </div>
         <div id="disce-edit-deck-screen" class="disce-screen">
             <h2 class="mb-4">Edit Deck</h2>
@@ -61,12 +81,18 @@
                 <input id="disce-deck-name-textbox" class="disce-deck-name-textbox form-control" type="text" />
             </div>
             <div class="mb-3">
-                <button class="disce-save-deck-btn btn btn-success">Save Deck</button>
-                <button class="disce-select-all-btn btn btn-primary">Select All</button>
-                <button class="disce-delete-cards-btn btn btn-danger">Delete Selected</button>
+                <button class="disce-save-deck-btn btn btn-success"><i class="bi bi-save me-1"></i>Save Deck</button>
+                <button class="disce-select-all-btn btn btn-primary">
+                    <i class="bi bi-check2-square me-1"></i><span class="disce-text">Select All</span>
+                </button>
+                <button class="disce-delete-cards-btn btn btn-danger">
+                    <i class="bi bi-trash me-1"></i>Delete Selected
+                </button>
             </div>
             <div class="disce-cards"></div>
-            <button class="disce-back-to-decks-screen-btn btn btn-secondary mt-4">Back to Decks Screen</button>
+            <button class="disce-back-to-decks-screen-btn btn btn-secondary mt-4">
+                <i class="bi bi-arrow-left me-1"></i>Back to Decks Screen
+            </button>
             <div class="position-fixed bottom-0 end-0 p-3">
                 <div
                     class="disce-deck-saved-toast toast align-items-center text-white bg-success"

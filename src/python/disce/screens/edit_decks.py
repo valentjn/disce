@@ -62,7 +62,7 @@ def render_decks() -> None:
             "button",
             text="Edit",
             event_handlers={"click": edit_deck},
-            class_="disce-edit-deck-btn btn btn-outline-primary btn-sm me-2",
+            class_="disce-edit-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck.uuid,
         )
         append_child(
@@ -70,7 +70,7 @@ def render_decks() -> None:
             "button",
             text="Duplicate",
             event_handlers={"click": duplicate_deck},
-            class_="disce-duplicate-deck-btn btn btn-outline-primary btn-sm me-2",
+            class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck.uuid,
         )
         append_child(
@@ -78,7 +78,7 @@ def render_decks() -> None:
             "button",
             text="Delete",
             event_handlers={"click": delete_deck},
-            class_="disce-delete-deck-btn btn btn-outline-danger btn-sm",
+            class_="disce-delete-deck-btn btn btn-outline-danger",
             data_deck_uuid=deck.uuid,
         )
         decks_div.appendChild(deck_div)

@@ -9,6 +9,7 @@
 import logging
 from typing import Any
 
+from pydantic import ValidationError
 from pyscript import when, window
 
 from disce import data, tools
@@ -92,6 +93,34 @@ def add_deck() -> None:
     edit_deck_screen.show(deck_uuid=None)
 
 
+@when("click", "#disce-edit-decks-screen .disce-import-decks-btn")
+def import_decks() -> None:
+    """Import decks from a JSON file."""
+
+    def handle_imported_data(json: str) -> None:
+        try:
+            imported_data = data.SavedData.model_validate_json(json)
+        except ValidationError as exception:
+            window.alert(f"failed to parse imported data: {exception}")
+            return
+        saved_data = data.SavedData.load_from_local_storage()
+        overwriting_deck_uuids = {deck.uuid for deck in imported_data.decks} & {deck.uuid for deck in saved_data.decks}
+        if overwriting_deck_uuids and not window.confirm(
+            f"The imported data contains {tools.format_plural(len(overwriting_deck_uuids), 'deck')} (see below) that "
+            f"will overwrite existing decks. Do you want to continue?\n\n"
+            f"{tools.format_plural(len(overwriting_deck_uuids), 'Name', omit_number=True)} of "
+            f"{tools.format_plural(len(overwriting_deck_uuids), 'deck', omit_number=True)} to be overwritten: "
+            f"{', '.join(f'"{saved_data.get_deck(uuid).name}"' for uuid in overwriting_deck_uuids)}"
+        ):
+            return
+        for deck in imported_data.decks:
+            saved_data.set_deck(deck)
+        saved_data.save_to_local_storage()
+        render_decks()
+
+    screen_tools.upload_file(".json,application/json", handle_imported_data)
+
+
 @when("click", "#disce-edit-decks-screen .disce-merge-decks-btn")
 def merge_decks() -> None:
     """Merge selected decks."""
@@ -110,6 +139,19 @@ def merge_decks() -> None:
         merged_deck.merge(saved_data.get_deck(deck_uuid))
     saved_data.set_deck(merged_deck)
     saved_data.save_to_local_storage()
+    render_decks()
+
+
+@when("click", "#disce-edit-decks-screen .disce-export-decks-btn")
+def export_decks() -> None:
+    """Export selected decks."""
+    saved_data = data.SavedData.load_from_local_storage()
+    selected_deck_uuids = get_selected_deck_uuids()
+    if not selected_deck_uuids:
+        window.alert("Please select at least one deck to export.")
+        return
+    decks_to_export = [saved_data.get_deck(deck_uuid) for deck_uuid in selected_deck_uuids]
+    screen_tools.download_file("decks.json", data.SavedData(decks=decks_to_export).model_dump_json(indent=4))
     render_decks()
 
 
@@ -137,6 +179,7 @@ def toggle_bulk_buttons() -> None:
     select_element("#disce-edit-decks-screen .disce-merge-decks-btn").disabled = (
         len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE
     )
+    select_element("#disce-edit-decks-screen .disce-export-decks-btn").disabled = len(selected_deck_uuids) == 0
     select_element("#disce-edit-decks-screen .disce-delete-decks-btn").disabled = len(selected_deck_uuids) == 0
 
 

@@ -9,7 +9,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
-from pyscript import document
+from pyscript import document, window
 from pyscript.ffi import create_proxy
 
 type EventHandler = Callable[[], None] | Callable[[Any], None]
@@ -67,3 +67,31 @@ def hide_all() -> None:
     edit_decks_screen.hide()
     main_screen.hide()
     load_screen.hide()
+
+
+def download_file(filename: str, content: str) -> None:
+    """Offer a file for download with the given content."""
+    blob = window.Blob.new([content], {"type": "text/plain"})
+    url = window.URL.createObjectURL(blob)
+    a_element = create_element("a", href=url, download=filename)
+    a_element.click()
+    window.URL.revokeObjectURL(url)
+
+
+def upload_file(accepted_types: str, handler: Callable[[str], None]) -> None:
+    """Open a file dialog and handle the selected file with the given handler."""
+
+    def handle_uploaded_file(event: Any) -> None:  # noqa: ANN401
+        input_element = event.target
+        for file in input_element.files:
+            reader = window.FileReader.new()
+            reader.addEventListener("load", create_proxy(process_imported_data))
+            reader.readAsText(file)
+
+    def process_imported_data(event: Any) -> None:  # noqa: ANN401
+        handler(event.target.result)
+
+    input_element = create_element(
+        "input", event_handlers={"change": handle_uploaded_file}, type="file", accept=accepted_types
+    )
+    input_element.click()

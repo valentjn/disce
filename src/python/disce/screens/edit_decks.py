@@ -99,7 +99,7 @@ def merge_decks() -> None:
     selected_deck_uuids = get_selected_deck_uuids()
     if len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE:
         window.alert(
-            f"Please select at least {tools.format_number(_MINIMUM_NUMBER_OF_DECKS_TO_MERGE, 'deck')} to merge."
+            f"Please select at least {tools.format_plural(_MINIMUM_NUMBER_OF_DECKS_TO_MERGE, 'deck')} to merge."
         )
         return
     merged_deck_name = window.prompt("Enter a name for the merged deck:", "Merged Deck")
@@ -122,7 +122,7 @@ def delete_decks() -> None:
         window.alert("Please select at least one deck to delete.")
         return
     if window.confirm(
-        f"Are you sure you want to delete the selected {tools.format_number(len(selected_deck_uuids), 'deck')}?"
+        f"Are you sure you want to delete the selected {tools.format_plural(len(selected_deck_uuids), 'deck')}?"
     ):
         for deck_uuid in selected_deck_uuids:
             saved_data.delete_deck(deck_uuid)

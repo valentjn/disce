@@ -10,17 +10,15 @@ from collections.abc import Sequence
 from typing import Any
 
 
-def format_number(number_or_sequence: int | Sequence[Any], singular: str, plural: str | None = None) -> str:
-    """Format a number with the correct singular/plural form of a word.
-
-    :param number_or_sequence: Number or a sequence whose length to format.
-    :param singular: Singular form of the word.
-    :param plural: Plural form of the word. If ``None``, ``s`` is appended to the singular form.
-    :return: Formatted string, e.g., ``"1 deck"`` or ``"3 decks"``.
-    """
+def format_plural(
+    number_or_sequence: int | Sequence[Any], singular: str, plural: str | None = None, *, omit_number: bool = False
+) -> str:
+    """Format a number with the correct singular/plural form of a word."""
     number = number_or_sequence if isinstance(number_or_sequence, int) else len(number_or_sequence)
     if number == 1:
-        return f"1 {singular}"
-    if plural is None:
-        plural = singular + "s"
-    return f"{number} {plural}"
+        suffix = singular
+    elif plural is None:
+        suffix = singular + "s"
+    else:
+        suffix = plural
+    return suffix if omit_number else f"{number} {suffix}"

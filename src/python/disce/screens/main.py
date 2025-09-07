@@ -20,8 +20,8 @@ def show() -> None:
     saved_data = data.SavedData.load_from_local_storage()
     number_of_cards = sum(len(deck.cards) for deck in saved_data.decks)
     select_element("#disce-main-screen .disce-status-text").innerText = (
-        f"Loaded {tools.format_number(len(saved_data.decks), 'deck')} with "
-        f"{tools.format_number(number_of_cards, 'card')}."
+        f"Loaded {tools.format_plural(len(saved_data.decks), 'deck')} with "
+        f"{tools.format_plural(number_of_cards, 'card')}."
     )
     screen_tools.hide_all()
     select_element("#disce-main-screen").style.display = "block"

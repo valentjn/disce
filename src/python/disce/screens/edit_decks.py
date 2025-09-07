@@ -40,13 +40,13 @@ def render_decks() -> None:
     decks_div = select_element("#disce-edit-decks-screen .disce-decks")
     decks_div.innerHTML = ""
     saved_data = data.SavedData.load_from_local_storage()
-    for deck_index, deck in enumerate(sorted(saved_data.decks, key=lambda deck: deck.name.casefold())):
-        deck_div = create_element("div", class_="d-flex align-items-center mb-2")
+    for deck in sorted(saved_data.decks, key=lambda deck: deck.name.casefold()):
+        deck_div = create_element("div", class_="d-flex align-items-center mb-2", data_deck_uuid=deck.uuid)
         append_child(
             deck_div,
             "input",
             event_handlers={"change": toggle_bulk_buttons},
-            id_=f"disce-selected-checkbox-{deck_index}",
+            id_=f"disce-selected-checkbox-{deck.uuid}",
             type="checkbox",
             class_="disce-selected-checkbox form-check-input me-2",
             data_deck_uuid=deck.uuid,
@@ -55,7 +55,7 @@ def render_decks() -> None:
             deck_div,
             "label",
             text=deck.name,
-            for_=f"disce-selected-checkbox-{deck_index}",
+            for_=f"disce-selected-checkbox-{deck.uuid}",
             class_="disce-deck-name-label me-2",
         )
         append_child(

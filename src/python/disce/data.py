@@ -6,7 +6,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Data models."""
 
-from pydantic import BaseModel
+import uuid
+
+from pydantic import BaseModel, Field
 from pyscript import window
 
 
@@ -26,6 +28,8 @@ class Card(BaseModel):
 class Deck(BaseModel):
     """A deck of flashcards."""
 
+    uuid: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    """Unique identifier for the deck."""
     name: str = "New Deck"
     """Name of the deck."""
     cards: list[Card] = []
@@ -37,6 +41,39 @@ class SavedData(BaseModel):
 
     decks: list[Deck] = []
     """List of decks."""
+
+    def deck_exists(self, uuid: str) -> bool:
+        """Check if a deck with the given UUID exists."""
+        try:
+            self._get_deck_index(uuid)
+        except ValueError:
+            return False
+        return True
+
+    def get_deck(self, uuid: str) -> Deck:
+        """Get a deck by its UUID."""
+        return self.decks[self._get_deck_index(uuid)]
+
+    def set_deck(self, deck: Deck) -> None:
+        """Add or update a deck."""
+        try:
+            index = self._get_deck_index(deck.uuid)
+        except ValueError:
+            self.decks.append(deck)
+        else:
+            self.decks[index] = deck
+
+    def delete_deck(self, uuid: str) -> None:
+        """Delete a deck by its UUID."""
+        del self.decks[self._get_deck_index(uuid)]
+
+    def _get_deck_index(self, uuid: str) -> int:
+        """Get the index of a deck by its UUID."""
+        index = next((index for index, deck in enumerate(self.decks) if deck.uuid == uuid), None)
+        if index is None:
+            msg = f"deck with UUID {uuid} not found"
+            raise ValueError(msg)
+        return index
 
     @staticmethod
     def load_from_local_storage() -> "SavedData":

@@ -38,7 +38,7 @@ def render_decks() -> None:
     decks_div = select_element("#disce-edit-decks-screen .disce-decks")
     decks_div.innerHTML = ""
     saved_data = data.SavedData.load_from_local_storage()
-    for deck_index, deck in enumerate(saved_data.decks):
+    for deck_index, deck in enumerate(sorted(saved_data.decks, key=lambda deck: deck.name.casefold())):
         deck_div = create_element("div", class_="d-flex align-items-center mb-2")
         append_child(
             deck_div,

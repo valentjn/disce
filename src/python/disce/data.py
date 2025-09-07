@@ -52,6 +52,25 @@ class Deck(BaseModel):
                 existing_card_index = len(self.cards) - 1
             existing_cards[(card.front, card.back)] = (existing_card_index, self.cards[existing_card_index])
 
+    def get_card_to_learn(self, history_length: int, seed: int | None = None) -> Card:
+        """Get the card that should be learned next (based on the answer history)."""
+        candidates = []
+        minimum_score = None
+        for card in self.cards:
+            if not card.enabled:
+                continue
+            score = sum(card.answer_history[-history_length:])
+            if minimum_score is None or score < minimum_score:
+                minimum_score = score
+                candidates = [card]
+            elif score == minimum_score:
+                candidates.append(card)
+        if not candidates:
+            msg = "no enabled cards in deck"
+            raise ValueError(msg)
+        rng = random.Random(seed)
+        return rng.choice(candidates)
+
 
 class SavedData(BaseModel):
     """All saved data of the application."""

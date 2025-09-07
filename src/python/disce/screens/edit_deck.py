@@ -11,7 +11,7 @@ from typing import Any
 
 from pyscript import when, window
 
-from disce import data
+from disce import data, tools
 from disce.screens import edit_decks as edit_decks_screen
 from disce.screens import tools as screen_tools
 from disce.screens.tools import append_child, create_element, select_all_elements, select_element
@@ -21,7 +21,9 @@ _logger = logging.getLogger(__name__)
 
 def show(*, deck_uuid: str | None) -> None:
     """Show the edit deck screen for a given deck (or new deck if ``None``)."""
-    render_cards(deck_uuid)
+    saved_data = data.SavedData.load_from_local_storage()
+    deck = saved_data.get_deck(deck_uuid) if deck_uuid is not None else data.Deck()
+    render_deck(deck)
     screen_tools.hide_all()
     select_element("#disce-edit-deck-screen").style.display = "block"
 
@@ -31,16 +33,15 @@ def hide() -> None:
     select_element("#disce-edit-deck-screen").style.display = "none"
 
 
-def render_cards(deck_uuid: str | None) -> None:
+def render_deck(deck: data.Deck) -> None:
     """Render the edit deck screen."""
-    saved_data = data.SavedData.load_from_local_storage()
-    deck = saved_data.get_deck(deck_uuid) if deck_uuid is not None else data.Deck()
     select_element("#disce-edit-deck-screen .disce-deck-uuid-hidden").value = deck.uuid
     select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value = deck.name
     cards_div = select_element("#disce-edit-deck-screen .disce-cards")
     cards_div.innerHTML = ""
     for card in [*deck.cards, data.Card()]:
         cards_div.appendChild(create_card_div(card))
+    toggle_bulk_buttons()
 
 
 def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
@@ -50,6 +51,7 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
         card_div,
         create_element(
             "input",
+            event_handlers={"change": toggle_bulk_buttons},
             type="checkbox",
             class_="disce-selected-checkbox form-check-input",
             title="Select this card for bulk actions",
@@ -128,6 +130,15 @@ def card_text_changed() -> None:
     if last_card_front or last_card_back:
         cards_div = select_element("#disce-edit-deck-screen .disce-cards")
         cards_div.appendChild(create_card_div(data.Card()))
+    toggle_bulk_buttons()
+
+
+@when("change", "#disce-edit-deck-screen .disce-selected-checkbox")
+def toggle_bulk_buttons() -> None:
+    """Enable or disable the bulk action buttons based on selection."""
+    selected_checkboxes = select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox")
+    any_selected = any(checkbox.checked for checkbox in selected_checkboxes)
+    select_element("#disce-edit-deck-screen .disce-delete-cards-btn").disabled = not any_selected
 
 
 @when("click", "#disce-edit-deck-screen .disce-save-deck-btn")
@@ -137,6 +148,24 @@ def save_deck() -> None:
     saved_data.set_deck(get_deck())
     saved_data.save_to_local_storage()
     window.bootstrap.Toast.new(select_element("#disce-edit-deck-screen .disce-deck-saved-toast")).show()
+
+
+@when("click", "#disce-edit-deck-screen .disce-delete-cards-btn")
+def delete_selected_cards() -> None:
+    """Delete the selected cards."""
+    selected_card_uuids = {
+        checkbox.getAttribute("data-card-uuid")
+        for checkbox in select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox")
+        if checkbox.checked
+    }
+    if not selected_card_uuids:
+        return
+    if window.confirm(
+        f"Are you sure you want to delete the selected {tools.format_plural(len(selected_card_uuids), 'card')}?"
+    ):
+        deck = get_deck()
+        deck.cards = [card for card in deck.cards if card.uuid not in selected_card_uuids]
+        render_deck(deck)
 
 
 @when("click", "#disce-edit-deck-screen .disce-back-to-decks-screen-btn")

@@ -13,9 +13,9 @@ from pyscript import window
 class Card(BaseModel):
     """A flashcard."""
 
-    front: str
+    front: str = ""
     """Text on the front side of the card (e.g., question or term in foreign language)."""
-    back: str
+    back: str = ""
     """Text on the back side of the card (e.g., answer or term in native language)."""
     enabled: bool = True
     """Whether the card is enabled for review."""
@@ -26,16 +26,16 @@ class Card(BaseModel):
 class Deck(BaseModel):
     """A deck of flashcards."""
 
-    name: str
+    name: str = "New Deck"
     """Name of the deck."""
-    cards: list[Card]
+    cards: list[Card] = []
     """List of cards in the deck."""
 
 
 class SavedData(BaseModel):
     """All saved data of the application."""
 
-    decks: list[Deck]
+    decks: list[Deck] = []
     """List of decks."""
 
     @staticmethod

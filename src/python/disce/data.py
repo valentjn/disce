@@ -28,8 +28,6 @@ class Deck(BaseModel):
 
     name: str
     """Name of the deck."""
-    description: str = ""
-    """Optional additional information about the deck."""
     cards: list[Card]
     """List of cards in the deck."""
 

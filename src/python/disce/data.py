@@ -6,15 +6,23 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Data models."""
 
-import uuid
+import random
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 from pyscript import window
 
 
+def _generate_uuid() -> str:
+    """Generate a new UUID."""
+    return str(uuid4())
+
+
 class Card(BaseModel):
     """A flashcard."""
 
+    uuid: str = Field(default_factory=_generate_uuid)
+    """Unique identifier for the card."""
     front: str = ""
     """Text on the front side of the card (e.g., question or term in foreign language)."""
     back: str = ""
@@ -28,7 +36,7 @@ class Card(BaseModel):
 class Deck(BaseModel):
     """A deck of flashcards."""
 
-    uuid: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    uuid: str = Field(default_factory=_generate_uuid)
     """Unique identifier for the deck."""
     name: str = "New Deck"
     """Name of the deck."""

@@ -39,26 +39,21 @@ def render_cards(deck_uuid: str | None) -> None:
     select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value = deck.name
     cards_div = select_element("#disce-edit-deck-screen .disce-cards")
     cards_div.innerHTML = ""
-    for card_index, card in enumerate([*deck.cards, create_empty_card()]):
-        cards_div.appendChild(create_card_div(card_index, card))
+    for card in [*deck.cards, data.Card()]:
+        cards_div.appendChild(create_card_div(card))
 
 
-def create_empty_card() -> data.Card:
-    """Create a new empty card."""
-    return data.Card(front="", back="", enabled=True, answer_history=[])
-
-
-def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
+def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
     """Create a div representing a card for editing."""
-    card_div = create_element("div", class_="disce-card row mx-auto align-items-center mb-2")
+    card_div = create_element("div", class_="disce-card row mx-auto align-items-center mb-2", data_card_uuid=card.uuid)
     create_column(
         card_div,
         create_element(
             "input",
             type="checkbox",
             class_="disce-selected-checkbox form-check-input",
-            data_card_index=str(card_index),
             title="Select this card for bulk actions",
+            data_card_uuid=card.uuid,
         ),
         class_="form-check",
     )
@@ -71,7 +66,7 @@ def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
             class_="disce-front-textbox form-control",
             value=card.front,
             placeholder="Front",
-            data_card_index=str(card_index),
+            data_card_uuid=card.uuid,
         ),
     )
     create_column(
@@ -83,20 +78,20 @@ def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
             class_="disce-back-textbox form-control",
             value=card.back,
             placeholder="Back",
-            data_card_index=str(card_index),
+            data_card_uuid=card.uuid,
         ),
     )
     create_column(
         card_div,
         create_element(
             "input",
-            id_=f"disce-enabled-checkbox-{card_index}",
+            id_=f"disce-enabled-checkbox-{card.uuid}",
             type="checkbox",
             class_="disce-enabled-checkbox form-check-input",
             checked="checked" if card.enabled else "",
-            data_card_index=str(card_index),
+            data_card_uuid=card.uuid,
         ),
-        create_element("label", text="Enabled", for_=f"disce-enabled-checkbox-{card_index}"),
+        create_element("label", text="Enabled", for_=f"disce-enabled-checkbox-{card.uuid}"),
         class_="form-check",
     )
     create_column(
@@ -107,7 +102,7 @@ def create_card_div(card_index: int, card: data.Card) -> Any:  # noqa: ANN401
             class_="disce-answer-history-textbox form-control",
             value="".join("Y" if x else "N" for x in card.answer_history),
             placeholder="Answer history (Y/N)",
-            data_card_index=str(card_index),
+            data_card_uuid=card.uuid,
         ),
     )
     return card_div
@@ -132,7 +127,7 @@ def card_text_changed() -> None:
     last_card_back = cards[-1].querySelector(".disce-back-textbox").value
     if last_card_front or last_card_back:
         cards_div = select_element("#disce-edit-deck-screen .disce-cards")
-        cards_div.appendChild(create_card_div(len(cards), create_empty_card()))
+        cards_div.appendChild(create_card_div(data.Card()))
 
 
 @when("click", "#disce-edit-deck-screen .disce-save-deck-btn")
@@ -165,6 +160,7 @@ def get_deck() -> data.Deck:
     deck_name = select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value
     cards = []
     for card_div in select_all_elements("#disce-edit-deck-screen .disce-card"):
+        uuid: str = card_div.getAttribute("data-card-uuid")
         front: str = card_div.querySelector(".disce-front-textbox").value
         back: str = card_div.querySelector(".disce-back-textbox").value
         if not front and not back:
@@ -172,5 +168,5 @@ def get_deck() -> data.Deck:
         enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
         answer_history_str: str = card_div.querySelector(".disce-answer-history-textbox").value
         answer_history = [character.upper() == "Y" for character in answer_history_str]
-        cards.append(data.Card(front=front, back=back, enabled=enabled, answer_history=answer_history))
+        cards.append(data.Card(uuid=uuid, front=front, back=back, enabled=enabled, answer_history=answer_history))
     return data.Deck(uuid=deck_uuid, name=deck_name, cards=cards)

@@ -8,7 +8,7 @@
 
 from pyscript import when  # type: ignore[import-not-found]
 
-from disce import data, util
+from disce import data, tools
 from disce.screens import tools as screen_tools
 from disce.screens.tools import select_element
 
@@ -19,8 +19,8 @@ def show() -> None:
     saved_data = data.SavedData.load_from_local_storage()
     number_of_cards = sum(len(deck.cards) for deck in saved_data.decks)
     select_element("#main-screen-status-text").innerText = (
-        f"Loaded {util.format_number(len(saved_data.decks), 'deck')} with "
-        f"{util.format_number(number_of_cards, 'card')}."
+        f"Loaded {tools.format_number(len(saved_data.decks), 'deck')} with "
+        f"{tools.format_number(number_of_cards, 'card')}."
     )
     screen_tools.hide_all()
     select_element("#main-screen").style.display = "block"

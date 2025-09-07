@@ -41,7 +41,7 @@ def render_deck(deck: data.Deck) -> None:
     cards_div.innerHTML = ""
     for card in [*deck.cards, data.Card()]:
         cards_div.appendChild(create_card_div(card))
-    toggle_bulk_buttons()
+    update_bulk_buttons()
 
 
 def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
@@ -51,7 +51,7 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
         card_div,
         create_element(
             "input",
-            event_handlers={"change": toggle_bulk_buttons},
+            event_handlers={"change": update_bulk_buttons},
             type="checkbox",
             class_="disce-selected-checkbox form-check-input",
             title="Select this card for bulk actions",
@@ -130,15 +130,7 @@ def card_text_changed() -> None:
     if last_card_front or last_card_back:
         cards_div = select_element("#disce-edit-deck-screen .disce-cards")
         cards_div.appendChild(create_card_div(data.Card()))
-    toggle_bulk_buttons()
-
-
-@when("change", "#disce-edit-deck-screen .disce-selected-checkbox")
-def toggle_bulk_buttons() -> None:
-    """Enable or disable the bulk action buttons based on selection."""
-    selected_checkboxes = select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox")
-    any_selected = any(checkbox.checked for checkbox in selected_checkboxes)
-    select_element("#disce-edit-deck-screen .disce-delete-cards-btn").disabled = not any_selected
+    update_bulk_buttons()
 
 
 @when("click", "#disce-edit-deck-screen .disce-save-deck-btn")
@@ -150,14 +142,21 @@ def save_deck() -> None:
     window.bootstrap.Toast.new(select_element("#disce-edit-deck-screen .disce-deck-saved-toast")).show()
 
 
+@when("click", "#disce-edit-deck-screen .disce-select-all-btn")
+def select_all_decks() -> None:
+    """Select or deselect all decks."""
+    card_uuids = get_card_uuids()
+    selected_card_uuids = get_selected_card_uuids()
+    select_all = len(selected_card_uuids) < len(card_uuids)
+    for checkbox in select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox"):
+        checkbox.checked = select_all
+    update_bulk_buttons()
+
+
 @when("click", "#disce-edit-deck-screen .disce-delete-cards-btn")
 def delete_selected_cards() -> None:
     """Delete the selected cards."""
-    selected_card_uuids = {
-        checkbox.getAttribute("data-card-uuid")
-        for checkbox in select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox")
-        if checkbox.checked
-    }
+    selected_card_uuids = set(get_selected_card_uuids())
     if not selected_card_uuids:
         return
     if window.confirm(
@@ -166,6 +165,18 @@ def delete_selected_cards() -> None:
         deck = get_deck()
         deck.cards = [card for card in deck.cards if card.uuid not in selected_card_uuids]
         render_deck(deck)
+
+
+@when("change", "#disce-edit-deck-screen .disce-selected-checkbox")
+def update_bulk_buttons() -> None:
+    """Update the bulk action buttons based on selection."""
+    card_uuids = get_card_uuids()
+    selected_card_uuids = get_selected_card_uuids()
+    select_all_btn = select_element("#disce-edit-deck-screen .disce-select-all-btn")
+    select_all_btn.innerText = (
+        "Deselect All" if len(selected_card_uuids) >= len(card_uuids) and card_uuids else "Select All"
+    )
+    select_element("#disce-edit-deck-screen .disce-delete-cards-btn").disabled = len(selected_card_uuids) == 0
 
 
 @when("click", "#disce-edit-deck-screen .disce-back-to-decks-screen-btn")
@@ -199,3 +210,17 @@ def get_deck() -> data.Deck:
         answer_history = [character.upper() == "Y" for character in answer_history_str]
         cards.append(data.Card(uuid=uuid, front=front, back=back, enabled=enabled, answer_history=answer_history))
     return data.Deck(uuid=deck_uuid, name=deck_name, cards=cards)
+
+
+def get_card_uuids() -> list[str]:
+    """Get the UUIDs of all cards."""
+    return [
+        card_div.getAttribute("data-card-uuid")
+        for card_div in select_all_elements("#disce-edit-deck-screen .disce-card")
+    ][:-1]
+
+
+def get_selected_card_uuids() -> list[str]:
+    """Get the UUIDs of the selected cards."""
+    checkboxes = list(select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox"))[:-1]
+    return [checkbox.getAttribute("data-card-uuid") for checkbox in checkboxes if checkbox.checked]

@@ -41,11 +41,11 @@ def render_decks() -> None:
     decks_div.innerHTML = ""
     saved_data = data.SavedData.load_from_local_storage()
     for deck in sorted(saved_data.decks, key=lambda deck: deck.name.casefold()):
-        deck_div = create_element("div", class_="d-flex align-items-center mb-2", data_deck_uuid=deck.uuid)
+        deck_div = create_element("div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck.uuid)
         append_child(
             deck_div,
             "input",
-            event_handlers={"change": toggle_bulk_buttons},
+            event_handlers={"change": update_bulk_buttons},
             id_=f"disce-selected-checkbox-{deck.uuid}",
             type="checkbox",
             class_="disce-selected-checkbox form-check-input me-2",
@@ -85,7 +85,7 @@ def render_decks() -> None:
         decks_div.appendChild(deck_div)
     if not saved_data.decks:
         decks_div.appendChild(create_element("p", text="No decks available. Please add a deck."))
-    toggle_bulk_buttons()
+    update_bulk_buttons()
 
 
 @when("click", "#disce-edit-decks-screen .disce-add-deck-btn")
@@ -120,6 +120,17 @@ def import_decks() -> None:
         render_decks()
 
     screen_tools.upload_file(".json,application/json", handle_imported_data)
+
+
+@when("click", "#disce-edit-decks-screen .disce-select-all-btn")
+def select_all_decks() -> None:
+    """Select or deselect all decks."""
+    deck_uuids = get_deck_uuids()
+    selected_deck_uuids = get_selected_deck_uuids()
+    select_all = len(selected_deck_uuids) < len(deck_uuids)
+    for checkbox in select_all_elements("#disce-edit-decks-screen .disce-selected-checkbox"):
+        checkbox.checked = select_all
+    update_bulk_buttons()
 
 
 @when("click", "#disce-edit-decks-screen .disce-merge-decks-btn")
@@ -181,9 +192,14 @@ def delete_decks() -> None:
 
 
 @when("change", "#disce-edit-decks-screen .disce-selected-checkbox")
-def toggle_bulk_buttons() -> None:
-    """Enable or disable the bulk action buttons based on selection."""
+def update_bulk_buttons() -> None:
+    """Update the bulk action buttons based on selection."""
+    deck_uuids = get_deck_uuids()
     selected_deck_uuids = get_selected_deck_uuids()
+    select_all_btn = select_element("#disce-edit-decks-screen .disce-select-all-btn")
+    select_all_btn.innerText = (
+        "Deselect All" if len(selected_deck_uuids) == len(deck_uuids) and deck_uuids else "Select All"
+    )
     select_element("#disce-edit-decks-screen .disce-merge-decks-btn").disabled = (
         len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE
     )
@@ -221,6 +237,14 @@ def delete_deck(event: Any) -> None:  # noqa: ANN401
         saved_data.delete_deck(deck_uuid)
         saved_data.save_to_local_storage()
         render_decks()
+
+
+def get_deck_uuids() -> list[str]:
+    """Get the UUIDs of all decks."""
+    return [
+        deck_div.getAttribute("data-deck-uuid")
+        for deck_div in select_all_elements("#disce-edit-decks-screen .disce-deck")
+    ]
 
 
 def get_selected_deck_uuids() -> list[str]:

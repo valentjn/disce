@@ -12,8 +12,13 @@ body {
     font-family: Arial, sans-serif;
 }
 
-/* loading screen */
-#loading-screen {
+/* all screens */
+.disce-screen {
+    display: none;
+}
+
+/* load screen */
+#disce-load-screen {
     display: flex;
     position: fixed;
     top: 0;
@@ -26,24 +31,23 @@ body {
     height: 100vh;
 }
 
-#loading-screen .spinner-border {
+#disce-load-screen .spinner-border {
     width: 3rem;
     height: 3rem;
 }
 
-/* main menu */
-#main-screen {
-    display: none;
+/* main screen */
+#disce-main-screen {
     height: 80vh;
 }
 
-#main-screen h1 {
+#disce-main-screen h1 {
     font-weight: bold;
     font-size: 3rem;
     letter-spacing: 0.05em;
 }
 
-#main-screen button {
+#disce-main-screen button {
     transition:
         transform 0.1s,
         box-shadow 0.1s;
@@ -52,13 +56,16 @@ body {
     font-size: 2rem;
 }
 
-#main-screen button:hover,
-#main-screen button:focus {
+#disce-main-screen button:hover,
+#disce-main-screen button:focus {
     transform: scale(1.04);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* edit screen */
-#edit-screen {
-    display: none;
+/* edit decks screen */
+#disce-edit-decks-screen .disce-deck-name-label {
+    width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

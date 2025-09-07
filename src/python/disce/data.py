@@ -35,6 +35,23 @@ class Deck(BaseModel):
     cards: list[Card] = []
     """List of cards in the deck."""
 
+    def merge(self, other: "Deck") -> None:
+        """Merge another deck into this one."""
+        existing_cards = {(card.front, card.back): (index, card) for index, card in enumerate(self.cards)}
+        for card in other.cards:
+            existing_card_index, existing_card = existing_cards.get((card.front, card.back), (None, None))
+            if existing_card_index is not None and existing_card is not None:
+                self.cards[existing_card_index] = existing_card.model_copy(
+                    update={
+                        "enabled": existing_card.enabled or card.enabled,
+                        "answer_history": existing_card.answer_history + card.answer_history,
+                    }
+                )
+            else:
+                self.cards.append(card)
+                existing_card_index = len(self.cards) - 1
+            existing_cards[(card.front, card.back)] = (existing_card_index, self.cards[existing_card_index])
+
 
 class SavedData(BaseModel):
     """All saved data of the application."""

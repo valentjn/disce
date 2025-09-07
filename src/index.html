@@ -25,45 +25,45 @@
         />
     </head>
     <body>
-        <div id="loading-screen">
+        <div id="disce-load-screen" class="disce-screen">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-        <div id="main-screen">
+        <div id="disce-main-screen" class="disce-screen">
             <div class="d-flex flex-column align-items-center justify-content-center">
                 <h1 class="mb-5">Disce</h1>
-                <p id="main-screen-status-text"></p>
+                <p class="disce-status-text"></p>
                 <div class="d-flex flex-column gap-4 w-100 align-items-center">
-                    <button id="learn-btn" class="btn btn-primary btn-lg main-screen-btn w-75">Learn</button>
-                    <button id="edit-decks-btn" class="btn btn-primary btn-lg main-screen-btn w-75">Edit</button>
+                    <button class="disce-learn-btn btn btn-primary btn-lg main-screen-btn w-75">Learn</button>
+                    <button class="disce-edit-decks-btn btn btn-primary btn-lg main-screen-btn w-75">Edit</button>
                 </div>
             </div>
         </div>
-        <div id="edit-decks-screen">
+        <div id="disce-edit-decks-screen" class="disce-screen">
             <h2 class="mb-4">Edit Decks</h2>
             <div class="mb-3">
-                <button id="add-deck-btn" class="btn btn-primary btn-sm me-2">Add Deck</button>
-                <button id="merge-decks-btn" class="btn btn-primary btn-sm">Merge Selected</button>
-                <button id="delete-decks-btn" class="btn btn-danger btn-sm me-2">Delete Selected</button>
+                <button class="disce-add-deck-btn btn btn-primary btn-sm">Add Deck</button>
+                <button class="disce-merge-decks-btn btn btn-primary btn-sm">Merge Selected</button>
+                <button class="disce-delete-decks-btn btn btn-danger btn-sm">Delete Selected</button>
             </div>
-            <div id="decks"></div>
-            <button class="back-to-main-screen-btn btn btn-secondary mt-4">Back to Main Screen</button>
+            <div class="disce-decks"></div>
+            <button class="disce-back-to-main-screen-btn btn btn-secondary mt-4">Back to Main Screen</button>
         </div>
-        <div id="edit-deck-screen">
+        <div id="disce-edit-deck-screen" class="disce-screen">
             <h2 class="mb-4">Edit Deck</h2>
+            <input class="disce-deck-uuid-hidden" type="hidden" />
             <div class="mb-3">
-                <label class="form-label" for="deck-name-input">Deck Name</label>
-                <input id="deck-name-input" class="form-control" type="text" />
+                <label class="form-label" for="disce-deck-name-textbox">Deck Name</label>
+                <input id="disce-deck-name-textbox" class="disce-deck-name-textbox form-control" type="text" />
             </div>
             <div class="mb-3">
-                <button id="copy-cards-btn" class="btn btn-primary btn-sm me-2">Copy Selected to Deck</button>
-                <button id="delete-cards-btn" class="btn btn-danger btn-sm me-2">Delete Selected</button>
+                <button class="disce-copy-cards-btn btn btn-primary btn-sm">Copy Selected to Deck</button>
+                <button class="disce-delete-cards-btn btn btn-danger btn-sm">Delete Selected</button>
             </div>
-            <input type="text" class="card-front-textbox"/>
-            <div id="cards"></div>
-            <button id="discard-cards-btn" class="btn btn-secondary mt-4 me-2">Discard Changes</button>
-            <button id="save-deck-btn" class="btn btn-success mt-4">Save Deck</button>
+            <div class="disce-cards"></div>
+            <button class="disce-save-deck-btn btn btn-success mt-4">Save Deck</button>
+            <button class="disce-back-to-decks-screen-btn btn btn-secondary mt-4">Back to Decks Screen</button>
         </div>
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

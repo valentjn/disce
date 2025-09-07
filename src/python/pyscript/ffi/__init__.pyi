@@ -4,11 +4,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-"""Screen for loading."""
 
-from disce.screens.tools import select_element
+from typing import Any
 
-
-def hide() -> None:
-    """Hide the load screen."""
-    select_element("#disce-load-screen").style.display = "none"
+create_proxy: Any

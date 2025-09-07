@@ -6,14 +6,26 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Screen management."""
 
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from pyscript import document
+from pyscript.ffi import create_proxy
 
+type EventHandler = Callable[[], None] | Callable[[Any], None]
+
+select_all_elements = document.querySelectorAll
 select_element = document.querySelector
 
 
-def create_element(tag: str, text: str | None = None, html: str | None = None, **attributes: str) -> Any:  # noqa: ANN401
+def create_element(
+    tag: str,
+    *,
+    text: str | None = None,
+    html: str | None = None,
+    event_handlers: Mapping[str, EventHandler | Sequence[EventHandler]] | None = None,
+    **attributes: str,
+) -> Any:  # noqa: ANN401
     """Create a new HTML element with given attributes."""
     element = document.createElement(tag)
     for name, value in attributes.items():
@@ -22,28 +34,36 @@ def create_element(tag: str, text: str | None = None, html: str | None = None, *
         element.innerText = text
     if html is not None:
         element.innerHTML = html
+    if event_handlers:
+        for event, handlers in event_handlers.items():
+            for handler in handlers if isinstance(handlers, Sequence) else [handlers]:
+                element.addEventListener(event, create_proxy(handler))
     return element
 
 
 def append_child(
     parent: Any,  # noqa: ANN401
     tag: str,
+    *,
     text: str | None = None,
     html: str | None = None,
+    event_handlers: Mapping[str, EventHandler | Sequence[EventHandler]] | None = None,
     **attributes: str,
 ) -> Any:  # noqa: ANN401
     """Create a new HTML element with given attributes and append it to the parent."""
-    element = create_element(tag, text=text, html=html, **attributes)
+    element = create_element(tag, text=text, html=html, event_handlers=event_handlers, **attributes)
     parent.appendChild(element)
     return element
 
 
 def hide_all() -> None:
     """Hide all screens."""
+    from disce.screens import edit_deck as edit_deck_screen  # noqa: PLC0415
     from disce.screens import edit_decks as edit_decks_screen  # noqa: PLC0415
     from disce.screens import load as load_screen  # noqa: PLC0415
     from disce.screens import main as main_screen  # noqa: PLC0415
 
+    edit_deck_screen.hide()
     edit_decks_screen.hide()
     main_screen.hide()
     load_screen.hide()

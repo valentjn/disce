@@ -6,8 +6,10 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Main module."""
 
+import hashlib
 import logging
 import sys
+from pathlib import Path
 from typing import override
 
 # import all screens to register event handlers
@@ -34,7 +36,7 @@ class LoggingFormatter(logging.Formatter):
 def main() -> None:
     """Run the main application logic."""
     set_up_logging()
-    _logger.info("application started")
+    _logger.info("Disce started, source hash: %s", compute_source_hash()[:8])
     main_screen.show()
     load_screen.hide()
 
@@ -44,3 +46,12 @@ def set_up_logging() -> None:
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(LoggingFormatter())
     logging.basicConfig(level=logging.DEBUG, format="%(name)s:%(levelname)s - %(message)s", handlers=[handler])
+
+
+def compute_source_hash() -> str:
+    """Compute a hash of the source code files to detect changes."""
+    sha256 = hashlib.sha256()
+    for file in sorted(Path(__file__).parent.rglob("*.py")):
+        data = file.read_bytes()
+        sha256.update(data)
+    return sha256.hexdigest()

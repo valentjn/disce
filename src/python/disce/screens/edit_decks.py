@@ -7,6 +7,7 @@
 """Screen for editing decks."""
 
 import logging
+import re
 from typing import Any
 
 from pydantic import ValidationError
@@ -151,7 +152,14 @@ def export_decks() -> None:
         window.alert("Please select at least one deck to export.")
         return
     decks_to_export = [saved_data.get_deck(deck_uuid) for deck_uuid in selected_deck_uuids]
-    screen_tools.download_file("decks.json", data.SavedData(decks=decks_to_export).model_dump_json(indent=4))
+    if len(decks_to_export) == 1:
+        stem = re.sub(r"[^0-9A-Za-z]", "-", decks_to_export[0].name)
+        stem = re.sub(r"-{2,}", "-", stem).strip("-")[:64].lower()
+        if not stem:
+            stem = "deck"
+    else:
+        stem = "decks"
+    screen_tools.download_file(f"{stem}.json", data.SavedData(decks=decks_to_export).model_dump_json(indent=4))
     render_decks()
 
 

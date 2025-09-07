@@ -6,14 +6,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Screen for the main menu."""
 
-from pyscript import when  # type: ignore[import-not-found]
+from pyscript import when
 
 from disce import data, tools
 from disce.screens import tools as screen_tools
 from disce.screens.tools import select_element
 
 
-@when("click", ".back-to-main-screen-btn")  # type: ignore[misc]
+@when("click", ".back-to-main-screen-btn")
 def show() -> None:
     """Show the main menu screen."""
     saved_data = data.SavedData.load_from_local_storage()

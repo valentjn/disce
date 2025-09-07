@@ -7,7 +7,7 @@
 """Data models."""
 
 from pydantic import BaseModel
-from pyscript import window  # type: ignore[import-not-found]
+from pyscript import window
 
 
 class Card(BaseModel):

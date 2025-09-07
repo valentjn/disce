@@ -8,7 +8,7 @@
 
 from typing import Any
 
-from pyscript import document  # type: ignore[import-not-found]
+from pyscript import document
 
 select_element = document.querySelector
 

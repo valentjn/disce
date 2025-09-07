@@ -6,14 +6,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Screen for editing decks."""
 
-from pyscript import when  # type: ignore[import-not-found]
+from pyscript import when
 
 from disce import data
 from disce.screens import tools as screen_tools
 from disce.screens.tools import append_child, create_element, select_element
 
 
-@when("click", "#edit-btn")  # type: ignore[misc]
+@when("click", "#edit-btn")
 def show() -> None:
     """Show the edit screen."""
     render_decks_list()

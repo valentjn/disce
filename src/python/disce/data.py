@@ -129,4 +129,5 @@ class SavedData(BaseModel):
 
     def save_to_local_storage(self) -> None:
         """Save data to local storage."""
+        window.navigator.storage.persist()
         window.localStorage.setItem("saved_data_json", self.model_dump_json())

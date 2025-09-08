@@ -8,10 +8,11 @@
 
 from pyscript import when
 
-from disce import data, tools
+from disce import data
 from disce.screens import edit_decks as edit_decks_screen
 from disce.screens import tools as screen_tools
 from disce.screens.tools import select_element
+from disce.tools import format_plural
 
 
 @when("click", ".disce-back-to-main-screen-btn")
@@ -19,9 +20,10 @@ def show() -> None:
     """Show the main menu screen."""
     saved_data = data.SavedData.load_from_local_storage()
     number_of_cards = sum(len(deck.cards) for deck in saved_data.decks)
-    select_element("#disce-main-screen .disce-status-text").innerText = (
-        f"Loaded {tools.format_plural(len(saved_data.decks), 'deck')} with "
-        f"{tools.format_plural(number_of_cards, 'card')}."
+    select_element(
+        "#disce-main-screen .disce-status-text"
+    ).innerText = (
+        f"Loaded {format_plural(len(saved_data.decks), 'deck')} with {format_plural(number_of_cards, 'card')}."
     )
     screen_tools.hide_all()
     select_element("#disce-main-screen").style.display = "block"

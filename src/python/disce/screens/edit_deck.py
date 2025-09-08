@@ -11,10 +11,11 @@ from typing import Any
 
 from pyscript import when, window
 
-from disce import data, tools
+from disce import data
 from disce.screens import edit_decks as edit_decks_screen
 from disce.screens import tools as screen_tools
 from disce.screens.tools import append_child, create_element, select_all_elements, select_element
+from disce.tools import format_plural
 
 _logger = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ def delete_selected_cards() -> None:
     if not selected_card_uuids:
         return
     if window.confirm(
-        f"Are you sure you want to delete the selected {tools.format_plural(len(selected_card_uuids), 'card')}?"
+        f"Are you sure you want to delete the selected {format_plural(len(selected_card_uuids), 'card')}?"
     ):
         deck = get_deck()
         deck.cards = [card for card in deck.cards if card.uuid not in selected_card_uuids]

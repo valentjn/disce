@@ -13,10 +13,11 @@ from typing import Any
 from pydantic import ValidationError
 from pyscript import when, window
 
-from disce import data, tools
+from disce import data
 from disce.screens import edit_deck as edit_deck_screen
 from disce.screens import tools as screen_tools
 from disce.screens.tools import append_child, create_element, select_all_elements, select_element
+from disce.tools import format_plural
 
 _MINIMUM_NUMBER_OF_DECKS_TO_MERGE = 2
 
@@ -107,10 +108,10 @@ def import_decks() -> None:
         saved_data = data.SavedData.load_from_local_storage()
         overwriting_deck_uuids = {deck.uuid for deck in imported_data.decks} & {deck.uuid for deck in saved_data.decks}
         if overwriting_deck_uuids and not window.confirm(
-            f"The imported data contains {tools.format_plural(len(overwriting_deck_uuids), 'deck')} (see below) that "
+            f"The imported data contains {format_plural(len(overwriting_deck_uuids), 'deck')} (see below) that "
             f"will overwrite existing decks. Do you want to continue?\n\n"
-            f"{tools.format_plural(len(overwriting_deck_uuids), 'Name', omit_number=True)} of "
-            f"{tools.format_plural(len(overwriting_deck_uuids), 'deck', omit_number=True)} to be overwritten: "
+            f"{format_plural(len(overwriting_deck_uuids), 'Name', omit_number=True)} of "
+            f"{format_plural(len(overwriting_deck_uuids), 'deck', omit_number=True)} to be overwritten: "
             f"{', '.join(f'"{saved_data.get_deck(uuid).name}"' for uuid in overwriting_deck_uuids)}"
         ):
             return
@@ -139,9 +140,7 @@ def merge_decks() -> None:
     saved_data = data.SavedData.load_from_local_storage()
     selected_deck_uuids = get_selected_deck_uuids()
     if len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE:
-        window.alert(
-            f"Please select at least {tools.format_plural(_MINIMUM_NUMBER_OF_DECKS_TO_MERGE, 'deck')} to merge."
-        )
+        window.alert(f"Please select at least {format_plural(_MINIMUM_NUMBER_OF_DECKS_TO_MERGE, 'deck')} to merge.")
         return
     merged_deck_name = window.prompt("Enter a name for the merged deck:", "Merged Deck")
     if not merged_deck_name:
@@ -183,7 +182,7 @@ def delete_decks() -> None:
         window.alert("Please select at least one deck to delete.")
         return
     if window.confirm(
-        f"Are you sure you want to delete the selected {tools.format_plural(len(selected_deck_uuids), 'deck')}?"
+        f"Are you sure you want to delete the selected {format_plural(len(selected_deck_uuids), 'deck')}?"
     ):
         for deck_uuid in selected_deck_uuids:
             saved_data.delete_deck(deck_uuid)

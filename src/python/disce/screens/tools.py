@@ -89,14 +89,14 @@ def upload_file(accepted_types: str, handler: Callable[[str], None]) -> None:
     """Open a file dialog and handle the selected file with the given handler."""
 
     def handle_uploaded_file(event: Any) -> None:  # noqa: ANN401
-        input_element = event.target
+        input_element = event.currentTarget
         for file in input_element.files:
             reader = window.FileReader.new()
             reader.addEventListener("load", create_proxy(process_imported_data))
             reader.readAsText(file)
 
     def process_imported_data(event: Any) -> None:  # noqa: ANN401
-        handler(event.target.result)
+        handler(event.currentTarget.result)
 
     input_element = create_element(
         "input", event_handlers={"change": handle_uploaded_file}, type="file", accept=accepted_types

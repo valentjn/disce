@@ -224,13 +224,13 @@ def update_bulk_buttons() -> None:
 @when("click", "#disce-edit-decks-screen .disce-edit-deck-btn")
 def edit_deck(event: Any) -> None:  # noqa: ANN401
     """Edit a specific deck."""
-    edit_deck_screen.show(deck_uuid=event.target.getAttribute("data-deck-uuid"))
+    edit_deck_screen.show(deck_uuid=event.currentTarget.getAttribute("data-deck-uuid"))
 
 
 @when("click", "#disce-edit-decks-screen .disce-duplicate-deck-btn")
 def duplicate_deck(event: Any) -> None:  # noqa: ANN401
     """Duplicate a specific deck."""
-    original_deck_uuid: str = event.target.getAttribute("data-deck-uuid")
+    original_deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
     configuration = data.Configuration.load_from_local_storage()
     original_deck_metadata = configuration.get_deck_metadata(original_deck_uuid)
     new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
@@ -253,7 +253,7 @@ def duplicate_deck(event: Any) -> None:  # noqa: ANN401
 @when("click", "#disce-edit-decks-screen .disce-delete-deck-btn")
 def delete_deck(event: Any) -> None:  # noqa: ANN401
     """Delete a specific deck."""
-    deck_uuid: str = event.target.getAttribute("data-deck-uuid")
+    deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
     configuration = data.Configuration.load_from_local_storage()
     deck_metadata = configuration.get_deck_metadata(deck_uuid)
     if window.confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):

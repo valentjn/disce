@@ -56,6 +56,13 @@ def append_child(
     return element
 
 
+def set_theme(theme: str | None = None) -> None:
+    """Set the theme of the application."""
+    if theme is None:
+        theme = "dark" if window.matchMedia("(prefers-color-scheme: dark)").matches else "light"
+    document.documentElement.setAttribute("data-bs-theme", theme)
+
+
 def hide_all() -> None:
     """Hide all screens."""
     from disce.screens import edit_deck as edit_deck_screen  # noqa: PLC0415

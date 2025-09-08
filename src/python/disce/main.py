@@ -17,6 +17,7 @@ from disce.screens import *  # noqa: F403  # isort: skip
 
 from disce.screens import load as load_screen
 from disce.screens import main as main_screen
+from disce.screens import tools as screen_tools
 
 _logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ def main() -> None:
     """Run the main application logic."""
     set_up_logging()
     _logger.info("Disce started, source hash: %s", compute_source_hash()[:8])
+    screen_tools.set_theme()
     main_screen.show()
     load_screen.hide()
 

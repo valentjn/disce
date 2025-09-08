@@ -40,23 +40,25 @@ def render_decks() -> None:
     """Render the list of decks."""
     decks_div = select_element("#disce-edit-decks-screen .disce-decks")
     decks_div.innerHTML = ""
-    saved_data = data.SavedData.load_from_local_storage()
-    for deck in sorted(saved_data.decks, key=lambda deck: deck.name.casefold()):
-        deck_div = create_element("div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck.uuid)
+    configuration = data.Configuration.load_from_local_storage()
+    for deck_metadata in sorted(configuration.deck_metadata, key=lambda deck_metadata: deck_metadata.name.casefold()):
+        deck_div = create_element(
+            "div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck_metadata.uuid
+        )
         append_child(
             deck_div,
             "input",
             event_handlers={"change": update_bulk_buttons},
-            id_=f"disce-selected-checkbox-{deck.uuid}",
+            id_=f"disce-selected-checkbox-{deck_metadata.uuid}",
             type="checkbox",
             class_="disce-selected-checkbox form-check-input me-2",
-            data_deck_uuid=deck.uuid,
+            data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
             "label",
-            text=deck.name,
-            for_=f"disce-selected-checkbox-{deck.uuid}",
+            text=deck_metadata.name,
+            for_=f"disce-selected-checkbox-{deck_metadata.uuid}",
             class_="disce-deck-name-label me-2",
         )
         append_child(
@@ -65,7 +67,7 @@ def render_decks() -> None:
             html='<i class="bi bi-pencil me-1"></i>Edit',
             event_handlers={"click": edit_deck},
             class_="disce-edit-deck-btn btn btn-outline-primary me-2",
-            data_deck_uuid=deck.uuid,
+            data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
@@ -73,7 +75,7 @@ def render_decks() -> None:
             html='<i class="bi bi-copy me-1"></i>Duplicate',
             event_handlers={"click": duplicate_deck},
             class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
-            data_deck_uuid=deck.uuid,
+            data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
@@ -81,10 +83,10 @@ def render_decks() -> None:
             html='<i class="bi bi-trash me-1"></i>Delete',
             event_handlers={"click": delete_deck},
             class_="disce-delete-deck-btn btn btn-outline-danger",
-            data_deck_uuid=deck.uuid,
+            data_deck_uuid=deck_metadata.uuid,
         )
         decks_div.appendChild(deck_div)
-    if not saved_data.decks:
+    if not configuration.deck_metadata:
         decks_div.appendChild(create_element("p", text="No decks available. Please add a deck."))
     update_bulk_buttons()
 
@@ -101,23 +103,26 @@ def import_decks() -> None:
 
     def handle_imported_data(json: str) -> None:
         try:
-            imported_data = data.SavedData.model_validate_json(json)
+            deck_export = data.DeckExport.model_validate_json(json)
         except ValidationError as exception:
             window.alert(f"failed to parse imported data: {exception}")
             return
-        saved_data = data.SavedData.load_from_local_storage()
-        overwriting_deck_uuids = {deck.uuid for deck in imported_data.decks} & {deck.uuid for deck in saved_data.decks}
+        configuration = data.Configuration.load_from_local_storage()
+        overwriting_deck_uuids = {deck.metadata.uuid for deck in deck_export.decks} & {
+            deck.uuid for deck in configuration.deck_metadata
+        }
         if overwriting_deck_uuids and not window.confirm(
             f"The imported data contains {format_plural(len(overwriting_deck_uuids), 'deck')} (see below) that "
             f"will overwrite existing decks. Do you want to continue?\n\n"
             f"{format_plural(len(overwriting_deck_uuids), 'Name', omit_number=True)} of "
             f"{format_plural(len(overwriting_deck_uuids), 'deck', omit_number=True)} to be overwritten: "
-            f"{', '.join(f'"{saved_data.get_deck(uuid).name}"' for uuid in overwriting_deck_uuids)}"
+            f"{', '.join(f'"{configuration.get_deck_metadata(uuid).name}"' for uuid in overwriting_deck_uuids)}"
         ):
             return
-        for deck in imported_data.decks:
-            saved_data.set_deck(deck)
-        saved_data.save_to_local_storage()
+        for exported_deck in deck_export.decks:
+            exported_deck.data.save_to_local_storage()
+            configuration.set_deck_metadata(exported_deck.metadata)
+        configuration.save_to_local_storage()
         render_decks()
 
     screen_tools.upload_file(".json,application/json", handle_imported_data)
@@ -137,7 +142,6 @@ def select_all_decks() -> None:
 @when("click", "#disce-edit-decks-screen .disce-merge-decks-btn")
 def merge_decks() -> None:
     """Merge selected decks."""
-    saved_data = data.SavedData.load_from_local_storage()
     selected_deck_uuids = get_selected_deck_uuids()
     if len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE:
         window.alert(f"Please select at least {format_plural(_MINIMUM_NUMBER_OF_DECKS_TO_MERGE, 'deck')} to merge.")
@@ -145,38 +149,48 @@ def merge_decks() -> None:
     merged_deck_name = window.prompt("Enter a name for the merged deck:", "Merged Deck")
     if not merged_deck_name:
         return
-    merged_deck = data.Deck(name=merged_deck_name)
+    configuration = data.Configuration.load_from_local_storage()
+    merged_deck_data = data.DeckData()
+    merged_deck_metadata = data.DeckMetadata(uuid=merged_deck_data.uuid, name=merged_deck_name)
     for deck_uuid in selected_deck_uuids:
-        merged_deck.merge(saved_data.get_deck(deck_uuid))
-    saved_data.set_deck(merged_deck)
-    saved_data.save_to_local_storage()
+        merged_deck_data.merge(data.DeckData.load_from_local_storage(deck_uuid))
+    merged_deck_data.save_to_local_storage()
+    merged_deck_metadata.number_of_cards = len(merged_deck_data.cards)
+    configuration.set_deck_metadata(merged_deck_metadata)
+    configuration.save_to_local_storage()
     render_decks()
 
 
 @when("click", "#disce-edit-decks-screen .disce-export-decks-btn")
 def export_decks() -> None:
     """Export selected decks."""
-    saved_data = data.SavedData.load_from_local_storage()
     selected_deck_uuids = get_selected_deck_uuids()
     if not selected_deck_uuids:
         window.alert("Please select at least one deck to export.")
         return
-    decks_to_export = [saved_data.get_deck(deck_uuid) for deck_uuid in selected_deck_uuids]
-    if len(decks_to_export) == 1:
-        stem = re.sub(r"[^0-9A-Za-z]", "-", decks_to_export[0].name)
+    deck_data_to_export = [data.DeckData.load_from_local_storage(deck_uuid) for deck_uuid in selected_deck_uuids]
+    configuration = data.Configuration.load_from_local_storage()
+    deck_metadata_to_export = [configuration.get_deck_metadata(deck_uuid) for deck_uuid in selected_deck_uuids]
+    if len(deck_metadata_to_export) == 1:
+        stem = re.sub(r"[^0-9A-Za-z]", "-", deck_metadata_to_export[0].name)
         stem = re.sub(r"-{2,}", "-", stem).strip("-")[:64].lower()
         if not stem:
             stem = "deck"
     else:
         stem = "decks"
-    screen_tools.download_file(f"{stem}.json", data.SavedData(decks=decks_to_export).model_dump_json(indent=4))
+    deck_export = data.DeckExport(
+        decks=[
+            data.ExportedDeck(data=deck_data, metadata=deck_metadata)
+            for deck_data, deck_metadata in zip(deck_data_to_export, deck_metadata_to_export, strict=True)
+        ]
+    )
+    screen_tools.download_file(f"{stem}.json", deck_export.model_dump_json(indent=4))
     render_decks()
 
 
 @when("click", "#disce-edit-decks-screen .disce-delete-decks-btn")
 def delete_decks() -> None:
     """Delete selected decks."""
-    saved_data = data.SavedData.load_from_local_storage()
     selected_deck_uuids = get_selected_deck_uuids()
     if not selected_deck_uuids:
         window.alert("Please select at least one deck to delete.")
@@ -184,9 +198,11 @@ def delete_decks() -> None:
     if window.confirm(
         f"Are you sure you want to delete the selected {format_plural(len(selected_deck_uuids), 'deck')}?"
     ):
+        configuration = data.Configuration.load_from_local_storage()
         for deck_uuid in selected_deck_uuids:
-            saved_data.delete_deck(deck_uuid)
-        saved_data.save_to_local_storage()
+            data.DeckData.delete_from_local_storage(deck_uuid)
+            configuration.delete_deck_metadata(deck_uuid)
+        configuration.save_to_local_storage()
         render_decks()
 
 
@@ -214,26 +230,36 @@ def edit_deck(event: Any) -> None:  # noqa: ANN401
 @when("click", "#disce-edit-decks-screen .disce-duplicate-deck-btn")
 def duplicate_deck(event: Any) -> None:  # noqa: ANN401
     """Duplicate a specific deck."""
-    saved_data = data.SavedData.load_from_local_storage()
-    original_deck = saved_data.get_deck(event.target.getAttribute("data-deck-uuid"))
-    new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck.name}")
+    original_deck_uuid: str = event.target.getAttribute("data-deck-uuid")
+    configuration = data.Configuration.load_from_local_storage()
+    original_deck_metadata = configuration.get_deck_metadata(original_deck_uuid)
+    new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
     if not new_deck_name:
         return
-    new_deck = data.Deck(name=new_deck_name, cards=original_deck.cards.copy())
-    saved_data.set_deck(new_deck)
-    saved_data.save_to_local_storage()
+    original_deck_data = data.DeckData.load_from_local_storage(original_deck_uuid)
+    new_deck_data = original_deck_data.model_copy(
+        update={
+            "uuid": data.generate_uuid(),
+            "cards": [card.model_copy(update={"uuid": data.generate_uuid()}) for card in original_deck_data.cards],
+        }
+    )
+    new_deck_data.save_to_local_storage()
+    new_deck_metadata = original_deck_metadata.model_copy(update={"uuid": new_deck_data.uuid, "name": new_deck_name})
+    configuration.set_deck_metadata(new_deck_metadata)
+    configuration.save_to_local_storage()
     render_decks()
 
 
 @when("click", "#disce-edit-decks-screen .disce-delete-deck-btn")
 def delete_deck(event: Any) -> None:  # noqa: ANN401
     """Delete a specific deck."""
-    saved_data = data.SavedData.load_from_local_storage()
-    deck_uuid = event.target.getAttribute("data-deck-uuid")
-    deck = saved_data.get_deck(deck_uuid)
-    if window.confirm(f'Are you sure you want to delete the deck "{deck.name}"?'):
-        saved_data.delete_deck(deck_uuid)
-        saved_data.save_to_local_storage()
+    deck_uuid: str = event.target.getAttribute("data-deck-uuid")
+    configuration = data.Configuration.load_from_local_storage()
+    deck_metadata = configuration.get_deck_metadata(deck_uuid)
+    if window.confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):
+        data.DeckData.delete_from_local_storage(deck_uuid)
+        configuration.delete_deck_metadata(deck_uuid)
+        configuration.save_to_local_storage()
         render_decks()
 
 

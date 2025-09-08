@@ -18,12 +18,11 @@ from disce.tools import format_plural
 @when("click", ".disce-back-to-main-screen-btn")
 def show() -> None:
     """Show the main menu screen."""
-    saved_data = data.SavedData.load_from_local_storage()
-    number_of_cards = sum(len(deck.cards) for deck in saved_data.decks)
-    select_element(
-        "#disce-main-screen .disce-status-text"
-    ).innerText = (
-        f"Loaded {format_plural(len(saved_data.decks), 'deck')} with {format_plural(number_of_cards, 'card')}."
+    configuration = data.Configuration.load_from_local_storage()
+    number_of_cards = sum(deck_metadata.number_of_cards for deck_metadata in configuration.deck_metadata)
+    select_element("#disce-main-screen .disce-status-text").innerText = (
+        f"Loaded {format_plural(len(configuration.deck_metadata), 'deck')} with "
+        f"{format_plural(number_of_cards, 'card')}."
     )
     screen_tools.hide_all()
     select_element("#disce-main-screen").style.display = "block"

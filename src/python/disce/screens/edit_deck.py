@@ -22,9 +22,9 @@ _logger = logging.getLogger(__name__)
 
 def show(*, deck_uuid: str | None) -> None:
     """Show the edit deck screen for a given deck (or new deck if ``None``)."""
-    saved_data = data.SavedData.load_from_local_storage()
-    deck = saved_data.get_deck(deck_uuid) if deck_uuid is not None else data.Deck()
-    render_deck(deck)
+    configuration = data.Configuration.load_from_local_storage()
+    deck_metadata = configuration.get_deck_metadata(deck_uuid) if deck_uuid is not None else data.DeckMetadata()
+    render_deck(deck_metadata)
     screen_tools.hide_all()
     select_element("#disce-edit-deck-screen").style.display = "block"
 
@@ -34,13 +34,19 @@ def hide() -> None:
     select_element("#disce-edit-deck-screen").style.display = "none"
 
 
-def render_deck(deck: data.Deck) -> None:
+def render_deck(deck_metadata: data.DeckMetadata) -> None:
     """Render the edit deck screen."""
-    select_element("#disce-edit-deck-screen .disce-deck-uuid-hidden").value = deck.uuid
-    select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value = deck.name
+    select_element("#disce-edit-deck-screen .disce-deck-uuid-hidden").value = deck_metadata.uuid
+    select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value = deck_metadata.name
     cards_div = select_element("#disce-edit-deck-screen .disce-cards")
     cards_div.innerHTML = ""
-    for card in [*deck.cards, data.Card()]:
+    cards = (
+        data.DeckData.load_from_local_storage(deck_metadata.uuid).cards
+        if data.DeckData.exists_in_local_storage(deck_metadata.uuid)
+        else []
+    )
+    cards.append(data.Card())
+    for card in cards:
         cards_div.appendChild(create_card_div(card))
     update_bulk_buttons()
 
@@ -137,9 +143,11 @@ def card_text_changed() -> None:
 @when("click", "#disce-edit-deck-screen .disce-save-deck-btn")
 def save_deck() -> None:
     """Save the current deck."""
-    saved_data = data.SavedData.load_from_local_storage()
-    saved_data.set_deck(get_deck())
-    saved_data.save_to_local_storage()
+    deck_data, deck_metadata = get_deck()
+    configuration = data.Configuration.load_from_local_storage()
+    configuration.set_deck_metadata(deck_metadata)
+    configuration.save_to_local_storage()
+    deck_data.save_to_local_storage()
     window.bootstrap.Toast.new(select_element("#disce-edit-deck-screen .disce-deck-saved-toast")).show()
 
 
@@ -163,9 +171,9 @@ def delete_selected_cards() -> None:
     if window.confirm(
         f"Are you sure you want to delete the selected {format_plural(len(selected_card_uuids), 'card')}?"
     ):
-        deck = get_deck()
-        deck.cards = [card for card in deck.cards if card.uuid not in selected_card_uuids]
-        render_deck(deck)
+        deck_data, deck_metadata = get_deck()
+        deck_data.cards = [card for card in deck_data.cards if card.uuid not in selected_card_uuids]
+        render_deck(deck_metadata)
 
 
 @when("change", "#disce-edit-deck-screen .disce-selected-checkbox")
@@ -182,19 +190,23 @@ def update_bulk_buttons() -> None:
 @when("click", "#disce-edit-deck-screen .disce-back-to-decks-screen-btn")
 def back_to_decks_screen() -> None:
     """Go back to the edit decks screen."""
-    saved_data = data.SavedData.load_from_local_storage()
-    deck = get_deck()
-    if saved_data.deck_exists(deck.uuid):
-        original_deck = saved_data.get_deck(deck.uuid)
-        unsaved_changes = original_deck != deck
+    deck_data, deck_metadata = get_deck()
+    configuration = data.Configuration.load_from_local_storage()
+    if configuration.deck_metadata_exists(deck_metadata.uuid) and data.DeckData.exists_in_local_storage(deck_data.uuid):
+        original_deck_metadata = configuration.get_deck_metadata(deck_data.uuid)
+        if original_deck_metadata == deck_metadata:
+            original_deck_data = data.DeckData.load_from_local_storage(deck_data.uuid)
+            unsaved_changes = original_deck_data != deck_data
+        else:
+            unsaved_changes = True
     else:
-        unsaved_changes = len(deck.cards) > 0
+        unsaved_changes = len(deck_data.cards) > 0
     if unsaved_changes and not window.confirm("You have unsaved changes. Do you want to discard them?"):
         return
     edit_decks_screen.show()
 
 
-def get_deck() -> data.Deck:
+def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:
     """Get the current deck from the edit deck screen."""
     deck_uuid = select_element("#disce-edit-deck-screen .disce-deck-uuid-hidden").value
     deck_name = select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value
@@ -209,7 +221,9 @@ def get_deck() -> data.Deck:
         answer_history_str: str = card_div.querySelector(".disce-answer-history-textbox").value
         answer_history = [character.upper() == "Y" for character in answer_history_str]
         cards.append(data.Card(uuid=uuid, front=front, back=back, enabled=enabled, answer_history=answer_history))
-    return data.Deck(uuid=deck_uuid, name=deck_name, cards=cards)
+    return data.DeckData(uuid=deck_uuid, cards=cards), data.DeckMetadata(
+        uuid=deck_uuid, name=deck_name, number_of_cards=len(cards)
+    )
 
 
 def get_card_uuids() -> list[str]:

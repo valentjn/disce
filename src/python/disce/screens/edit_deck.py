@@ -97,8 +97,8 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
             id_=f"disce-enabled-checkbox-{card.uuid}",
             type="checkbox",
             class_="disce-enabled-checkbox form-check-input",
-            checked="checked" if card.enabled else "",
             data_card_uuid=card.uuid,
+            **({"checked": "checked"} if card.enabled else {}),  # type: ignore[arg-type]
         ),
         create_element("label", text="Enabled", for_=f"disce-enabled-checkbox-{card.uuid}"),
         class_="form-check",

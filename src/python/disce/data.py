@@ -106,7 +106,7 @@ class DeckData(LocalStorageModel):
                     }
                 )
             else:
-                self.cards.append(card)
+                self.cards.append(card.model_copy(update={"uuid": generate_uuid()}))
                 existing_card_index = len(self.cards) - 1
             existing_cards[(card.front, card.back)] = (existing_card_index, self.cards[existing_card_index])
 

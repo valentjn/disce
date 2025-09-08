@@ -6,8 +6,13 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Utility functions."""
 
-from collections.abc import Sequence
+import logging
+from collections.abc import Generator, Sequence
+from contextlib import contextmanager
+from time import perf_counter
 from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 
 def format_plural(
@@ -22,3 +27,14 @@ def format_plural(
     else:
         suffix = plural
     return suffix if omit_number else f"{number} {suffix}"
+
+
+@contextmanager
+def log_time(message: str) -> Generator[None]:
+    """Log the time taken by a function or a block of code."""
+    start = perf_counter()
+    try:
+        yield
+    finally:
+        end = perf_counter()
+        _logger.debug("%s in %.2f ms", message, 1000.0 * (end - start))

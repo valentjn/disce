@@ -12,6 +12,8 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 from pyscript import window
 
+from disce.tools import log_time
+
 
 def _generate_uuid() -> str:
     """Generate a new UUID."""
@@ -122,12 +124,17 @@ class SavedData(BaseModel):
     @staticmethod
     def load_from_local_storage() -> "SavedData":
         """Load saved data from local storage."""
-        json = window.localStorage.getItem("saved_data_json")
-        if not json:
-            return SavedData(decks=[])
-        return SavedData.model_validate_json(json)
+        with log_time("loaded saved data from local storage"):
+            json = window.localStorage.getItem("saved_data_json")
+        with log_time("parsed saved data"):
+            if not json:
+                return SavedData(decks=[])
+            return SavedData.model_validate_json(json)
 
     def save_to_local_storage(self) -> None:
         """Save data to local storage."""
         window.navigator.storage.persist()
-        window.localStorage.setItem("saved_data_json", self.model_dump_json())
+        with log_time("serialized saved data"):
+            json = self.model_dump_json()
+        with log_time("saved data to local storage"):
+            window.localStorage.setItem("saved_data_json", json)

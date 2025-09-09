@@ -11,7 +11,7 @@ import re
 from typing import Any
 
 from pydantic import ValidationError
-from pyscript import when, window
+from pyscript import document, when, window
 
 from disce import data
 from disce.screens import edit_deck as edit_deck_screen
@@ -290,6 +290,24 @@ def delete_deck(event: Any) -> None:  # noqa: ANN401
         configuration.delete_deck_metadata(deck_uuid)
         configuration.save_to_local_storage()
         render_decks()
+
+
+@when("click", "#disce-decks-screen .disce-settings-btn")
+def open_settings_modal() -> None:
+    """Open the settings modal and populate fields from configuration."""
+    configuration = data.Configuration.load_from_local_storage()
+    document.getElementById("disce-history-length-input").value = configuration.history_length
+    document.getElementById("disce-typewriter-mode-input").checked = configuration.typewriter_mode
+    window.bootstrap.Modal.new(select_element("#disce-decks-screen .disce-settings-modal")).show()
+
+
+@when("click", ".disce-save-settings-btn")
+def save_settings() -> None:
+    """Save settings from the modal dialog to configuration."""
+    configuration = data.Configuration.load_from_local_storage()
+    configuration.history_length = int(document.getElementById("disce-history-length-input").value)
+    configuration.typewriter_mode = document.getElementById("disce-typewriter-mode-input").checked
+    configuration.save_to_local_storage()
 
 
 def get_deck_uuids() -> list[str]:

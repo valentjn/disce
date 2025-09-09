@@ -12,9 +12,18 @@ body {
     font-family: Arial, sans-serif;
 }
 
-/* all screens */
 .disce-screen {
     display: none;
+}
+
+@media (max-width: 600px) {
+    .disce-row-btn-text {
+        display: none;
+    }
+}
+
+.btn {
+    white-space: nowrap;
 }
 
 /* load screen */
@@ -64,7 +73,7 @@ body {
 
 /* edit decks screen */
 #disce-edit-decks-screen .disce-deck-name-label {
-    width: 300px;
+    width: 320px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

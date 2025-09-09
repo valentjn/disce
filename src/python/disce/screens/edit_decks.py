@@ -64,7 +64,7 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            html='<i class="bi bi-pencil me-1"></i>Edit',
+            html='<i class="bi bi-pencil"></i><span class="disce-row-btn-text"> Edit</span>',
             event_handlers={"click": edit_deck},
             class_="disce-edit-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck_metadata.uuid,
@@ -72,7 +72,7 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            html='<i class="bi bi-copy me-1"></i>Duplicate',
+            html='<i class="bi bi-copy"></i><span class="disce-row-btn-text"> Duplicate</span>',
             event_handlers={"click": duplicate_deck},
             class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck_metadata.uuid,
@@ -80,7 +80,7 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            html='<i class="bi bi-trash me-1"></i>Delete',
+            html='<i class="bi bi-trash"></i><span class="disce-row-btn-text"> Delete</span>',
             event_handlers={"click": delete_deck},
             class_="disce-delete-deck-btn btn btn-outline-danger",
             data_deck_uuid=deck_metadata.uuid,

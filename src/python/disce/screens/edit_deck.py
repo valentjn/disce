@@ -123,8 +123,16 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
         card_div,
         "input",
         type="hidden",
-        class_="disce-answer-history-hidden",
-        value="".join("Y" if x else "N" for x in card.answer_history),
+        class_="disce-front-answer-history-hidden",
+        value="".join("Y" if x else "N" for x in card.front_answer_history),
+        data_card_uuid=card.uuid,
+    )
+    append_child(
+        card_div,
+        "input",
+        type="hidden",
+        class_="disce-back-answer-history-hidden",
+        value="".join("Y" if x else "N" for x in card.back_answer_history),
         data_card_uuid=card.uuid,
     )
     return card_div
@@ -156,7 +164,8 @@ def save_deck() -> None:
             if (original_card := original_cards.get(card.uuid)) is not None and (
                 original_card.front != card.front or original_card.back != card.back
             ):
-                card.answer_history.clear()
+                card.front_answer_history.clear()
+                card.back_answer_history.clear()
     configuration = data.Configuration.load_from_local_storage()
     configuration.set_deck_metadata(deck_metadata)
     configuration.save_to_local_storage()
@@ -234,9 +243,22 @@ def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:
         if not front and not back:
             continue
         enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
-        answer_history_str: str = card_div.querySelector(".disce-answer-history-hidden").value
-        answer_history = [character.upper() == "Y" for character in answer_history_str]
-        cards.append(data.Card(uuid=uuid, front=front, back=back, enabled=enabled, answer_history=answer_history))
+        front_answer_history = [
+            character.upper() == "Y" for character in card_div.querySelector(".disce-front-answer-history-hidden").value
+        ]
+        back_answer_history = [
+            character.upper() == "Y" for character in card_div.querySelector(".disce-back-answer-history-hidden").value
+        ]
+        cards.append(
+            data.Card(
+                uuid=uuid,
+                front=front,
+                back=back,
+                enabled=enabled,
+                front_answer_history=front_answer_history,
+                back_answer_history=back_answer_history,
+            )
+        )
     return data.DeckData(uuid=deck_uuid, cards=cards), data.DeckMetadata(
         uuid=deck_uuid, name=deck_name, number_of_cards=len(cards)
     )

@@ -8,6 +8,7 @@
 
 import random
 from abc import ABC, abstractmethod
+from enum import StrEnum, auto
 from typing import Self, override
 from uuid import uuid4
 
@@ -73,8 +74,17 @@ class Card(BaseModel):
     """Text on the back side of the card (e.g., answer or term in native language)."""
     enabled: bool = True
     """Whether the card is enabled for review."""
-    answer_history: list[bool] = []
-    """History of answers (True for correct, False for incorrect, most recent last, reset when card is edited)."""
+    front_answer_history: list[bool] = []
+    """History of answers when asked for front (correct/incorrect, most recent last, reset when card is edited)."""
+    back_answer_history: list[bool] = []
+    """History of answers when asked for back (correct/incorrect, most recent last, reset when card is edited)."""
+
+
+class CardSide(StrEnum):
+    """Side of a flashcard."""
+
+    FRONT = auto()
+    BACK = auto()
 
 
 class DeckData(LocalStorageModel):
@@ -102,7 +112,8 @@ class DeckData(LocalStorageModel):
                 self.cards[existing_card_index] = existing_card.model_copy(
                     update={
                         "enabled": existing_card.enabled or card.enabled,
-                        "answer_history": existing_card.answer_history + card.answer_history,
+                        "front_answer_history": existing_card.front_answer_history + card.front_answer_history,
+                        "back_answer_history": existing_card.back_answer_history + card.back_answer_history,
                     }
                 )
             else:
@@ -110,30 +121,32 @@ class DeckData(LocalStorageModel):
                 existing_card_index = len(self.cards) - 1
             existing_cards[(card.front, card.back)] = (existing_card_index, self.cards[existing_card_index])
 
-    def get_card_to_learn(self, history_length: int, seed: int | None = None) -> Card:
-        """Get the card that should be learned next (based on the answer history)."""
-        candidates: list[Card] = []
+    def get_card_to_study(self, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
+        """Get the card and side that should be studied next (based on the answer history)."""
+        candidates: list[tuple[Card, CardSide]] = []
         minimum_history_length = None
         minimum_score = None
         for card in self.cards:
             if not card.enabled:
                 continue
-            append_card = False
-            score = sum(card.answer_history[-history_length:])
-            if minimum_history_length is None or len(card.answer_history) < minimum_history_length:
-                minimum_history_length = len(card.answer_history)
-                minimum_score = score
-                candidates.clear()
-                append_card = True
-            elif len(card.answer_history) == minimum_history_length:
-                if minimum_score is None or score < minimum_score:
+            for side in CardSide:
+                append = False
+                answer_history = card.front_answer_history if side is CardSide.FRONT else card.back_answer_history
+                score = sum(answer_history[-history_length:])
+                if minimum_history_length is None or len(answer_history) < minimum_history_length:
+                    minimum_history_length = len(answer_history)
                     minimum_score = score
                     candidates.clear()
-                    append_card = True
-                elif score == minimum_score:
-                    append_card = True
-            if append_card:
-                candidates.append(card)
+                    append = True
+                elif len(answer_history) == minimum_history_length:
+                    if minimum_score is None or score < minimum_score:
+                        minimum_score = score
+                        candidates.clear()
+                        append = True
+                    elif score == minimum_score:
+                        append = True
+                if append:
+                    candidates.append((card, side))
         if not candidates:
             msg = "no enabled cards in deck"
             raise ValueError(msg)

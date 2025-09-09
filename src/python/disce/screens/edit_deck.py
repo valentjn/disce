@@ -53,21 +53,27 @@ def render_deck(deck_metadata: data.DeckMetadata) -> None:
 
 def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
     """Create a div representing a card for editing."""
-    card_div = create_element("div", class_="disce-card row mx-auto align-items-center mb-2", data_card_uuid=card.uuid)
-    create_column(
+    card_div = create_element("div", class_="disce-card row gx-3 align-items-center mb-2", data_card_uuid=card.uuid)
+    append_child(
         card_div,
+        "div",
         create_element(
-            "input",
-            event_handlers={"change": update_bulk_buttons},
-            type="checkbox",
-            class_="disce-selected-checkbox form-check-input",
-            title="Select this card for bulk actions",
-            data_card_uuid=card.uuid,
+            "div",
+            create_element(
+                "input",
+                event_handlers={"change": update_bulk_buttons},
+                type="checkbox",
+                class_="disce-selected-checkbox form-check-input",
+                title="Select this card for bulk actions",
+                data_card_uuid=card.uuid,
+            ),
+            class_="form-check",
         ),
-        class_="form-check",
+        class_="col-auto",
     )
-    create_column(
+    append_child(
         card_div,
+        "div",
         create_element(
             "input",
             event_handlers={"input": card_text_changed},
@@ -77,9 +83,11 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
             placeholder="Front",
             data_card_uuid=card.uuid,
         ),
+        class_="col-sm",
     )
-    create_column(
+    append_child(
         card_div,
+        "div",
         create_element(
             "input",
             event_handlers={"input": card_text_changed},
@@ -89,19 +97,27 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
             placeholder="Back",
             data_card_uuid=card.uuid,
         ),
+        class_="col-sm",
     )
-    create_column(
+    append_child(
         card_div,
+        "div",
         create_element(
-            "input",
-            id_=f"disce-enabled-checkbox-{card.uuid}",
-            type="checkbox",
-            class_="disce-enabled-checkbox form-check-input",
-            data_card_uuid=card.uuid,
-            **({"checked": "checked"} if card.enabled else {}),  # type: ignore[arg-type]
+            "div",
+            create_element(
+                "input",
+                id_=f"disce-enabled-checkbox-{card.uuid}",
+                type="checkbox",
+                class_="disce-enabled-checkbox form-check-input",
+                data_card_uuid=card.uuid,
+                **({"checked": "checked"} if card.enabled else {}),  # type: ignore[arg-type]
+            ),
+            create_element(
+                "label", class_="form-check-label", text="Enabled", for_=f"disce-enabled-checkbox-{card.uuid}"
+            ),
+            class_="form-check",
         ),
-        create_element("label", text="Enabled", for_=f"disce-enabled-checkbox-{card.uuid}"),
-        class_="form-check",
+        class_="col-auto",
     )
     append_child(
         card_div,
@@ -112,14 +128,6 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
         data_card_uuid=card.uuid,
     )
     return card_div
-
-
-def create_column(parent: Any, *children: Any, class_: str = "") -> Any:  # noqa: ANN401
-    """Create a column div and append the children to it."""
-    column = append_child(parent, "div", class_=f"col-auto {class_}")
-    for child in children:
-        column.appendChild(child)
-    return column
 
 
 @when("input", "#disce-edit-deck-screen .disce-front-textbox, #disce-edit-deck-screen .disce-back-textbox")

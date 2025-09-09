@@ -20,7 +20,7 @@ select_element = document.querySelector
 
 def create_element(
     tag: str,
-    *,
+    *children: Any,  # noqa: ANN401
     text: str | None = None,
     html: str | None = None,
     event_handlers: Mapping[str, EventHandler | Sequence[EventHandler]] | None = None,
@@ -38,20 +38,22 @@ def create_element(
         for event, handlers in event_handlers.items():
             for handler in handlers if isinstance(handlers, Sequence) else [handlers]:
                 element.addEventListener(event, create_proxy(handler))
+    for child in children:
+        element.appendChild(child)
     return element
 
 
 def append_child(
     parent: Any,  # noqa: ANN401
     tag: str,
-    *,
+    *children: Any,  # noqa: ANN401
     text: str | None = None,
     html: str | None = None,
     event_handlers: Mapping[str, EventHandler | Sequence[EventHandler]] | None = None,
     **attributes: str,
 ) -> Any:  # noqa: ANN401
     """Create a new HTML element with given attributes and append it to the parent."""
-    element = create_element(tag, text=text, html=html, event_handlers=event_handlers, **attributes)
+    element = create_element(tag, *children, text=text, html=html, event_handlers=event_handlers, **attributes)
     parent.appendChild(element)
     return element
 

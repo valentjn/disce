@@ -45,34 +45,8 @@ body {
     height: 3rem;
 }
 
-/* main screen */
-#disce-main-screen {
-    height: 80vh;
-}
-
-#disce-main-screen h1 {
-    font-weight: bold;
-    font-size: 3rem;
-    letter-spacing: 0.05em;
-}
-
-#disce-main-screen button {
-    transition:
-        transform 0.1s,
-        box-shadow 0.1s;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    padding: 2rem;
-    font-size: 2rem;
-}
-
-#disce-main-screen button:hover,
-#disce-main-screen button:focus {
-    transform: scale(1.04);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
 /* edit decks screen */
-#disce-edit-decks-screen .disce-deck-name-label {
+#disce-decks-screen .disce-deck-name-label {
     width: 320px;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -36,27 +36,16 @@
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-        <div id="disce-main-screen" class="disce-screen">
-            <div class="d-flex flex-column align-items-center justify-content-center">
-                <h1 class="mb-5">Disce</h1>
-                <p class="disce-status-text"></p>
-                <div class="d-flex flex-column gap-4 w-100 align-items-center">
-                    <button class="disce-learn-btn btn btn-primary btn-lg main-screen-btn w-75">
-                        <i class="bi bi-lightbulb me-3"></i>Learn
-                    </button>
-                    <button class="disce-edit-decks-btn btn btn-primary btn-lg main-screen-btn w-75">
-                        <i class="bi bi-pencil me-3"></i>Edit
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div id="disce-edit-decks-screen" class="disce-screen">
-            <h2 class="mb-4">Edit Decks</h2>
+        <div id="disce-decks-screen" class="disce-screen">
+            <h2 class="mb-4">Disce: Decks</h2>
             <div class="mb-3">
                 <button class="disce-add-deck-btn btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Deck</button>
                 <button class="disce-import-decks-btn btn btn-primary"><i class="bi bi-upload me-1"></i>Import</button>
                 <button class="disce-select-all-btn btn btn-primary">
                     <i class="bi bi-check2-square me-1"></i><span class="disce-text">Select All</span>
+                </button>
+                <button class="disce-study-decks-btn btn btn-primary">
+                    <i class="bi bi-lightbulb me-1"></i>Study Selected
                 </button>
                 <button class="disce-merge-decks-btn btn btn-primary">
                     <i class="bi bi-layers me-1"></i>Merge Selected
@@ -69,12 +58,9 @@
                 </button>
             </div>
             <div class="disce-decks"></div>
-            <button class="disce-back-to-main-screen-btn btn btn-secondary mt-4">
-                <i class="bi bi-arrow-left me-1"></i>Back to Main Screen
-            </button>
         </div>
         <div id="disce-edit-deck-screen" class="disce-screen">
-            <h2 class="mb-4">Edit Deck</h2>
+            <h2 class="mb-4">Disce: Edit Deck</h2>
             <input class="disce-deck-uuid-hidden" type="hidden" />
             <div class="mb-3">
                 <label class="form-label" for="disce-deck-name-textbox">Deck Name</label>

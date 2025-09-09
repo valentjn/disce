@@ -4,7 +4,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-"""Screen for editing decks."""
+"""Screen for listing and editing decks."""
 
 import logging
 import re
@@ -28,17 +28,17 @@ def show() -> None:
     """Show the edit decks screen."""
     render_decks()
     screen_tools.hide_all()
-    select_element("#disce-edit-decks-screen").style.display = "block"
+    select_element("#disce-decks-screen").style.display = "block"
 
 
 def hide() -> None:
     """Hide the edit decks screen."""
-    select_element("#disce-edit-decks-screen").style.display = "none"
+    select_element("#disce-decks-screen").style.display = "none"
 
 
 def render_decks() -> None:
     """Render the list of decks."""
-    decks_div = select_element("#disce-edit-decks-screen .disce-decks")
+    decks_div = select_element("#disce-decks-screen .disce-decks")
     decks_div.innerHTML = ""
     configuration = data.Configuration.load_from_local_storage()
     for deck_metadata in sorted(configuration.deck_metadata, key=lambda deck_metadata: deck_metadata.name.casefold()):
@@ -60,6 +60,15 @@ def render_decks() -> None:
             text=deck_metadata.name,
             for_=f"disce-selected-checkbox-{deck_metadata.uuid}",
             class_="disce-deck-name-label me-2",
+        )
+        append_child(
+            deck_div,
+            "button",
+            create_element("i", class_="bi bi-lightbulb", title=f'Study the deck "{deck_metadata.name}"'),
+            create_element("span", text=" Study", class_="disce-row-btn-text"),
+            event_handlers={"click": study_deck},
+            class_="disce-study-deck-btn btn btn-outline-success me-2",
+            data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
@@ -94,13 +103,13 @@ def render_decks() -> None:
     update_bulk_buttons()
 
 
-@when("click", "#disce-edit-decks-screen .disce-add-deck-btn")
+@when("click", "#disce-decks-screen .disce-add-deck-btn")
 def add_deck() -> None:
     """Add a new deck."""
     edit_deck_screen.show(deck_uuid=None)
 
 
-@when("click", "#disce-edit-decks-screen .disce-import-decks-btn")
+@when("click", "#disce-decks-screen .disce-import-decks-btn")
 def import_decks() -> None:
     """Import decks from a JSON file."""
 
@@ -131,18 +140,23 @@ def import_decks() -> None:
     screen_tools.upload_file(".json,application/json", handle_imported_data)
 
 
-@when("click", "#disce-edit-decks-screen .disce-select-all-btn")
+@when("click", "#disce-decks-screen .disce-select-all-btn")
 def select_all_decks() -> None:
     """Select or deselect all decks."""
     deck_uuids = get_deck_uuids()
     selected_deck_uuids = get_selected_deck_uuids()
     select_all = len(selected_deck_uuids) < len(deck_uuids)
-    for checkbox in select_all_elements("#disce-edit-decks-screen .disce-selected-checkbox"):
+    for checkbox in select_all_elements("#disce-decks-screen .disce-selected-checkbox"):
         checkbox.checked = select_all
     update_bulk_buttons()
 
 
-@when("click", "#disce-edit-decks-screen .disce-merge-decks-btn")
+@when("click", "#disce-decks-screen .disce-study-decks-btn")
+def study_decks() -> None:
+    """Study selected decks."""
+
+
+@when("click", "#disce-decks-screen .disce-merge-decks-btn")
 def merge_decks() -> None:
     """Merge selected decks."""
     selected_deck_uuids = get_selected_deck_uuids()
@@ -164,7 +178,7 @@ def merge_decks() -> None:
     render_decks()
 
 
-@when("click", "#disce-edit-decks-screen .disce-export-decks-btn")
+@when("click", "#disce-decks-screen .disce-export-decks-btn")
 def export_decks() -> None:
     """Export selected decks."""
     selected_deck_uuids = get_selected_deck_uuids()
@@ -191,7 +205,7 @@ def export_decks() -> None:
     render_decks()
 
 
-@when("click", "#disce-edit-decks-screen .disce-delete-decks-btn")
+@when("click", "#disce-decks-screen .disce-delete-decks-btn")
 def delete_decks() -> None:
     """Delete selected decks."""
     selected_deck_uuids = get_selected_deck_uuids()
@@ -209,28 +223,33 @@ def delete_decks() -> None:
         render_decks()
 
 
-@when("change", "#disce-edit-decks-screen .disce-selected-checkbox")
+@when("change", "#disce-decks-screen .disce-selected-checkbox")
 def update_bulk_buttons() -> None:
     """Update the bulk action buttons based on selection."""
     deck_uuids = get_deck_uuids()
     selected_deck_uuids = get_selected_deck_uuids()
-    select_element("#disce-edit-decks-screen .disce-select-all-btn .disce-text").innerText = (
+    select_element("#disce-decks-screen .disce-select-all-btn .disce-text").innerText = (
         "Deselect All" if len(selected_deck_uuids) == len(deck_uuids) and deck_uuids else "Select All"
     )
-    select_element("#disce-edit-decks-screen .disce-merge-decks-btn").disabled = (
+    select_element("#disce-decks-screen .disce-merge-decks-btn").disabled = (
         len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE
     )
-    select_element("#disce-edit-decks-screen .disce-export-decks-btn").disabled = len(selected_deck_uuids) == 0
-    select_element("#disce-edit-decks-screen .disce-delete-decks-btn").disabled = len(selected_deck_uuids) == 0
+    select_element("#disce-decks-screen .disce-export-decks-btn").disabled = len(selected_deck_uuids) == 0
+    select_element("#disce-decks-screen .disce-delete-decks-btn").disabled = len(selected_deck_uuids) == 0
 
 
-@when("click", "#disce-edit-decks-screen .disce-edit-deck-btn")
+@when("click", "#disce-decks-screen .disce-study-deck-btn")
+def study_deck(event: Any) -> None:  # noqa: ANN401
+    """Study a specific deck."""
+
+
+@when("click", "#disce-decks-screen .disce-edit-deck-btn")
 def edit_deck(event: Any) -> None:  # noqa: ANN401
     """Edit a specific deck."""
     edit_deck_screen.show(deck_uuid=event.currentTarget.getAttribute("data-deck-uuid"))
 
 
-@when("click", "#disce-edit-decks-screen .disce-duplicate-deck-btn")
+@when("click", "#disce-decks-screen .disce-duplicate-deck-btn")
 def duplicate_deck(event: Any) -> None:  # noqa: ANN401
     """Duplicate a specific deck."""
     original_deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
@@ -253,7 +272,7 @@ def duplicate_deck(event: Any) -> None:  # noqa: ANN401
     render_decks()
 
 
-@when("click", "#disce-edit-decks-screen .disce-delete-deck-btn")
+@when("click", "#disce-decks-screen .disce-delete-deck-btn")
 def delete_deck(event: Any) -> None:  # noqa: ANN401
     """Delete a specific deck."""
     deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
@@ -269,8 +288,7 @@ def delete_deck(event: Any) -> None:  # noqa: ANN401
 def get_deck_uuids() -> list[str]:
     """Get the UUIDs of all decks."""
     return [
-        deck_div.getAttribute("data-deck-uuid")
-        for deck_div in select_all_elements("#disce-edit-decks-screen .disce-deck")
+        deck_div.getAttribute("data-deck-uuid") for deck_div in select_all_elements("#disce-decks-screen .disce-deck")
     ]
 
 
@@ -278,6 +296,6 @@ def get_selected_deck_uuids() -> list[str]:
     """Get the UUIDs of the selected decks."""
     return [
         checkbox.getAttribute("data-deck-uuid")
-        for checkbox in select_all_elements("#disce-edit-decks-screen .disce-selected-checkbox")
+        for checkbox in select_all_elements("#disce-decks-screen .disce-selected-checkbox")
         if checkbox.checked
     ]

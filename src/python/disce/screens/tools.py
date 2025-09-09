@@ -67,14 +67,12 @@ def set_theme(theme: str | None = None) -> None:
 
 def hide_all() -> None:
     """Hide all screens."""
+    from disce.screens import decks as decks_screen  # noqa: PLC0415
     from disce.screens import edit_deck as edit_deck_screen  # noqa: PLC0415
-    from disce.screens import edit_decks as edit_decks_screen  # noqa: PLC0415
     from disce.screens import load as load_screen  # noqa: PLC0415
-    from disce.screens import main as main_screen  # noqa: PLC0415
 
     edit_deck_screen.hide()
-    edit_decks_screen.hide()
-    main_screen.hide()
+    decks_screen.hide()
     load_screen.hide()
 
 

@@ -12,7 +12,7 @@ from typing import Any
 from pyscript import when, window
 
 from disce import data
-from disce.screens import edit_decks as edit_decks_screen
+from disce.screens import decks as decks_screen
 from disce.screens import tools as screen_tools
 from disce.screens.tools import append_child, create_element, select_all_elements, select_element
 from disce.tools import format_plural
@@ -216,7 +216,7 @@ def back_to_decks_screen() -> None:
         unsaved_changes = len(deck_data.cards) > 0
     if unsaved_changes and not window.confirm("You have unsaved changes. Do you want to discard them?"):
         return
-    edit_decks_screen.show()
+    decks_screen.show()
 
 
 def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:

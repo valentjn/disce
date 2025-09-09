@@ -64,37 +64,41 @@ def render_decks() -> None:
         append_child(
             deck_div,
             "button",
-            create_element("i", class_="bi bi-lightbulb", title=f'Study the deck "{deck_metadata.name}"'),
+            create_element("i", class_="bi bi-lightbulb"),
             create_element("span", text=" Study", class_="disce-btn-text"),
             event_handlers={"click": study_deck},
             class_="disce-study-deck-btn btn btn-outline-success me-2",
+            title=f'Study the deck "{deck_metadata.name}"',
             data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
             "button",
-            create_element("i", class_="bi bi-pencil", title=f'Edit the deck "{deck_metadata.name}"'),
+            create_element("i", class_="bi bi-pencil"),
             create_element("span", text=" Edit", class_="disce-btn-text"),
             event_handlers={"click": edit_deck},
             class_="disce-edit-deck-btn btn btn-outline-primary me-2",
+            title=f'Edit the deck "{deck_metadata.name}"',
             data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
             "button",
-            create_element("i", class_="bi bi-copy", title=f'Duplicate the deck "{deck_metadata.name}"'),
+            create_element("i", class_="bi bi-copy"),
             create_element("span", text=" Duplicate", class_="disce-btn-text"),
             event_handlers={"click": duplicate_deck},
             class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
+            title=f'Duplicate the deck "{deck_metadata.name}"',
             data_deck_uuid=deck_metadata.uuid,
         )
         append_child(
             deck_div,
             "button",
-            create_element("i", class_="bi bi-trash", title=f'Delete the deck "{deck_metadata.name}"'),
+            create_element("i", class_="bi bi-trash"),
             create_element("span", text=" Delete", class_="disce-btn-text"),
             event_handlers={"click": delete_deck},
             class_="disce-delete-deck-btn btn btn-outline-danger",
+            title=f'Delete the deck "{deck_metadata.name}"',
             data_deck_uuid=deck_metadata.uuid,
         )
         decks_div.appendChild(deck_div)
@@ -228,8 +232,11 @@ def update_bulk_buttons() -> None:
     """Update the bulk action buttons based on selection."""
     deck_uuids = get_deck_uuids()
     selected_deck_uuids = get_selected_deck_uuids()
+    select_element("#disce-decks-screen .disce-select-all-btn").setAttribute(
+        "title", "Deselect all" if len(selected_deck_uuids) == len(deck_uuids) > 0 else "Select all"
+    )
     select_element("#disce-decks-screen .disce-select-all-btn .disce-btn-text").innerText = (
-        " Deselect All" if len(selected_deck_uuids) == len(deck_uuids) and deck_uuids else " Select All"
+        " Deselect All" if len(selected_deck_uuids) == len(deck_uuids) > 0 else " Select All"
     )
     select_element("#disce-decks-screen .disce-merge-decks-btn").disabled = (
         len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE

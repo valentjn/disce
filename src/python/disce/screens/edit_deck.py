@@ -103,16 +103,13 @@ def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
         create_element("label", text="Enabled", for_=f"disce-enabled-checkbox-{card.uuid}"),
         class_="form-check",
     )
-    create_column(
+    append_child(
         card_div,
-        create_element(
-            "input",
-            type="text",
-            class_="disce-answer-history-textbox form-control",
-            value="".join("Y" if x else "N" for x in card.answer_history),
-            placeholder="Answer history (Y/N)",
-            data_card_uuid=card.uuid,
-        ),
+        "input",
+        type="hidden",
+        class_="disce-answer-history-hidden",
+        value="".join("Y" if x else "N" for x in card.answer_history),
+        data_card_uuid=card.uuid,
     )
     return card_div
 
@@ -144,6 +141,14 @@ def card_text_changed() -> None:
 def save_deck() -> None:
     """Save the current deck."""
     deck_data, deck_metadata = get_deck()
+    if data.DeckData.exists_in_local_storage(deck_data.uuid):
+        original_deck_data = data.DeckData.load_from_local_storage(deck_data.uuid)
+        original_cards = {card.uuid: card for card in original_deck_data.cards}
+        for card in deck_data.cards:
+            if (original_card := original_cards.get(card.uuid)) is not None and (
+                original_card.front != card.front or original_card.back != card.back
+            ):
+                card.answer_history.clear()
     configuration = data.Configuration.load_from_local_storage()
     configuration.set_deck_metadata(deck_metadata)
     configuration.save_to_local_storage()
@@ -218,7 +223,7 @@ def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:
         if not front and not back:
             continue
         enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
-        answer_history_str: str = card_div.querySelector(".disce-answer-history-textbox").value
+        answer_history_str: str = card_div.querySelector(".disce-answer-history-hidden").value
         answer_history = [character.upper() == "Y" for character in answer_history_str]
         cards.append(data.Card(uuid=uuid, front=front, back=back, enabled=enabled, answer_history=answer_history))
     return data.DeckData(uuid=deck_uuid, cards=cards), data.DeckMetadata(

@@ -65,7 +65,7 @@ def render_decks() -> None:
             deck_div,
             "button",
             create_element("i", class_="bi bi-lightbulb", title=f'Study the deck "{deck_metadata.name}"'),
-            create_element("span", text=" Study", class_="disce-row-btn-text"),
+            create_element("span", text=" Study", class_="disce-btn-text"),
             event_handlers={"click": study_deck},
             class_="disce-study-deck-btn btn btn-outline-success me-2",
             data_deck_uuid=deck_metadata.uuid,
@@ -74,7 +74,7 @@ def render_decks() -> None:
             deck_div,
             "button",
             create_element("i", class_="bi bi-pencil", title=f'Edit the deck "{deck_metadata.name}"'),
-            create_element("span", text=" Edit", class_="disce-row-btn-text"),
+            create_element("span", text=" Edit", class_="disce-btn-text"),
             event_handlers={"click": edit_deck},
             class_="disce-edit-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck_metadata.uuid,
@@ -83,7 +83,7 @@ def render_decks() -> None:
             deck_div,
             "button",
             create_element("i", class_="bi bi-copy", title=f'Duplicate the deck "{deck_metadata.name}"'),
-            create_element("span", text=" Duplicate", class_="disce-row-btn-text"),
+            create_element("span", text=" Duplicate", class_="disce-btn-text"),
             event_handlers={"click": duplicate_deck},
             class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
             data_deck_uuid=deck_metadata.uuid,
@@ -92,7 +92,7 @@ def render_decks() -> None:
             deck_div,
             "button",
             create_element("i", class_="bi bi-trash", title=f'Delete the deck "{deck_metadata.name}"'),
-            create_element("span", text=" Delete", class_="disce-row-btn-text"),
+            create_element("span", text=" Delete", class_="disce-btn-text"),
             event_handlers={"click": delete_deck},
             class_="disce-delete-deck-btn btn btn-outline-danger",
             data_deck_uuid=deck_metadata.uuid,
@@ -228,8 +228,8 @@ def update_bulk_buttons() -> None:
     """Update the bulk action buttons based on selection."""
     deck_uuids = get_deck_uuids()
     selected_deck_uuids = get_selected_deck_uuids()
-    select_element("#disce-decks-screen .disce-select-all-btn .disce-text").innerText = (
-        "Deselect All" if len(selected_deck_uuids) == len(deck_uuids) and deck_uuids else "Select All"
+    select_element("#disce-decks-screen .disce-select-all-btn .disce-btn-text").innerText = (
+        " Deselect All" if len(selected_deck_uuids) == len(deck_uuids) and deck_uuids else " Select All"
     )
     select_element("#disce-decks-screen .disce-merge-decks-btn").disabled = (
         len(selected_deck_uuids) < _MINIMUM_NUMBER_OF_DECKS_TO_MERGE

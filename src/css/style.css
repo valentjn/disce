@@ -17,7 +17,7 @@ body {
 }
 
 @media (max-width: 600px) {
-    .disce-row-btn-text {
+    .disce-btn-text {
         display: none;
     }
 }

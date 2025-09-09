@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Self, override
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 from pyscript import window
 
 from disce.tools import log_time
@@ -173,7 +173,7 @@ class Configuration(LocalStorageModel):
 
     deck_metadata: list[DeckMetadata] = []
     """List of metadata for all decks."""
-    history_length: int = 5
+    history_length: NonNegativeInt = 5
     """Number of recent answers to consider when selecting the next card to learn."""
     typewriter_mode: bool = False
     """Whether to enable typewriter mode (requiring full text input for answers)."""

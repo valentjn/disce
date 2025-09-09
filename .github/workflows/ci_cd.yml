@@ -28,7 +28,7 @@ jobs:
               uses: actions/setup-node@v4
             - name: install uv
               run: curl --fail --location https://astral.sh/uv/install.sh | sh
-            - name: install NPM deps
+            - name: install npm deps
               run: npm install
             - name: lint
               run: npm run lint

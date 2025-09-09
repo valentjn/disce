@@ -112,16 +112,27 @@ class DeckData(LocalStorageModel):
 
     def get_card_to_learn(self, history_length: int, seed: int | None = None) -> Card:
         """Get the card that should be learned next (based on the answer history)."""
-        candidates = []
+        candidates: list[Card] = []
+        minimum_history_length = None
         minimum_score = None
         for card in self.cards:
             if not card.enabled:
                 continue
+            append_card = False
             score = sum(card.answer_history[-history_length:])
-            if minimum_score is None or score < minimum_score:
+            if minimum_history_length is None or len(card.answer_history) < minimum_history_length:
+                minimum_history_length = len(card.answer_history)
                 minimum_score = score
-                candidates = [card]
-            elif score == minimum_score:
+                candidates.clear()
+                append_card = True
+            elif len(card.answer_history) == minimum_history_length:
+                if minimum_score is None or score < minimum_score:
+                    minimum_score = score
+                    candidates.clear()
+                    append_card = True
+                elif score == minimum_score:
+                    append_card = True
+            if append_card:
                 candidates.append(card)
         if not candidates:
             msg = "no enabled cards in deck"

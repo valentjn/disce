@@ -18,11 +18,6 @@ from pyscript import window
 from disce.tools import log_time
 
 
-def generate_uuid() -> str:
-    """Generate a new UUID."""
-    return str(uuid4())
-
-
 class LocalStorageModel(BaseModel, ABC):
     """Base model with local storage support."""
 
@@ -63,11 +58,21 @@ class LocalStorageModel(BaseModel, ABC):
             window.localStorage.removeItem(cls.get_local_storage_key(uuid))
 
 
-class Card(BaseModel):
-    """A flashcard."""
+class UUIDModel(BaseModel):
+    """Base model with a UUID."""
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generate a new UUID."""
+        return str(uuid4())
 
     uuid: str = Field(default_factory=generate_uuid)
-    """Unique identifier for the card."""
+    """Unique identifier."""
+
+
+class Card(UUIDModel):
+    """A flashcard."""
+
     front: str = ""
     """Text on the front side of the card (e.g., question or term in foreign language)."""
     back: str = ""
@@ -87,11 +92,9 @@ class CardSide(StrEnum):
     BACK = auto()
 
 
-class DeckData(LocalStorageModel):
+class DeckData(LocalStorageModel, UUIDModel):
     """A deck of flashcards."""
 
-    uuid: str = Field(default_factory=generate_uuid)
-    """Unique identifier for the deck."""
     cards: list[Card] = []
     """List of cards in the deck."""
 
@@ -117,7 +120,7 @@ class DeckData(LocalStorageModel):
                     }
                 )
             else:
-                self.cards.append(card.model_copy(update={"uuid": generate_uuid()}))
+                self.cards.append(card.model_copy(update={"uuid": UUIDModel.generate_uuid()}))
                 existing_card_index = len(self.cards) - 1
             existing_cards[(card.front, card.back)] = (existing_card_index, self.cards[existing_card_index])
 
@@ -154,11 +157,9 @@ class DeckData(LocalStorageModel):
         return rng.choice(candidates)
 
 
-class DeckMetadata(BaseModel):
+class DeckMetadata(UUIDModel):
     """Metadata for a deck of flashcards."""
 
-    uuid: str = Field(default_factory=generate_uuid)
-    """Unique identifier for the deck."""
     name: str = "New Deck"
     """Name of the deck."""
     number_of_cards: int = 0

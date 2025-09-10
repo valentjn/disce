@@ -268,8 +268,10 @@ def duplicate_deck(event: Any) -> None:  # noqa: ANN401
     original_deck_data = data.DeckData.load_from_local_storage(original_deck_uuid)
     new_deck_data = original_deck_data.model_copy(
         update={
-            "uuid": data.generate_uuid(),
-            "cards": [card.model_copy(update={"uuid": data.generate_uuid()}) for card in original_deck_data.cards],
+            "uuid": data.UUIDModel.generate_uuid(),
+            "cards": [
+                card.model_copy(update={"uuid": data.UUIDModel.generate_uuid()}) for card in original_deck_data.cards
+            ],
         }
     )
     new_deck_data.save_to_local_storage()

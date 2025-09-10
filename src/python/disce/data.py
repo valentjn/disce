@@ -13,8 +13,8 @@ from typing import Self, override
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, NonNegativeInt
-from pyscript import window
 
+from disce.storage import AbstractStorage
 from disce.tools import log_time
 
 
@@ -28,34 +28,33 @@ class StorageModel(BaseModel, ABC):
         raise NotImplementedError
 
     @classmethod
-    def exists_in_storage(cls, uuid: str | None = None) -> bool:
+    def exists_in_storage(cls, storage: AbstractStorage, uuid: str | None = None) -> bool:
         """Check if data exists in storage."""
         storage_key = cls.get_storage_key(uuid)
-        return any(window.localStorage.key(index) == storage_key for index in range(window.localStorage.length))
+        return storage.has(storage_key)
 
     @classmethod
-    def load_from_storage(cls, uuid: str | None = None) -> Self:
+    def load_from_storage(cls, storage: AbstractStorage, uuid: str | None = None) -> Self:
         """Load saved data from storage."""
         with log_time("loaded data from storage"):
-            json = window.localStorage.getItem(cls.get_storage_key(uuid))
+            json = storage.load(cls.get_storage_key(uuid))
         with log_time("parsed data"):
             if not json:
                 return cls()
             return cls.model_validate_json(json)
 
-    def save_to_storage(self) -> None:
+    def save_to_storage(self, storage: AbstractStorage) -> None:
         """Save data to storage."""
-        window.navigator.storage.persist()
         with log_time("serialized data"):
             json = self.model_dump_json()
         with log_time("saved data to storage"):
-            window.localStorage.setItem(self.get_storage_key(getattr(self, "uuid", None)), json)
+            storage.save(self.get_storage_key(getattr(self, "uuid", None)), json)
 
     @classmethod
-    def delete_from_storage(cls, uuid: str | None = None) -> None:
+    def delete_from_storage(cls, storage: AbstractStorage, uuid: str | None = None) -> None:
         """Delete data from storage."""
         with log_time("deleted data from storage"):
-            window.localStorage.removeItem(cls.get_storage_key(uuid))
+            storage.delete(cls.get_storage_key(uuid))
 
 
 class UUIDModel(BaseModel):

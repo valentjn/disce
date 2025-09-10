@@ -17,4 +17,5 @@ packages = ["pydantic"]
 "disce/screens/edit_deck.py" = "./disce/screens/"
 "disce/screens/load.py" = "./disce/screens/"
 "disce/screens/tools.py" = "./disce/screens/"
+"disce/storage.py" = "./disce/"
 "disce/tools.py" = "./disce/"

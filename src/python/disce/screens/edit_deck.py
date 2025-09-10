@@ -11,10 +11,11 @@ from typing import Any
 
 from pyscript import when, window
 
-from disce import data
+from disce.data import Card, Configuration, DeckData, DeckMetadata
 from disce.screens import decks as decks_screen
 from disce.screens import tools as screen_tools
 from disce.screens.tools import append_child, create_element, select_all_elements, select_element
+from disce.storage import LocalStorage
 from disce.tools import format_plural
 
 _logger = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ _logger = logging.getLogger(__name__)
 
 def show(*, deck_uuid: str | None) -> None:
     """Show the edit deck screen for a given deck (or new deck if ``None``)."""
-    configuration = data.Configuration.load_from_storage()
-    deck_metadata = configuration.get_deck_metadata(deck_uuid) if deck_uuid is not None else data.DeckMetadata()
+    configuration = Configuration.load_from_storage(LocalStorage())
+    deck_metadata = configuration.get_deck_metadata(deck_uuid) if deck_uuid is not None else DeckMetadata()
     render_deck(deck_metadata)
     screen_tools.hide_all()
     select_element("#disce-edit-deck-screen").style.display = "block"
@@ -34,24 +35,24 @@ def hide() -> None:
     select_element("#disce-edit-deck-screen").style.display = "none"
 
 
-def render_deck(deck_metadata: data.DeckMetadata) -> None:
+def render_deck(deck_metadata: DeckMetadata) -> None:
     """Render the edit deck screen."""
     select_element("#disce-edit-deck-screen .disce-deck-uuid-hidden").value = deck_metadata.uuid
     select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value = deck_metadata.name
     cards_div = select_element("#disce-edit-deck-screen .disce-cards")
     cards_div.innerHTML = ""
     cards = (
-        data.DeckData.load_from_storage(deck_metadata.uuid).cards
-        if data.DeckData.exists_in_storage(deck_metadata.uuid)
+        DeckData.load_from_storage(LocalStorage(), deck_metadata.uuid).cards
+        if DeckData.exists_in_storage(LocalStorage(), deck_metadata.uuid)
         else []
     )
-    cards.append(data.Card())
+    cards.append(Card())
     for card in cards:
         cards_div.appendChild(create_card_div(card))
     update_bulk_buttons()
 
 
-def create_card_div(card: data.Card) -> Any:  # noqa: ANN401
+def create_card_div(card: Card) -> Any:  # noqa: ANN401
     """Create a div representing a card for editing."""
     card_div = create_element("div", class_="disce-card row gx-3 align-items-center mb-2", data_card_uuid=card.uuid)
     append_child(
@@ -149,7 +150,7 @@ def card_text_changed() -> None:
     last_card_back = cards[-1].querySelector(".disce-back-textbox").value
     if last_card_front or last_card_back:
         cards_div = select_element("#disce-edit-deck-screen .disce-cards")
-        cards_div.appendChild(create_card_div(data.Card()))
+        cards_div.appendChild(create_card_div(Card()))
     update_bulk_buttons()
 
 
@@ -157,8 +158,8 @@ def card_text_changed() -> None:
 def save_deck() -> None:
     """Save the current deck."""
     deck_data, deck_metadata = get_deck()
-    if data.DeckData.exists_in_storage(deck_data.uuid):
-        original_deck_data = data.DeckData.load_from_storage(deck_data.uuid)
+    if DeckData.exists_in_storage(LocalStorage(), deck_data.uuid):
+        original_deck_data = DeckData.load_from_storage(LocalStorage(), deck_data.uuid)
         original_cards = {card.uuid: card for card in original_deck_data.cards}
         for card in deck_data.cards:
             if (original_card := original_cards.get(card.uuid)) is not None and (
@@ -166,10 +167,10 @@ def save_deck() -> None:
             ):
                 card.front_answer_history.clear()
                 card.back_answer_history.clear()
-    configuration = data.Configuration.load_from_storage()
+    configuration = Configuration.load_from_storage(LocalStorage())
     configuration.set_deck_metadata(deck_metadata)
-    configuration.save_to_storage()
-    deck_data.save_to_storage()
+    configuration.save_to_storage(LocalStorage())
+    deck_data.save_to_storage(LocalStorage())
     window.bootstrap.Toast.new(select_element("#disce-edit-deck-screen .disce-deck-saved-toast")).show()
 
 
@@ -216,11 +217,13 @@ def update_bulk_buttons() -> None:
 def back_to_decks_screen() -> None:
     """Go back to the edit decks screen."""
     deck_data, deck_metadata = get_deck()
-    configuration = data.Configuration.load_from_storage()
-    if configuration.deck_metadata_exists(deck_metadata.uuid) and data.DeckData.exists_in_storage(deck_data.uuid):
+    configuration = Configuration.load_from_storage(LocalStorage())
+    if configuration.deck_metadata_exists(deck_metadata.uuid) and DeckData.exists_in_storage(
+        LocalStorage(), deck_data.uuid
+    ):
         original_deck_metadata = configuration.get_deck_metadata(deck_data.uuid)
         if original_deck_metadata == deck_metadata:
-            original_deck_data = data.DeckData.load_from_storage(deck_data.uuid)
+            original_deck_data = DeckData.load_from_storage(LocalStorage(), deck_data.uuid)
             unsaved_changes = original_deck_data != deck_data
         else:
             unsaved_changes = True
@@ -231,7 +234,7 @@ def back_to_decks_screen() -> None:
     decks_screen.show()
 
 
-def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:
+def get_deck() -> tuple[DeckData, DeckMetadata]:
     """Get the current deck from the edit deck screen."""
     deck_uuid = select_element("#disce-edit-deck-screen .disce-deck-uuid-hidden").value
     deck_name = select_element("#disce-edit-deck-screen .disce-deck-name-textbox").value
@@ -250,7 +253,7 @@ def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:
             character.upper() == "Y" for character in card_div.querySelector(".disce-back-answer-history-hidden").value
         ]
         cards.append(
-            data.Card(
+            Card(
                 uuid=uuid,
                 front=front,
                 back=back,
@@ -259,7 +262,7 @@ def get_deck() -> tuple[data.DeckData, data.DeckMetadata]:
                 back_answer_history=back_answer_history,
             )
         )
-    return data.DeckData(uuid=deck_uuid, cards=cards), data.DeckMetadata(
+    return DeckData(uuid=deck_uuid, cards=cards), DeckMetadata(
         uuid=deck_uuid, name=deck_name, number_of_cards=len(cards)
     )
 

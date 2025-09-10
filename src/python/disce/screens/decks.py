@@ -40,7 +40,7 @@ def render_decks() -> None:
     """Render the list of decks."""
     decks_div = select_element("#disce-decks-screen .disce-decks")
     decks_div.innerHTML = ""
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     for deck_metadata in sorted(configuration.deck_metadata, key=lambda deck_metadata: deck_metadata.name.casefold()):
         deck_div = create_element(
             "div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck_metadata.uuid
@@ -123,7 +123,7 @@ def import_decks() -> None:
         except ValidationError as exception:
             window.alert(f"failed to parse imported data: {exception}")
             return
-        configuration = data.Configuration.load_from_local_storage()
+        configuration = data.Configuration.load_from_storage()
         overwriting_deck_uuids = {deck.metadata.uuid for deck in deck_export.decks} & {
             deck.uuid for deck in configuration.deck_metadata
         }
@@ -136,9 +136,9 @@ def import_decks() -> None:
         ):
             return
         for exported_deck in deck_export.decks:
-            exported_deck.data.save_to_local_storage()
+            exported_deck.data.save_to_storage()
             configuration.set_deck_metadata(exported_deck.metadata)
-        configuration.save_to_local_storage()
+        configuration.save_to_storage()
         render_decks()
 
     screen_tools.upload_file(".json,application/json", handle_imported_data)
@@ -170,15 +170,15 @@ def merge_decks() -> None:
     merged_deck_name = window.prompt("Enter a name for the merged deck:", "Merged Deck")
     if not merged_deck_name:
         return
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     merged_deck_data = data.DeckData()
     merged_deck_metadata = data.DeckMetadata(uuid=merged_deck_data.uuid, name=merged_deck_name)
     for deck_uuid in selected_deck_uuids:
-        merged_deck_data.merge(data.DeckData.load_from_local_storage(deck_uuid))
-    merged_deck_data.save_to_local_storage()
+        merged_deck_data.merge(data.DeckData.load_from_storage(deck_uuid))
+    merged_deck_data.save_to_storage()
     merged_deck_metadata.number_of_cards = len(merged_deck_data.cards)
     configuration.set_deck_metadata(merged_deck_metadata)
-    configuration.save_to_local_storage()
+    configuration.save_to_storage()
     render_decks()
 
 
@@ -189,8 +189,8 @@ def export_decks() -> None:
     if not selected_deck_uuids:
         window.alert("Please select at least one deck to export.")
         return
-    deck_data_to_export = [data.DeckData.load_from_local_storage(deck_uuid) for deck_uuid in selected_deck_uuids]
-    configuration = data.Configuration.load_from_local_storage()
+    deck_data_to_export = [data.DeckData.load_from_storage(deck_uuid) for deck_uuid in selected_deck_uuids]
+    configuration = data.Configuration.load_from_storage()
     deck_metadata_to_export = [configuration.get_deck_metadata(deck_uuid) for deck_uuid in selected_deck_uuids]
     if len(deck_metadata_to_export) == 1:
         stem = re.sub(r"[^0-9A-Za-z]", "-", deck_metadata_to_export[0].name)
@@ -219,11 +219,11 @@ def delete_decks() -> None:
     if window.confirm(
         f"Are you sure you want to delete the selected {format_plural(len(selected_deck_uuids), 'deck')}?"
     ):
-        configuration = data.Configuration.load_from_local_storage()
+        configuration = data.Configuration.load_from_storage()
         for deck_uuid in selected_deck_uuids:
-            data.DeckData.delete_from_local_storage(deck_uuid)
+            data.DeckData.delete_from_storage(deck_uuid)
             configuration.delete_deck_metadata(deck_uuid)
-        configuration.save_to_local_storage()
+        configuration.save_to_storage()
         render_decks()
 
 
@@ -260,12 +260,12 @@ def edit_deck(event: Any) -> None:  # noqa: ANN401
 def duplicate_deck(event: Any) -> None:  # noqa: ANN401
     """Duplicate a specific deck."""
     original_deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     original_deck_metadata = configuration.get_deck_metadata(original_deck_uuid)
     new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
     if not new_deck_name:
         return
-    original_deck_data = data.DeckData.load_from_local_storage(original_deck_uuid)
+    original_deck_data = data.DeckData.load_from_storage(original_deck_uuid)
     new_deck_data = original_deck_data.model_copy(
         update={
             "uuid": data.UUIDModel.generate_uuid(),
@@ -274,10 +274,10 @@ def duplicate_deck(event: Any) -> None:  # noqa: ANN401
             ],
         }
     )
-    new_deck_data.save_to_local_storage()
+    new_deck_data.save_to_storage()
     new_deck_metadata = original_deck_metadata.model_copy(update={"uuid": new_deck_data.uuid, "name": new_deck_name})
     configuration.set_deck_metadata(new_deck_metadata)
-    configuration.save_to_local_storage()
+    configuration.save_to_storage()
     render_decks()
 
 
@@ -285,19 +285,19 @@ def duplicate_deck(event: Any) -> None:  # noqa: ANN401
 def delete_deck(event: Any) -> None:  # noqa: ANN401
     """Delete a specific deck."""
     deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     deck_metadata = configuration.get_deck_metadata(deck_uuid)
     if window.confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):
-        data.DeckData.delete_from_local_storage(deck_uuid)
+        data.DeckData.delete_from_storage(deck_uuid)
         configuration.delete_deck_metadata(deck_uuid)
-        configuration.save_to_local_storage()
+        configuration.save_to_storage()
         render_decks()
 
 
 @when("click", "#disce-decks-screen .disce-settings-btn")
 def open_settings_modal() -> None:
     """Open the settings modal and populate fields from configuration."""
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     document.getElementById("disce-history-length-input").value = configuration.history_length
     document.getElementById("disce-typewriter-mode-input").checked = configuration.typewriter_mode
     window.bootstrap.Modal.new(select_element("#disce-decks-screen .disce-settings-modal")).show()
@@ -306,10 +306,10 @@ def open_settings_modal() -> None:
 @when("click", ".disce-save-settings-btn")
 def save_settings() -> None:
     """Save settings from the modal dialog to configuration."""
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     configuration.history_length = int(document.getElementById("disce-history-length-input").value)
     configuration.typewriter_mode = document.getElementById("disce-typewriter-mode-input").checked
-    configuration.save_to_local_storage()
+    configuration.save_to_storage()
 
 
 def get_deck_uuids() -> list[str]:

@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 
 def show(*, deck_uuid: str | None) -> None:
     """Show the edit deck screen for a given deck (or new deck if ``None``)."""
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     deck_metadata = configuration.get_deck_metadata(deck_uuid) if deck_uuid is not None else data.DeckMetadata()
     render_deck(deck_metadata)
     screen_tools.hide_all()
@@ -41,8 +41,8 @@ def render_deck(deck_metadata: data.DeckMetadata) -> None:
     cards_div = select_element("#disce-edit-deck-screen .disce-cards")
     cards_div.innerHTML = ""
     cards = (
-        data.DeckData.load_from_local_storage(deck_metadata.uuid).cards
-        if data.DeckData.exists_in_local_storage(deck_metadata.uuid)
+        data.DeckData.load_from_storage(deck_metadata.uuid).cards
+        if data.DeckData.exists_in_storage(deck_metadata.uuid)
         else []
     )
     cards.append(data.Card())
@@ -157,8 +157,8 @@ def card_text_changed() -> None:
 def save_deck() -> None:
     """Save the current deck."""
     deck_data, deck_metadata = get_deck()
-    if data.DeckData.exists_in_local_storage(deck_data.uuid):
-        original_deck_data = data.DeckData.load_from_local_storage(deck_data.uuid)
+    if data.DeckData.exists_in_storage(deck_data.uuid):
+        original_deck_data = data.DeckData.load_from_storage(deck_data.uuid)
         original_cards = {card.uuid: card for card in original_deck_data.cards}
         for card in deck_data.cards:
             if (original_card := original_cards.get(card.uuid)) is not None and (
@@ -166,10 +166,10 @@ def save_deck() -> None:
             ):
                 card.front_answer_history.clear()
                 card.back_answer_history.clear()
-    configuration = data.Configuration.load_from_local_storage()
+    configuration = data.Configuration.load_from_storage()
     configuration.set_deck_metadata(deck_metadata)
-    configuration.save_to_local_storage()
-    deck_data.save_to_local_storage()
+    configuration.save_to_storage()
+    deck_data.save_to_storage()
     window.bootstrap.Toast.new(select_element("#disce-edit-deck-screen .disce-deck-saved-toast")).show()
 
 
@@ -216,11 +216,11 @@ def update_bulk_buttons() -> None:
 def back_to_decks_screen() -> None:
     """Go back to the edit decks screen."""
     deck_data, deck_metadata = get_deck()
-    configuration = data.Configuration.load_from_local_storage()
-    if configuration.deck_metadata_exists(deck_metadata.uuid) and data.DeckData.exists_in_local_storage(deck_data.uuid):
+    configuration = data.Configuration.load_from_storage()
+    if configuration.deck_metadata_exists(deck_metadata.uuid) and data.DeckData.exists_in_storage(deck_data.uuid):
         original_deck_metadata = configuration.get_deck_metadata(deck_data.uuid)
         if original_deck_metadata == deck_metadata:
-            original_deck_data = data.DeckData.load_from_local_storage(deck_data.uuid)
+            original_deck_data = data.DeckData.load_from_storage(deck_data.uuid)
             unsaved_changes = original_deck_data != deck_data
         else:
             unsaved_changes = True

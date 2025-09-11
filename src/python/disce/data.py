@@ -141,7 +141,9 @@ class CardSide(StrEnum):
     """Side of a flashcard."""
 
     FRONT = auto()
+    """Front side (e.g., question or term in foreign language)."""
     BACK = auto()
+    """Back side (e.g., answer or term in native language)."""
 
 
 class DeckData(StorageModel, UUIDModel):

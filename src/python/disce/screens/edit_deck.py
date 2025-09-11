@@ -11,7 +11,7 @@ from typing import override
 from pyscript import window
 
 import disce.screens.decks as decks_screen
-from disce.data import Card, Configuration, DeckData, DeckMetadata
+from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata, UUIDModelList
 from disce.screens.base import AbstractScreen, EventBinding
 from disce.screens.tools import Element, Event, append_child, create_element, select_all_elements
 from disce.storage import AbstractStorage
@@ -21,7 +21,7 @@ from disce.tools import format_plural
 class EditDeckScreen(AbstractScreen):
     """Screen for editing a single deck."""
 
-    def __init__(self, deck_uuid: str | None, storage: AbstractStorage) -> None:
+    def __init__(self, deck_uuid: UUID | None, storage: AbstractStorage) -> None:
         """Initialize the screen."""
         super().__init__("#disce-edit-deck-screen")
         self._deck_uuid = deck_uuid
@@ -49,7 +49,7 @@ class EditDeckScreen(AbstractScreen):
         if deck_metadata is None:
             configuration = Configuration.load_from_storage(self._storage)
             deck_metadata = (
-                configuration.get_deck_metadata(self._deck_uuid) if self._deck_uuid is not None else DeckMetadata()
+                configuration.deck_metadata[self._deck_uuid] if self._deck_uuid is not None else DeckMetadata()
             )
         self.select_child(".disce-deck-name-textbox").value = deck_metadata.name
         self.unregister_event_listeners(dynamic=True)
@@ -58,9 +58,9 @@ class EditDeckScreen(AbstractScreen):
         cards = (
             DeckData.load_from_storage(self._storage, deck_metadata.uuid).cards
             if DeckData.exists_in_storage(self._storage, deck_metadata.uuid)
-            else []
+            else UUIDModelList()
         )
-        cards.append(Card())
+        cards.set(Card())
         for card in cards:
             cards_div.appendChild(self.create_card_div(card))
         self.update_bulk_buttons()
@@ -167,7 +167,7 @@ class EditDeckScreen(AbstractScreen):
                     card.front_answer_history.clear()
                     card.back_answer_history.clear()
         configuration = Configuration.load_from_storage(self._storage)
-        configuration.set_deck_metadata(deck_metadata)
+        configuration.deck_metadata.set(deck_metadata)
         configuration.save_to_storage(self._storage)
         deck_data.save_to_storage(self._storage)
         window.bootstrap.Toast.new(self.select_child(".disce-deck-saved-toast")).show()
@@ -190,7 +190,7 @@ class EditDeckScreen(AbstractScreen):
             f"Are you sure you want to delete the selected {format_plural(len(selected_card_uuids), 'card')}?"
         ):
             deck_data, deck_metadata = self.get_deck()
-            deck_data.cards = [card for card in deck_data.cards if card.uuid not in selected_card_uuids]
+            deck_data.cards = UUIDModelList([card for card in deck_data.cards if card.uuid not in selected_card_uuids])
             self.render(deck_metadata)
 
     def update_bulk_buttons(self, _event: Event | None = None) -> None:
@@ -209,10 +209,10 @@ class EditDeckScreen(AbstractScreen):
         """Go back to the edit decks screen."""
         deck_data, deck_metadata = self.get_deck()
         configuration = Configuration.load_from_storage(self._storage)
-        if configuration.deck_metadata_exists(deck_metadata.uuid) and DeckData.exists_in_storage(
+        if deck_metadata.uuid in configuration.deck_metadata and DeckData.exists_in_storage(
             self._storage, deck_data.uuid
         ):
-            original_deck_metadata = configuration.get_deck_metadata(deck_data.uuid)
+            original_deck_metadata = configuration.deck_metadata[deck_data.uuid]
             if original_deck_metadata == deck_metadata:
                 original_deck_data = DeckData.load_from_storage(self._storage, deck_data.uuid)
                 unsaved_changes = original_deck_data != deck_data
@@ -228,9 +228,9 @@ class EditDeckScreen(AbstractScreen):
     def get_deck(self) -> tuple[DeckData, DeckMetadata]:
         """Get the current deck from the edit deck screen."""
         deck_name = self.select_child(".disce-deck-name-textbox").value
-        cards = []
+        cards = UUIDModelList[Card]()
         for card_div in select_all_elements("#disce-edit-deck-screen .disce-card"):
-            uuid: str = card_div.getAttribute("data-card-uuid")
+            uuid: UUID = card_div.getAttribute("data-card-uuid")
             front: str = card_div.querySelector(".disce-front-textbox").value
             back: str = card_div.querySelector(".disce-back-textbox").value
             if not front and not back:
@@ -244,7 +244,7 @@ class EditDeckScreen(AbstractScreen):
                 character.upper() == "Y"
                 for character in card_div.querySelector(".disce-back-answer-history-hidden").value
             ]
-            cards.append(
+            cards.set(
                 Card(
                     uuid=uuid,
                     front=front,
@@ -261,11 +261,11 @@ class EditDeckScreen(AbstractScreen):
             deck_metadata.uuid = self._deck_uuid
         return deck_data, deck_metadata
 
-    def get_card_uuids(self) -> list[str]:
+    def get_card_uuids(self) -> list[UUID]:
         """Get the UUIDs of all cards."""
         return [card_div.getAttribute("data-card-uuid") for card_div in self.select_all_children(".disce-card")][:-1]
 
-    def get_selected_card_uuids(self) -> list[str]:
+    def get_selected_card_uuids(self) -> list[UUID]:
         """Get the UUIDs of the selected cards."""
         checkboxes = list(self.select_all_children(".disce-selected-checkbox"))[:-1]
         return [checkbox.getAttribute("data-card-uuid") for checkbox in checkboxes if checkbox.checked]

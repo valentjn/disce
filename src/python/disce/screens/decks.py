@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from pyscript import document, window
 
 import disce.screens.edit_deck as edit_deck_screen
-from disce.data import Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel
+from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel
 from disce.screens.base import AbstractScreen, EventBinding
 from disce.screens.tools import Event, append_child, create_element, download_file, select_all_elements, upload_file
 from disce.storage import AbstractStorage
@@ -166,12 +166,12 @@ class DecksScreen(AbstractScreen):
                 f"will overwrite existing decks. Do you want to continue?\n\n"
                 f"{format_plural(len(overwriting_deck_uuids), 'Name', omit_number=True)} of "
                 f"{format_plural(len(overwriting_deck_uuids), 'deck', omit_number=True)} to be overwritten: "
-                f"{', '.join(f'"{configuration.get_deck_metadata(uuid).name}"' for uuid in overwriting_deck_uuids)}"
+                f"{', '.join(f'"{configuration.deck_metadata[uuid].name}"' for uuid in overwriting_deck_uuids)}"
             ):
                 return
             for exported_deck in deck_export.decks:
                 exported_deck.data.save_to_storage(self._storage)
-                configuration.set_deck_metadata(exported_deck.metadata)
+                configuration.deck_metadata.set(exported_deck.metadata)
             configuration.save_to_storage(self._storage)
             self.render()
 
@@ -208,7 +208,7 @@ class DecksScreen(AbstractScreen):
             merged_deck_data.merge(DeckData.load_from_storage(self._storage, deck_uuid))
         merged_deck_data.save_to_storage(self._storage)
         merged_deck_metadata.number_of_cards = len(merged_deck_data.cards)
-        configuration.set_deck_metadata(merged_deck_metadata)
+        configuration.deck_metadata.set(merged_deck_metadata)
         configuration.save_to_storage(self._storage)
         self.render()
 
@@ -222,7 +222,7 @@ class DecksScreen(AbstractScreen):
             DeckData.load_from_storage(self._storage, deck_uuid) for deck_uuid in selected_deck_uuids
         ]
         configuration = Configuration.load_from_storage(self._storage)
-        deck_metadata_to_export = [configuration.get_deck_metadata(deck_uuid) for deck_uuid in selected_deck_uuids]
+        deck_metadata_to_export = [configuration.deck_metadata[deck_uuid] for deck_uuid in selected_deck_uuids]
         if len(deck_metadata_to_export) == 1:
             stem = re.sub(r"[^0-9A-Za-z]", "-", deck_metadata_to_export[0].name)
             stem = re.sub(r"-{2,}", "-", stem).strip("-")[:64].lower()
@@ -251,7 +251,7 @@ class DecksScreen(AbstractScreen):
             configuration = Configuration.load_from_storage(self._storage)
             for deck_uuid in selected_deck_uuids:
                 DeckData.delete_from_storage(self._storage, deck_uuid)
-                configuration.delete_deck_metadata(deck_uuid)
+                del configuration.deck_metadata[deck_uuid]
             configuration.save_to_storage(self._storage)
             self.render()
 
@@ -281,9 +281,9 @@ class DecksScreen(AbstractScreen):
 
     def duplicate_deck(self, event: Event) -> None:
         """Duplicate a specific deck."""
-        original_deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
+        original_deck_uuid: UUID = event.currentTarget.getAttribute("data-deck-uuid")
         configuration = Configuration.load_from_storage(self._storage)
-        original_deck_metadata = configuration.get_deck_metadata(original_deck_uuid)
+        original_deck_metadata = configuration.deck_metadata[original_deck_uuid]
         new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
         if not new_deck_name:
             return
@@ -300,18 +300,18 @@ class DecksScreen(AbstractScreen):
         new_deck_metadata = original_deck_metadata.model_copy(
             update={"uuid": new_deck_data.uuid, "name": new_deck_name}
         )
-        configuration.set_deck_metadata(new_deck_metadata)
+        configuration.deck_metadata.set(new_deck_metadata)
         configuration.save_to_storage(self._storage)
         self.render()
 
     def delete_deck(self, event: Event) -> None:
         """Delete a specific deck."""
-        deck_uuid: str = event.currentTarget.getAttribute("data-deck-uuid")
+        deck_uuid: UUID = event.currentTarget.getAttribute("data-deck-uuid")
         configuration = Configuration.load_from_storage(self._storage)
-        deck_metadata = configuration.get_deck_metadata(deck_uuid)
+        deck_metadata = configuration.deck_metadata[deck_uuid]
         if window.confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):
             DeckData.delete_from_storage(self._storage, deck_uuid)
-            configuration.delete_deck_metadata(deck_uuid)
+            del configuration.deck_metadata[deck_uuid]
             configuration.save_to_storage(self._storage)
             self.render()
 
@@ -329,14 +329,14 @@ class DecksScreen(AbstractScreen):
         configuration.typewriter_mode = document.getElementById("disce-typewriter-mode-input").checked
         configuration.save_to_storage(self._storage)
 
-    def get_deck_uuids(self) -> list[str]:
+    def get_deck_uuids(self) -> list[UUID]:
         """Get the UUIDs of all decks."""
         return [
             deck_div.getAttribute("data-deck-uuid")
             for deck_div in select_all_elements("#disce-decks-screen .disce-deck")
         ]
 
-    def get_selected_deck_uuids(self) -> list[str]:
+    def get_selected_deck_uuids(self) -> list[UUID]:
         """Get the UUIDs of the selected decks."""
         return [
             checkbox.getAttribute("data-deck-uuid")

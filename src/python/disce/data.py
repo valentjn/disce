@@ -8,14 +8,18 @@
 
 import random
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
+from copy import deepcopy
 from enum import StrEnum, auto
 from typing import Self, override
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import BaseModel, Field, NonNegativeInt, RootModel
 
 from disce.storage import AbstractStorage
 from disce.tools import log_time
+
+type UUID = str
 
 
 class StorageModel(BaseModel, ABC):
@@ -23,18 +27,18 @@ class StorageModel(BaseModel, ABC):
 
     @staticmethod
     @abstractmethod
-    def get_storage_key(uuid: str | None) -> str:
+    def get_storage_key(uuid: UUID | None) -> str:
         """Get the key to use for storage."""
         raise NotImplementedError
 
     @classmethod
-    def exists_in_storage(cls, storage: AbstractStorage, uuid: str | None = None) -> bool:
+    def exists_in_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> bool:
         """Check if data exists in storage."""
         storage_key = cls.get_storage_key(uuid)
         return storage.has(storage_key)
 
     @classmethod
-    def load_from_storage(cls, storage: AbstractStorage, uuid: str | None = None) -> Self:
+    def load_from_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> Self:
         """Load saved data from storage."""
         with log_time("loaded data from storage"):
             json = storage.load(cls.get_storage_key(uuid))
@@ -51,7 +55,7 @@ class StorageModel(BaseModel, ABC):
             storage.save(self.get_storage_key(getattr(self, "uuid", None)), json)
 
     @classmethod
-    def delete_from_storage(cls, storage: AbstractStorage, uuid: str | None = None) -> None:
+    def delete_from_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> None:
         """Delete data from storage."""
         with log_time("deleted data from storage"):
             storage.delete(cls.get_storage_key(uuid))
@@ -61,12 +65,61 @@ class UUIDModel(BaseModel):
     """Base model with a UUID."""
 
     @staticmethod
-    def generate_uuid() -> str:
+    def generate_uuid() -> UUID:
         """Generate a new UUID."""
         return str(uuid4())
 
-    uuid: str = Field(default_factory=generate_uuid)
+    uuid: UUID = Field(default_factory=generate_uuid)
     """Unique identifier."""
+
+
+class UUIDModelList[T: UUIDModel](RootModel[list[T]]):
+    """Base model for a list of UUID models."""
+
+    root: list[T] = []
+    """List of UUID models."""
+
+    @override
+    def __iter__(self) -> Iterator[T]:  # type: ignore[override]
+        """Iterate over the items in the list."""
+        return iter(self.root)
+
+    def __len__(self) -> int:
+        """Get the number of items in the list."""
+        return len(self.root)
+
+    def __contains__(self, uuid: UUID) -> bool:
+        """Check if an item with the given UUID exists in the list."""
+        try:
+            self._get_index(uuid)
+        except KeyError:
+            return False
+        return True
+
+    def __getitem__(self, uuid: UUID) -> T:
+        """Get an item by its UUID."""
+        return self.root[self._get_index(uuid)]
+
+    def set(self, value: T) -> None:
+        """Set an item by its UUID (add if it doesn't exist)."""
+        try:
+            index = self._get_index(value.uuid)
+        except KeyError:
+            self.root.append(value)
+        else:
+            self.root[index] = value
+
+    def __delitem__(self, uuid: UUID) -> None:
+        """Delete an item by its UUID."""
+        del self.root[self._get_index(uuid)]
+
+    def _get_index(self, uuid: UUID) -> int:
+        """Get the index of item by its UUID."""
+        index = next((index for index, item in enumerate(self.root) if item.uuid == uuid), None)
+        if index is None:
+            msg = f"item with UUID {uuid} not found"
+            raise KeyError(msg)
+        return index
 
 
 class Card(UUIDModel):
@@ -94,34 +147,41 @@ class CardSide(StrEnum):
 class DeckData(StorageModel, UUIDModel):
     """A deck of flashcards."""
 
-    cards: list[Card] = []
+    cards: UUIDModelList[Card] = UUIDModelList()
     """List of cards in the deck."""
 
     @staticmethod
     @override
-    def get_storage_key(uuid: str | None) -> str:
+    def get_storage_key(uuid: UUID | None) -> str:
         if uuid is None:
             msg = "uuid must be provided"
             raise ValueError(msg)
         return f"deck_data_{uuid}"
 
+    @staticmethod
+    def from_merge(deck_data_list: "list[DeckData]") -> "DeckData":
+        """Create a new deck by merging multiple decks."""
+        merged_deck = DeckData()
+        for deck_data in deck_data_list:
+            merged_deck.merge(deepcopy(deck_data))
+        return merged_deck
+
     def merge(self, other: "DeckData") -> None:
-        """Merge another deck into this one."""
-        existing_cards = {(card.front, card.back): (index, card) for index, card in enumerate(self.cards)}
+        """Merge another deck into this one.
+
+        Possibly updates cards of this and the other deck in place.
+        """
+        existing_cards = {(card.front, card.back): card for card in self.cards}
         for card in other.cards:
-            existing_card_index, existing_card = existing_cards.get((card.front, card.back), (None, None))
-            if existing_card_index is not None and existing_card is not None:
-                self.cards[existing_card_index] = existing_card.model_copy(
-                    update={
-                        "enabled": existing_card.enabled or card.enabled,
-                        "front_answer_history": existing_card.front_answer_history + card.front_answer_history,
-                        "back_answer_history": existing_card.back_answer_history + card.back_answer_history,
-                    }
-                )
+            existing_card = existing_cards.get((card.front, card.back), None)
+            if existing_card is not None:
+                existing_card.enabled = existing_card.enabled or card.enabled
+                existing_card.front_answer_history += card.front_answer_history
+                existing_card.back_answer_history += card.back_answer_history
             else:
-                self.cards.append(card.model_copy(update={"uuid": UUIDModel.generate_uuid()}))
-                existing_card_index = len(self.cards) - 1
-            existing_cards[(card.front, card.back)] = (existing_card_index, self.cards[existing_card_index])
+                self.cards.set(card)
+                existing_card = card
+            existing_cards[(card.front, card.back)] = existing_card
 
     def get_card_to_study(self, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
         """Get the card and side that should be studied next (based on the answer history)."""
@@ -184,7 +244,7 @@ class DeckExport(BaseModel):
 class Configuration(StorageModel):
     """Configuration for the application."""
 
-    deck_metadata: list[DeckMetadata] = []
+    deck_metadata: UUIDModelList[DeckMetadata] = UUIDModelList()
     """List of metadata for all decks."""
     history_length: NonNegativeInt = 5
     """Number of recent answers to consider when selecting the next card to learn."""
@@ -193,38 +253,5 @@ class Configuration(StorageModel):
 
     @staticmethod
     @override
-    def get_storage_key(uuid: str | None) -> str:
+    def get_storage_key(uuid: UUID | None) -> str:
         return "configuration"
-
-    def deck_metadata_exists(self, uuid: str) -> bool:
-        """Check if deck metadata with the given UUID exists."""
-        try:
-            self._get_deck_metadata_index(uuid)
-        except ValueError:
-            return False
-        return True
-
-    def get_deck_metadata(self, uuid: str) -> DeckMetadata:
-        """Get deck metadata by its UUID."""
-        return self.deck_metadata[self._get_deck_metadata_index(uuid)]
-
-    def set_deck_metadata(self, metadata: DeckMetadata) -> None:
-        """Add or update deck metadata."""
-        try:
-            index = self._get_deck_metadata_index(metadata.uuid)
-        except ValueError:
-            self.deck_metadata.append(metadata)
-        else:
-            self.deck_metadata[index] = metadata
-
-    def delete_deck_metadata(self, uuid: str) -> None:
-        """Delete deck metadata by its UUID."""
-        del self.deck_metadata[self._get_deck_metadata_index(uuid)]
-
-    def _get_deck_metadata_index(self, uuid: str) -> int:
-        """Get the index of deck metadata by its UUID."""
-        index = next((index for index, metadata in enumerate(self.deck_metadata) if metadata.uuid == uuid), None)
-        if index is None:
-            msg = f"deck metadata with UUID {uuid} not found"
-            raise ValueError(msg)
-        return index

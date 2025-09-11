@@ -12,12 +12,10 @@ import sys
 from pathlib import Path
 from typing import override
 
-# import all screens to register event handlers
-from disce.screens import *  # noqa: F403  # isort: skip
-
-from disce.screens import decks as decks_screen
-from disce.screens import load as load_screen
-from disce.screens import tools as screen_tools
+from disce.screens.decks import DecksScreen
+from disce.screens.load import LoadScreen
+from disce.screens.tools import set_theme
+from disce.storage import LocalStorage
 
 _logger = logging.getLogger(__name__)
 
@@ -38,9 +36,9 @@ def main() -> None:
     """Run the main application logic."""
     set_up_logging()
     _logger.info("Disce started, source hash: %s", compute_source_hash()[:8])
-    screen_tools.set_theme()
-    decks_screen.show()
-    load_screen.hide()
+    set_theme()
+    DecksScreen(LocalStorage()).show()
+    LoadScreen().hide()
 
 
 def set_up_logging() -> None:

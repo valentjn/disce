@@ -4,11 +4,24 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-"""Screen for loading."""
+"""Loading screen."""
 
-from disce.screens.tools import select_element
+from typing import override
+
+from disce.screens.base import AbstractScreen, EventBinding
 
 
-def hide() -> None:
-    """Hide the load screen."""
-    select_element("#disce-load-screen").style.display = "none"
+class LoadScreen(AbstractScreen):
+    """Loading screen."""
+
+    def __init__(self) -> None:
+        """Initialize the screen."""
+        super().__init__("#disce-load-screen")
+
+    @override
+    def _get_static_event_listeners(self) -> list[EventBinding]:
+        return []
+
+    @override
+    def render(self) -> None:
+        pass

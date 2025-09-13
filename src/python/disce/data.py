@@ -43,8 +43,6 @@ class AbstractStoredModel(BaseModel, ABC):
         with log_time("loaded data from storage"):
             json = storage.load(cls.get_storage_key(uuid))
         with log_time("parsed data"):
-            if not json:
-                return cls()
             return cls.model_validate_json(json)
 
     def save_to_storage(self, storage: AbstractStorage) -> None:

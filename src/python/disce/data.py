@@ -115,8 +115,7 @@ class UUIDModelList[T: UUIDModel](RootModel[list[T]]):
         """Get the index of item by its UUID."""
         index = next((index for index, item in enumerate(self.root) if item.uuid == uuid), None)
         if index is None:
-            msg = f"item with UUID {uuid} not found"
-            raise KeyError(msg)
+            raise KeyError(uuid)
         return index
 
 

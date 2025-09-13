@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from pyscript import document, window
 
 import disce.screens.edit_deck as edit_deck_screen
-from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel
+from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
 from disce.screens.base import AbstractScreen, EventBinding
 from disce.screens.tools import Event, append_child, create_element, download_file, select_all_elements, upload_file
 from disce.storage import AbstractStorage
@@ -291,9 +291,9 @@ class DecksScreen(AbstractScreen):
         new_deck_data = original_deck_data.model_copy(
             update={
                 "uuid": UUIDModel.generate_uuid(),
-                "cards": [
-                    card.model_copy(update={"uuid": UUIDModel.generate_uuid()}) for card in original_deck_data.cards
-                ],
+                "cards": UUIDModelList(
+                    [card.model_copy(update={"uuid": UUIDModel.generate_uuid()}) for card in original_deck_data.cards]
+                ),
             }
         )
         new_deck_data.save_to_storage(self._storage)

@@ -15,7 +15,7 @@ from typing import override
 _logger = logging.getLogger(__name__)
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     """Run the main application logic."""
     from disce.screens.decks import DecksScreen  # noqa: PLC0415
     from disce.screens.load import LoadScreen  # noqa: PLC0415

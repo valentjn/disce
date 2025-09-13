@@ -18,16 +18,36 @@ dependencies = [
 dev = [
     "mypy>=1.17.1",
     "packaging>=25.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
     "ruff>=0.12.11",
     "tomlkit>=0.13.3",
 ]
 
+[tool.coverage.report]
+fail_under = 100
+omit = [
+    "src/python/disce/screens/*",
+    "src/python/disce/storage/local.py",
+]
+show_missing = true
+
+[tool.coverage.run]
+source = ["src/python"]
+
 [tool.mypy]
+mypy_path = "src/python"
 files = [
     "scripts",
     "src",
+    "tests",
 ]
 strict = true
+
+[tool.pytest.ini_options]
+addopts = "--cov --verbose --verbose"
+filterwarnings = ["error"]
+pythonpath = ["src/python"]
 
 [tool.ruff]
 line-length = 120
@@ -43,6 +63,14 @@ ignore = [
     "S607",
 ]
 select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "ARG001",
+    "D",
+    "PLR2004",
+    "S101",
+]
 
 [tool.uv.build-backend]
 module-root = "src/python"

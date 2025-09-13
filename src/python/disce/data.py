@@ -182,7 +182,7 @@ class DeckData(AbstractStoredModel, UUIDModel):
                 existing_card = card
             existing_cards[(card.front, card.back)] = existing_card
 
-    def get_card_to_study(self, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
+    def get_card_to_study(self, *, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
         """Get the card and side that should be studied next (based on the answer history)."""
         candidates: list[tuple[Card, CardSide]] = []
         minimum_relevant_history_length = None

@@ -50,8 +50,9 @@ def set_up_logging() -> None:
 
 def compute_source_hash() -> str:
     """Compute a hash of the source code files to detect changes."""
-    sha256 = hashlib.sha256()
+    hasher = hashlib.sha256()
     for file in sorted(Path(__file__).parent.rglob("*.py")):
+        hasher.update(file.as_posix().encode())
         data = file.read_bytes()
-        sha256.update(data)
-    return sha256.hexdigest()
+        hasher.update(data)
+    return hasher.hexdigest()

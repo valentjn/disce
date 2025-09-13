@@ -22,8 +22,8 @@ from disce.tools import log_time
 type UUID = str
 
 
-class StorageModel(BaseModel, ABC):
-    """Base model with storage support."""
+class AbstractStoredModel(BaseModel, ABC):
+    """Base model for data that can be stored in a storage backend."""
 
     @staticmethod
     @abstractmethod
@@ -146,7 +146,7 @@ class CardSide(StrEnum):
     """Back side (e.g., answer or term in native language)."""
 
 
-class DeckData(StorageModel, UUIDModel):
+class DeckData(AbstractStoredModel, UUIDModel):
     """A deck of flashcards."""
 
     cards: UUIDModelList[Card] = UUIDModelList()
@@ -243,7 +243,7 @@ class DeckExport(BaseModel):
     """List of exported decks."""
 
 
-class Configuration(StorageModel):
+class Configuration(AbstractStoredModel):
     """Configuration for the application."""
 
     deck_metadata: UUIDModelList[DeckMetadata] = UUIDModelList()

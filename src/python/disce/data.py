@@ -185,7 +185,7 @@ class DeckData(AbstractStoredModel, UUIDModel):
     def get_card_to_study(self, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
         """Get the card and side that should be studied next (based on the answer history)."""
         candidates: list[tuple[Card, CardSide]] = []
-        minimum_history_length = None
+        minimum_relevant_history_length = None
         minimum_score = None
         for card in self.cards:
             if not card.enabled:
@@ -193,13 +193,17 @@ class DeckData(AbstractStoredModel, UUIDModel):
             for side in CardSide:
                 append = False
                 answer_history = card.front_answer_history if side is CardSide.FRONT else card.back_answer_history
-                score = sum(answer_history[-history_length:])
-                if minimum_history_length is None or len(answer_history) < minimum_history_length:
-                    minimum_history_length = len(answer_history)
+                relevant_answer_history = answer_history[-history_length:]
+                score = sum(relevant_answer_history)
+                if (
+                    minimum_relevant_history_length is None
+                    or len(relevant_answer_history) < minimum_relevant_history_length
+                ):
+                    minimum_relevant_history_length = len(relevant_answer_history)
                     minimum_score = score
                     candidates.clear()
                     append = True
-                elif len(answer_history) == minimum_history_length:
+                elif len(relevant_answer_history) == minimum_relevant_history_length:
                     if minimum_score is None or score < minimum_score:
                         minimum_score = score
                         candidates.clear()

@@ -5,7 +5,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Learn flashcards by heart, in the browser, without server state."""
-
-from pathlib import Path
-
-__all__ = sorted(file.stem for file in Path(__file__).parent.glob("*.py") if file.stem != "__init__")  # noqa: PLE0605

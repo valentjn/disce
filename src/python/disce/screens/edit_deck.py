@@ -14,7 +14,7 @@ import disce.screens.decks as decks_screen
 from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata, UUIDModelList
 from disce.screens.base import AbstractScreen, EventBinding
 from disce.screens.tools import Element, Event, append_child, create_element, select_all_elements
-from disce.storage import AbstractStorage
+from disce.storage.base import AbstractStorage
 from disce.tools import format_plural
 
 

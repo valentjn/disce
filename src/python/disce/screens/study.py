@@ -10,7 +10,7 @@ from typing import override
 
 from disce.data import Configuration, DeckData
 from disce.screens.base import AbstractScreen, EventBinding
-from disce.storage import AbstractStorage
+from disce.storage.base import AbstractStorage
 
 
 class StudyScreen(AbstractScreen):

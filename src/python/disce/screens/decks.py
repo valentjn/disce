@@ -17,7 +17,7 @@ import disce.screens.edit_deck as edit_deck_screen
 from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
 from disce.screens.base import AbstractScreen, EventBinding
 from disce.screens.tools import Event, append_child, create_element, download_file, select_all_elements, upload_file
-from disce.storage import AbstractStorage
+from disce.storage.base import AbstractStorage
 from disce.tools import format_plural
 
 _logger = logging.getLogger(__name__)

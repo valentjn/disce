@@ -16,7 +16,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, NonNegativeInt, RootModel
 
-from disce.storage import AbstractStorage
+from disce.storage.base import AbstractStorage
 from disce.tools import log_time
 
 type UUID = str

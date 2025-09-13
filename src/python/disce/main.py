@@ -12,11 +12,6 @@ import sys
 from pathlib import Path
 from typing import override
 
-from disce.screens.decks import DecksScreen
-from disce.screens.load import LoadScreen
-from disce.screens.tools import set_theme
-from disce.storage import LocalStorage
-
 _logger = logging.getLogger(__name__)
 
 
@@ -34,6 +29,11 @@ class LoggingFormatter(logging.Formatter):
 
 def main() -> None:
     """Run the main application logic."""
+    from disce.screens.decks import DecksScreen  # noqa: PLC0415
+    from disce.screens.load import LoadScreen  # noqa: PLC0415
+    from disce.screens.tools import set_theme  # noqa: PLC0415
+    from disce.storage.local import LocalStorage  # noqa: PLC0415
+
     set_up_logging()
     _logger.info("Disce started, source hash: %s", compute_source_hash()[:8])
     set_theme()

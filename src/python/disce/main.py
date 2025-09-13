@@ -15,18 +15,6 @@ from typing import override
 _logger = logging.getLogger(__name__)
 
 
-class LoggingFormatter(logging.Formatter):
-    """Custom logging formatter to adjust format based on log level."""
-
-    @override
-    def format(self, record: logging.LogRecord) -> str:
-        format_ = (
-            "%(name)s - %(levelname)s: %(message)s" if record.levelno >= logging.WARNING else "%(name)s: %(message)s"
-        )
-        self._style._fmt = format_  # noqa: SLF001
-        return super().format(record)
-
-
 def main() -> None:
     """Run the main application logic."""
     from disce.screens.decks import DecksScreen  # noqa: PLC0415
@@ -39,6 +27,18 @@ def main() -> None:
     set_theme()
     DecksScreen(LocalStorage()).show()
     LoadScreen().hide()
+
+
+class LoggingFormatter(logging.Formatter):
+    """Custom logging formatter to adjust format based on log level."""
+
+    @override
+    def format(self, record: logging.LogRecord) -> str:
+        format_ = (
+            "%(name)s - %(levelname)s: %(message)s" if record.levelno >= logging.WARNING else "%(name)s: %(message)s"
+        )
+        self._style._fmt = format_  # noqa: SLF001
+        return super().format(record)
 
 
 def set_up_logging() -> None:

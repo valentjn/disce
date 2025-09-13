@@ -60,7 +60,7 @@ def update_files(config: tomlkit.TOMLDocument) -> None:
     python_dir = get_python_dir()
     files = {}
     for entry in sorted((python_dir / "disce").rglob("*")):
-        if entry.is_file():
+        if entry.is_file() and entry.suffix != ".pyc":
             relative_file = entry.relative_to(python_dir)
             files[relative_file.as_posix()] = f"./{relative_file.parent.as_posix()}/"
     config["files"] = files

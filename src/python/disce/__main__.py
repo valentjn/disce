@@ -6,6 +6,6 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Entry point of the application."""
 
-from disce import main
+from disce import main  # pragma: no cover
 
-main.main()
+main.main()  # pragma: no cover

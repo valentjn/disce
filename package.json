@@ -17,6 +17,7 @@
         "lint:fix:ruff": "uv run ruff check --fix",
         "lint:misc": "uv run python scripts/sync_pyscript.py --check",
         "lint:mypy": "uv run mypy",
-        "lint:ruff": "uv run ruff check"
+        "lint:ruff": "uv run ruff check",
+        "test": "uv run pytest"
     }
 }

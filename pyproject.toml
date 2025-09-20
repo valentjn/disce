@@ -21,6 +21,7 @@ dev = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.12.11",
+    "selenium>=4.35.0",
     "tomlkit>=0.13.3",
 ]
 
@@ -47,6 +48,8 @@ strict = true
 [tool.pytest.ini_options]
 addopts = "--cov --verbose --verbose"
 filterwarnings = ["error"]
+log_format = "%(name)s:%(levelname)s - %(message)s"
+log_level = "INFO"
 pythonpath = ["src/python"]
 
 [tool.ruff]

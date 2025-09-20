@@ -40,10 +40,23 @@ class AbstractStoredModel(BaseModel, ABC):
     @classmethod
     def load_from_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> Self:
         """Load saved data from storage."""
+        storage_key = cls.get_storage_key(uuid)
+        if not cls.exists_in_storage(storage, uuid):
+            raise KeyError(storage_key)
         with log_time("loaded data from storage"):
-            json = storage.load(cls.get_storage_key(uuid))
+            json = storage.load(storage_key)
         with log_time("parsed data"):
             return cls.model_validate_json(json)
+
+    @classmethod
+    def load_from_storage_or_create(
+        cls, storage: AbstractStorage, uuid: UUID | None = None, default: Self | None = None
+    ) -> Self:
+        """Load saved data from storage or create a new instance."""
+        try:
+            return cls.load_from_storage(storage, uuid)
+        except KeyError:
+            return cls() if default is None else default
 
     def save_to_storage(self, storage: AbstractStorage) -> None:
         """Save data to storage."""

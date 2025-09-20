@@ -21,7 +21,7 @@ class StudyScreen(AbstractScreen):
         super().__init__("#disce-study-screen")
         self._deck_uuids = deck_uuids
         self._storage = storage
-        self._configuration = Configuration.load_from_storage(self._storage)
+        self._configuration = Configuration.load_from_storage_or_create(self._storage)
         self._deck_data_list = [DeckData.load_from_storage(self._storage, uuid) for uuid in deck_uuids]
         self._merged_deck_data = DeckData.from_merge(self._deck_data_list)
         self._card_uuid_to_deck_uuid = {

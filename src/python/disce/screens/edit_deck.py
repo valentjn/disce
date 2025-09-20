@@ -47,7 +47,7 @@ class EditDeckScreen(AbstractScreen):
     @override
     def render(self, deck_metadata: DeckMetadata | None = None) -> None:
         if deck_metadata is None:
-            configuration = Configuration.load_from_storage(self._storage)
+            configuration = Configuration.load_from_storage_or_create(self._storage)
             deck_metadata = (
                 configuration.deck_metadata[self._deck_uuid] if self._deck_uuid is not None else DeckMetadata()
             )
@@ -166,7 +166,7 @@ class EditDeckScreen(AbstractScreen):
                 ):
                     card.front_answer_history.clear()
                     card.back_answer_history.clear()
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         configuration.deck_metadata.set(deck_metadata)
         configuration.save_to_storage(self._storage)
         deck_data.save_to_storage(self._storage)
@@ -208,7 +208,7 @@ class EditDeckScreen(AbstractScreen):
     def back_to_decks_screen(self, _event: Event | None = None) -> None:
         """Go back to the edit decks screen."""
         deck_data, deck_metadata = self.get_deck()
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         if deck_metadata.uuid in configuration.deck_metadata and DeckData.exists_in_storage(
             self._storage, deck_data.uuid
         ):

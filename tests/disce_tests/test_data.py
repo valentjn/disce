@@ -56,6 +56,18 @@ class TestStoredModel:
             DummyStoredModel.load_from_storage(storage, "uuid2")
 
     @staticmethod
+    def test_load_from_storage_or_create(storage: DictStorage) -> None:
+        model = DummyStoredModel.load_from_storage_or_create(storage, "uuid0")
+        assert model.field == "value0"
+
+    @staticmethod
+    def test_load_from_storage_or_create_non_existent_uuid(storage: DictStorage) -> None:
+        model = DummyStoredModel.load_from_storage_or_create(
+            storage, "uuid2", default=DummyStoredModel(field="default")
+        )
+        assert model.field == "default"
+
+    @staticmethod
     def test_save_to_storage(storage: DictStorage) -> None:
         model = DummyStoredModel(uuid="uuid2", field="value2")
         model.save_to_storage(storage)

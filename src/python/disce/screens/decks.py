@@ -65,7 +65,7 @@ class DecksScreen(AbstractScreen):
         self.unregister_event_listeners(dynamic=True)
         decks_div = self.select_child(".disce-decks")
         decks_div.innerHTML = ""
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         for deck_metadata in sorted(
             configuration.deck_metadata, key=lambda deck_metadata: deck_metadata.name.casefold()
         ):
@@ -157,7 +157,7 @@ class DecksScreen(AbstractScreen):
             except ValidationError as exception:
                 window.alert(f"failed to parse imported data: {exception}")
                 return
-            configuration = Configuration.load_from_storage(self._storage)
+            configuration = Configuration.load_from_storage_or_create(self._storage)
             overwriting_deck_uuids = {deck.metadata.uuid for deck in deck_export.decks} & {
                 deck.uuid for deck in configuration.deck_metadata
             }
@@ -201,7 +201,7 @@ class DecksScreen(AbstractScreen):
         merged_deck_name = window.prompt("Enter a name for the merged deck:", "Merged Deck")
         if not merged_deck_name:
             return
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         merged_deck_data = DeckData()
         merged_deck_metadata = DeckMetadata(uuid=merged_deck_data.uuid, name=merged_deck_name)
         for deck_uuid in selected_deck_uuids:
@@ -221,7 +221,7 @@ class DecksScreen(AbstractScreen):
         deck_data_to_export = [
             DeckData.load_from_storage(self._storage, deck_uuid) for deck_uuid in selected_deck_uuids
         ]
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         deck_metadata_to_export = [configuration.deck_metadata[deck_uuid] for deck_uuid in selected_deck_uuids]
         if len(deck_metadata_to_export) == 1:
             stem = re.sub(r"[^0-9A-Za-z]", "-", deck_metadata_to_export[0].name)
@@ -248,7 +248,7 @@ class DecksScreen(AbstractScreen):
         if window.confirm(
             f"Are you sure you want to delete the selected {format_plural(len(selected_deck_uuids), 'deck')}?"
         ):
-            configuration = Configuration.load_from_storage(self._storage)
+            configuration = Configuration.load_from_storage_or_create(self._storage)
             for deck_uuid in selected_deck_uuids:
                 DeckData.delete_from_storage(self._storage, deck_uuid)
                 del configuration.deck_metadata[deck_uuid]
@@ -282,7 +282,7 @@ class DecksScreen(AbstractScreen):
     def duplicate_deck(self, event: Event) -> None:
         """Duplicate a specific deck."""
         original_deck_uuid: UUID = event.currentTarget.getAttribute("data-deck-uuid")
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         original_deck_metadata = configuration.deck_metadata[original_deck_uuid]
         new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
         if not new_deck_name:
@@ -307,7 +307,7 @@ class DecksScreen(AbstractScreen):
     def delete_deck(self, event: Event) -> None:
         """Delete a specific deck."""
         deck_uuid: UUID = event.currentTarget.getAttribute("data-deck-uuid")
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         deck_metadata = configuration.deck_metadata[deck_uuid]
         if window.confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):
             DeckData.delete_from_storage(self._storage, deck_uuid)
@@ -317,14 +317,14 @@ class DecksScreen(AbstractScreen):
 
     def open_settings_modal(self, _event: Event | None = None) -> None:
         """Open the settings modal and populate fields from configuration."""
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         document.getElementById("disce-history-length-input").value = configuration.history_length
         document.getElementById("disce-typewriter-mode-input").checked = configuration.typewriter_mode
         window.bootstrap.Modal.new(self.select_child(".disce-settings-modal")).show()
 
     def save_settings(self, _event: Event | None = None) -> None:
         """Save settings from the modal dialog to configuration."""
-        configuration = Configuration.load_from_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         configuration.history_length = int(document.getElementById("disce-history-length-input").value)
         configuration.typewriter_mode = document.getElementById("disce-typewriter-mode-input").checked
         configuration.save_to_storage(self._storage)

@@ -9,6 +9,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from pyodide.ffi import JsNull
 from pyodide.ffi.wrappers import add_event_listener, remove_event_listener
 
 from disce.screens.tools import Element, EventListener, select_element
@@ -93,7 +94,11 @@ class AbstractScreen(ABC):
 
     def select_child(self, selector: str) -> Element:
         """Select a child element within the screen."""
-        return self.element.querySelector(selector)
+        element = self.element.querySelector(selector)
+        if isinstance(element, JsNull):
+            msg = f"could not find child element of {self.selector} matching selector: {selector}"
+            raise ValueError(msg)  # noqa: TRY004
+        return element
 
     def select_all_children(self, selector: str) -> list[Element]:
         """Select all child elements within the screen."""

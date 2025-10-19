@@ -206,7 +206,7 @@ class EditDeckScreen(AbstractScreen):
         self.select_child(".disce-delete-cards-btn").disabled = len(selected_card_uuids) == 0
 
     def back_to_decks_screen(self, _event: Event | None = None) -> None:
-        """Go back to the edit decks screen."""
+        """Go back to the decks screen."""
         deck_data, deck_metadata = self.get_deck()
         configuration = Configuration.load_from_storage_or_create(self._storage)
         if deck_metadata.uuid in configuration.deck_metadata and DeckData.exists_in_storage(

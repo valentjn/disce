@@ -131,6 +131,20 @@ class TestUUIDModelList:
             del cards["uuid2"]
 
 
+class TestCard:
+    @staticmethod
+    def test_get_side() -> None:
+        card = Card(front="front", back="back")
+        assert card.get_side(CardSide.FRONT) == "front"
+        assert card.get_side(CardSide.BACK) == "back"
+
+    @staticmethod
+    def test_get_opposite_side() -> None:
+        card = Card(front="front", back="back")
+        assert card.get_opposite_side(CardSide.FRONT) == "back"
+        assert card.get_opposite_side(CardSide.BACK) == "front"
+
+
 class TestDeckData:
     @staticmethod
     def test_get_storage_key() -> None:

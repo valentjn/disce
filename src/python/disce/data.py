@@ -132,6 +132,15 @@ class UUIDModelList[T: UUIDModel](RootModel[list[T]]):
         return index
 
 
+class CardSide(StrEnum):
+    """Side of a flashcard."""
+
+    FRONT = auto()
+    """Front side (e.g., question or term in foreign language)."""
+    BACK = auto()
+    """Back side (e.g., answer or term in native language)."""
+
+
 class Card(UUIDModel):
     """A flashcard."""
 
@@ -146,14 +155,13 @@ class Card(UUIDModel):
     back_answer_history: list[bool] = []
     """History of answers when asked for back (correct/incorrect, most recent last, reset when card is edited)."""
 
+    def get_side(self, side: CardSide) -> str:
+        """Get the text on the specified side of the card."""
+        return self.front if side is CardSide.FRONT else self.back
 
-class CardSide(StrEnum):
-    """Side of a flashcard."""
-
-    FRONT = auto()
-    """Front side (e.g., question or term in foreign language)."""
-    BACK = auto()
-    """Back side (e.g., answer or term in native language)."""
+    def get_opposite_side(self, side: CardSide) -> str:
+        """Get the text on the opposite side of the card."""
+        return self.back if side is CardSide.FRONT else self.front
 
 
 class DeckData(AbstractStoredModel, UUIDModel):

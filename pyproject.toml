@@ -9,9 +9,9 @@ name = "disce"
 version = "1.0.0"
 description = "Learn flashcards by heart, in the browser, without server state."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = "~=3.13.0"
 dependencies = [
-    "pydantic>=2.11.7",
+    "pydantic>=2.12.3",
 ]
 
 [dependency-groups]

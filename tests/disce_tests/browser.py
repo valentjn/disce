@@ -155,10 +155,10 @@ def browser(
         new_stdout, new_stderr = _tee_output(capsys)
         stdout += new_stdout
         stderr += new_stderr
-    if "Disce started" in stderr:
-        time.sleep(0.5)
-    else:
-        _logger.warning("timeout waiting for Disce to start")
+    if "Disce started" not in stderr:
+        msg = "timeout waiting for Disce to start"
+        raise TimeoutError(msg)
+    time.sleep(0.5)
     return browser
 
 

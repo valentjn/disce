@@ -18,9 +18,9 @@ class TestAbstractStorage:
         return DictStorage()
 
     @staticmethod
-    def test_contains(storage: DictStorage) -> None:
+    def test_iter(storage: DictStorage) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractStorage.__contains__(storage, "key")
+            AbstractStorage.__iter__(storage)
 
     @staticmethod
     def test_getitem(storage: DictStorage) -> None:

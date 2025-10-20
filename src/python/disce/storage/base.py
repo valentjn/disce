@@ -7,14 +7,15 @@
 """Base storage classes."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 
 class AbstractStorage(ABC):
     """Abstract storage interface for storing strings."""
 
     @abstractmethod
-    def __contains__(self, key: str) -> bool:
-        """Check if a key exists in storage."""
+    def __iter__(self) -> Iterator[str]:
+        """Get an iterator over all keys in storage."""
         raise NotImplementedError
 
     @abstractmethod

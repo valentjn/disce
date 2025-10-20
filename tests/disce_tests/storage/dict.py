@@ -5,6 +5,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from collections.abc import Iterator
+
 from disce.storage.base import AbstractStorage
 
 
@@ -12,8 +14,8 @@ class DictStorage(AbstractStorage):
     def __init__(self) -> None:
         self._data: dict[str, str] = {}
 
-    def __contains__(self, key: str) -> bool:
-        return key in self._data
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._data)
 
     def __getitem__(self, key: str) -> str:
         return self._data[key]

@@ -6,6 +6,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Storage classes."""
 
+from collections.abc import Iterator
 from typing import cast, override
 
 from pyscript import window
@@ -17,8 +18,9 @@ class LocalStorage(AbstractStorage):
     """Local storage implementation using browser's localStorage."""
 
     @override
-    def __contains__(self, key: str) -> bool:
-        return any(window.localStorage.key(index) == key for index in range(window.localStorage.length))
+    def __iter__(self) -> Iterator[str]:
+        for index in range(window.localStorage.length):
+            yield window.localStorage.key(index)
 
     @override
     def __getitem__(self, key: str) -> str:

@@ -144,6 +144,16 @@ class TestCard:
         assert card.get_opposite_side(CardSide.FRONT) == "back"
         assert card.get_opposite_side(CardSide.BACK) == "front"
 
+    @staticmethod
+    def test_record_answer() -> None:
+        card = Card(front="front", back="back")
+        card.record_answer(CardSide.FRONT, correct=True)
+        card.record_answer(CardSide.FRONT, correct=False)
+        card.record_answer(CardSide.BACK, correct=False)
+        card.record_answer(CardSide.BACK, correct=True)
+        assert card.front_answer_history == [True, False]
+        assert card.back_answer_history == [False, True]
+
 
 class TestDeckData:
     @staticmethod

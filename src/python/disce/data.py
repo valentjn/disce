@@ -163,6 +163,11 @@ class Card(UUIDModel):
         """Get the text on the opposite side of the card."""
         return self.back if side is CardSide.FRONT else self.front
 
+    def record_answer(self, side: CardSide, *, correct: bool) -> None:
+        """Record an answer for the specified side of the card."""
+        answer_history = self.front_answer_history if side is CardSide.FRONT else self.back_answer_history
+        answer_history.append(correct)
+
 
 class DeckData(AbstractStoredModel, UUIDModel):
     """A deck of flashcards."""

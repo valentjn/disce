@@ -12,14 +12,14 @@ class DictStorage(AbstractStorage):
     def __init__(self) -> None:
         self._data: dict[str, str] = {}
 
-    def has(self, key: str) -> bool:
+    def __contains__(self, key: str) -> bool:
         return key in self._data
 
-    def load(self, key: str) -> str:
+    def __getitem__(self, key: str) -> str:
         return self._data[key]
 
-    def save(self, key: str, value: str) -> None:
+    def __setitem__(self, key: str, value: str) -> None:
         self._data[key] = value
 
-    def delete(self, key: str) -> None:
+    def __delitem__(self, key: str) -> None:
         self._data.pop(key, None)

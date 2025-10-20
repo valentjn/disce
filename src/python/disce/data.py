@@ -35,7 +35,7 @@ class AbstractStoredModel(BaseModel, ABC):
     def exists_in_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> bool:
         """Check if data exists in storage."""
         storage_key = cls.get_storage_key(uuid)
-        return storage.has(storage_key)
+        return storage_key in storage
 
     @classmethod
     def load_from_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> Self:
@@ -44,7 +44,7 @@ class AbstractStoredModel(BaseModel, ABC):
         if not cls.exists_in_storage(storage, uuid):
             raise KeyError(storage_key)
         with log_time("loaded data from storage"):
-            json = storage.load(storage_key)
+            json = storage[storage_key]
         with log_time("parsed data"):
             return cls.model_validate_json(json)
 
@@ -63,13 +63,13 @@ class AbstractStoredModel(BaseModel, ABC):
         with log_time("serialized data"):
             json = self.model_dump_json()
         with log_time("saved data to storage"):
-            storage.save(self.get_storage_key(getattr(self, "uuid", None)), json)
+            storage[self.get_storage_key(getattr(self, "uuid", None))] = json
 
     @classmethod
     def delete_from_storage(cls, storage: AbstractStorage, uuid: UUID | None = None) -> None:
         """Delete data from storage."""
         with log_time("deleted data from storage"):
-            storage.delete(cls.get_storage_key(uuid))
+            del storage[cls.get_storage_key(uuid)]
 
 
 class UUIDModel(BaseModel):

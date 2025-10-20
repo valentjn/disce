@@ -18,21 +18,21 @@ class TestAbstractStorage:
         return DictStorage()
 
     @staticmethod
-    def test_has(storage: DictStorage) -> None:
+    def test_contains(storage: DictStorage) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractStorage.has(storage, "key")
+            AbstractStorage.__contains__(storage, "key")
 
     @staticmethod
-    def test_load(storage: DictStorage) -> None:
+    def test_getitem(storage: DictStorage) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractStorage.load(storage, "key")
+            AbstractStorage.__getitem__(storage, "key")
 
     @staticmethod
-    def test_save(storage: DictStorage) -> None:
+    def test_setitem(storage: DictStorage) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractStorage.save(storage, "key", "value")
+            AbstractStorage.__setitem__(storage, "key", "value")
 
     @staticmethod
-    def test_delete(storage: DictStorage) -> None:
+    def test_delitem(storage: DictStorage) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractStorage.delete(storage, "key")
+            AbstractStorage.__delitem__(storage, "key")

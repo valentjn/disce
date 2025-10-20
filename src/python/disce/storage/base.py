@@ -13,21 +13,21 @@ class AbstractStorage(ABC):
     """Abstract storage interface for storing strings."""
 
     @abstractmethod
-    def has(self, key: str) -> bool:
+    def __contains__(self, key: str) -> bool:
         """Check if a key exists in storage."""
         raise NotImplementedError
 
     @abstractmethod
-    def load(self, key: str) -> str:
+    def __getitem__(self, key: str) -> str:
         """Load a value from storage."""
         raise NotImplementedError
 
     @abstractmethod
-    def save(self, key: str, value: str) -> None:
+    def __setitem__(self, key: str, value: str) -> None:
         """Save a value to storage."""
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, key: str) -> None:
-        """Delete a value from storage."""
+    def __delitem__(self, key: str) -> None:
+        """Delete a value from storage if it exists (no error if it does not)."""
         raise NotImplementedError

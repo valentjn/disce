@@ -17,21 +17,21 @@ class LocalStorage(AbstractStorage):
     """Local storage implementation using browser's localStorage."""
 
     @override
-    def has(self, key: str) -> bool:
+    def __contains__(self, key: str) -> bool:
         return any(window.localStorage.key(index) == key for index in range(window.localStorage.length))
 
     @override
-    def load(self, key: str) -> str:
+    def __getitem__(self, key: str) -> str:
         value = cast("str", window.localStorage.getItem(key))
         if value is None:
             raise KeyError(key)
         return value
 
     @override
-    def save(self, key: str, value: str) -> None:
+    def __setitem__(self, key: str, value: str) -> None:
         window.navigator.storage.persist()
         window.localStorage.setItem(key, value)
 
     @override
-    def delete(self, key: str) -> None:
+    def __delitem__(self, key: str) -> None:
         window.localStorage.removeItem(key)

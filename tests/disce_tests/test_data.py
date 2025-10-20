@@ -31,8 +31,8 @@ class TestStoredModel:
     @pytest.fixture
     def storage() -> DictStorage:
         storage = DictStorage()
-        storage.save("dummy-uuid0", '{"field": "value0"}')
-        storage.save("dummy-uuid1", '{"field": "value1"}')
+        storage["dummy-uuid0"] = '{"field": "value0"}'
+        storage["dummy-uuid1"] = '{"field": "value1"}'
         return storage
 
     @staticmethod

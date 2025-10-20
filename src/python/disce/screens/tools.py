@@ -60,6 +60,22 @@ def append_child(
     return element
 
 
+def hide_element(element: Element, *, hide: bool = True) -> None:
+    """Hide the given element."""
+    if hide:
+        element.classList.add("d-none")
+    else:
+        show_element(element)
+
+
+def show_element(element: Element, *, show: bool = True) -> None:
+    """Show the given element."""
+    if show:
+        element.classList.remove("d-none")
+    else:
+        hide_element(element)
+
+
 def set_theme(theme: str | None = None) -> None:
     """Set the theme of the application."""
     if theme is None:

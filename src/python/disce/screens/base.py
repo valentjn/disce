@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pyodide.ffi import JsNull
 from pyodide.ffi.wrappers import add_event_listener, remove_event_listener
 
-from disce.screens.tools import Element, EventListener, select_element
+from disce.screens.tools import Element, EventListener, hide_element, select_element, show_element
 
 
 @dataclass
@@ -108,10 +108,10 @@ class AbstractScreen(ABC):
         """Show the screen."""
         self.register_static_event_listeners()
         self.render()
-        self.element.style.display = "block"
+        show_element(self.element)
 
     def hide(self) -> None:
         """Hide the screen."""
         self.unregister_event_listeners(dynamic=True)
         self.unregister_event_listeners(dynamic=False)
-        self.element.style.display = "none"
+        hide_element(self.element)

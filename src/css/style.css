@@ -12,10 +12,6 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.disce-screen {
-    display: none;
-}
-
 @media (max-width: 600px) {
     .disce-btn-text {
         display: none;

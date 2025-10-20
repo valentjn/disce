@@ -48,3 +48,24 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* study screen */
+#disce-study-screen .disce-study-card,
+#disce-study-screen .disce-answer-textbox,
+#disce-study-screen .disce-submit-answer-btn {
+    font-size: 2rem;
+}
+
+#disce-study-screen .disce-study-card-question-side,
+#disce-study-screen .disce-study-card-answer-side {
+    min-height: 100px;
+}
+
+#disce-study-screen .disce-study-card-answer-side .disce-matching-answer-part {
+    color: var(--bs-success);
+}
+
+#disce-study-screen .disce-study-card-answer-side ins,
+#disce-study-screen .disce-study-card-answer-side del {
+    color: var(--bs-danger);
+}

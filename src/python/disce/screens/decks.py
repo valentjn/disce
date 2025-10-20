@@ -14,6 +14,7 @@ from pydantic import ValidationError
 from pyscript import document, window
 
 import disce.screens.edit_deck as edit_deck_screen
+import disce.screens.study as study_screen
 from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
 from disce.screens.base import AbstractScreen, EventBinding
 from disce.screens.tools import Event, append_child, create_element, download_file, select_all_elements, upload_file
@@ -188,6 +189,8 @@ class DecksScreen(AbstractScreen):
 
     def study_decks(self, _event: Event | None = None) -> None:
         """Study selected decks."""
+        study_screen.StudyScreen(self.get_selected_deck_uuids(), self._storage).show()
+        self.hide()
 
     def merge_decks(self, _event: Event | None = None) -> None:
         """Merge selected decks."""
@@ -271,8 +274,10 @@ class DecksScreen(AbstractScreen):
         self.select_child(".disce-export-decks-btn").disabled = len(selected_deck_uuids) == 0
         self.select_child(".disce-delete-decks-btn").disabled = len(selected_deck_uuids) == 0
 
-    def study_deck(self, _event: Event | None = None) -> None:
+    def study_deck(self, event: Event) -> None:
         """Study a specific deck."""
+        study_screen.StudyScreen([event.currentTarget.getAttribute("data-deck-uuid")], self._storage).show()
+        self.hide()
 
     def edit_deck(self, event: Event) -> None:
         """Edit a specific deck."""

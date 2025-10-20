@@ -10,6 +10,7 @@ packages = ["pydantic"]
 "disce/__init__.py" = "./disce/"
 "disce/__main__.py" = "./disce/"
 "disce/data.py" = "./disce/"
+"disce/diffs.py" = "./disce/"
 "disce/main.py" = "./disce/"
 "disce/py.typed" = "./disce/"
 "disce/screens/__init__.py" = "./disce/screens/"

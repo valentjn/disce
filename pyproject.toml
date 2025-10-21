@@ -26,7 +26,7 @@ dev = [
 ]
 
 [tool.coverage.report]
-fail_under = 39
+fail_under = 44
 show_missing = true
 
 [tool.coverage.paths]

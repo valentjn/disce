@@ -9,7 +9,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
-from pyodide.ffi.wrappers import add_event_listener
+from pyodide.ffi.wrappers import add_event_listener  # pyright: ignore[reportMissingModuleSource]
 from pyscript import document, window
 
 type Element = Any

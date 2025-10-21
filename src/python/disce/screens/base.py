@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from pyodide.ffi import JsNull
-from pyodide.ffi.wrappers import add_event_listener, remove_event_listener
+from pyodide.ffi.wrappers import add_event_listener, remove_event_listener  # pyright: ignore[reportMissingModuleSource]
 
 from disce.screens.tools import Element, EventListener, hide_element, select_element, show_element
 

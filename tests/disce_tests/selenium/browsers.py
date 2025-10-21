@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import platform
+import re
 import sys
 import tarfile
 import time
@@ -16,18 +17,17 @@ import urllib.request
 import zipfile
 from collections.abc import Generator
 from contextlib import contextmanager, suppress
+from datetime import timedelta
 from enum import Enum, auto
 from io import BufferedWriter, BytesIO, TextIOWrapper
 from pathlib import Path
 from threading import Event, Thread
-from typing import TYPE_CHECKING
 
 import pytest
 from selenium.webdriver import Firefox, FirefoxService
 from selenium.webdriver.firefox.options import Options
 
-if TYPE_CHECKING:
-    from _pytest.capture import CaptureManager
+from disce_tests.selenium import outputs
 
 _logger = logging.getLogger(__name__)
 
@@ -148,27 +148,6 @@ def browser(
     url = f"{server_url.rstrip('/')}/{getattr(request, 'param', '').lstrip('/')}"
     browser = general_browser
     browser.get(url)
-    stdout, stderr = _tee_output(capsys)
-    start_time = time.monotonic()
-    while "Disce started" not in stderr and time.monotonic() - start_time < 20.0:
-        time.sleep(0.5)
-        new_stdout, new_stderr = _tee_output(capsys)
-        stdout += new_stdout
-        stderr += new_stderr
-    if "Disce started" not in stderr:
-        msg = "timeout waiting for Disce to start"
-        raise TimeoutError(msg)
+    outputs.watch_output(capsys, "stderr", timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
     time.sleep(0.5)
     return browser
-
-
-def _tee_output(capsys: pytest.CaptureFixture[str]) -> tuple[str, str]:
-    capture_manager: CaptureManager = capsys.request.config.pluginmanager.getplugin("capturemanager")
-    stdout, stderr = capsys.readouterr()
-    capture_manager.suspend_fixture()
-    try:
-        print(stdout, end="")  # noqa: T201
-        print(stderr, end="", file=sys.stderr)  # noqa: T201
-    finally:
-        capture_manager.resume_fixture()
-    return stdout, stderr

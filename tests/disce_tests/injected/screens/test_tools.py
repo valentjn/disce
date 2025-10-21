@@ -8,7 +8,17 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from disce.screens.tools import Element, Event, append_child, create_element, hide_element, show_element
+from disce.screens.tools import (
+    Element,
+    Event,
+    append_child,
+    create_element,
+    download_file,
+    hide_element,
+    set_theme,
+    show_element,
+    upload_file,
+)
 from pyscript import document, window
 
 
@@ -91,6 +101,28 @@ def test_show_element() -> None:
         assert style.display != "none"
         show_element(element, show=False)
         assert style.display == "none"
+
+
+def test_set_theme() -> None:
+    set_theme("dark")
+    assert document.documentElement.getAttribute("data-bs-theme") == "dark"
+    set_theme("light")
+    assert document.documentElement.getAttribute("data-bs-theme") == "light"
+    set_theme()
+    assert document.documentElement.getAttribute("data-bs-theme") in ("dark", "light")
+
+
+def test_download_file() -> None:
+    download_file("test.txt", "test content")
+
+
+def test_upload_file() -> None:
+    uploaded_content: dict[str, str | None] = {"value": None}
+
+    def handle_content(content: str) -> None:
+        uploaded_content["value"] = content
+
+    upload_file(".txt", handle_content)
 
 
 @contextmanager

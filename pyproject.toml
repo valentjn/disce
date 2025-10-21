@@ -46,7 +46,7 @@ files = [
 strict = true
 
 [tool.pytest.ini_options]
-addopts = "--cov --verbose --verbose"
+addopts = "--ignore=tests/disce_tests/injected --cov --verbose --verbose"
 filterwarnings = ["error"]
 log_format = "%(name)s:%(levelname)s - %(message)s"
 log_level = "INFO"

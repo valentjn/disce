@@ -26,12 +26,14 @@ dev = [
 ]
 
 [tool.coverage.report]
-fail_under = 100
-omit = [
-    "src/python/disce/screens/*",
-    "src/python/disce/storage/local.py",
-]
+fail_under = 39
 show_missing = true
+
+[tool.coverage.paths]
+source = [
+    "src/python/disce",
+    "/home/pyodide/disce",
+]
 
 [tool.coverage.run]
 source = ["src/python"]

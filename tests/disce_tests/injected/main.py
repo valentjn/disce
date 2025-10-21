@@ -6,22 +6,28 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import logging
+from base64 import b64encode
+from pathlib import Path
 from time import sleep
 
 import pytest
-from disce.main import main as disce_main
+from disce.main import set_up_logging
 
 _logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    disce_main()
+    set_up_logging()
+    _logger.info("Disce started")
     sleep(1.0)
     _logger.info("running injected tests")
     exit_code = pytest.main(
         [
             "--color=yes",
+            "--cov=disce",
+            "--cov-report=term-missing",
             "--pythonwarnings=error",
+            "--pythonwarnings=ignore:Couldn't import C tracer",
             "--log-format=%(name)s:%(levelname)s - %(message)s",
             "--log-level=INFO",
             "--verbose",
@@ -29,4 +35,5 @@ def main() -> None:
             "disce_tests/injected",
         ]
     )
+    _logger.info(".coverage file of injected tests: %s", b64encode(Path(".coverage").read_bytes()).decode())
     _logger.info("finished injected tests, exit code: %d", exit_code)

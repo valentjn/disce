@@ -8,7 +8,7 @@
 import re
 import sys
 import time
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from datetime import timedelta
 from typing import TYPE_CHECKING, Literal
@@ -27,18 +27,24 @@ def watch_output(  # noqa: PLR0913
     interval: timedelta = timedelta(seconds=0.1),
     start_pattern: re.Pattern[str] | None = None,
     end_pattern: re.Pattern[str],
+    return_patterns: Sequence[re.Pattern[str]] = (),
     always_print: bool = False,
     transformer: Callable[[str], str] | None = None,
-) -> re.Match[str]:
+) -> list[re.Match[str] | None]:
     stdout, stderr = _tee_output(capsys, transformer=transformer)
     start_time = time.monotonic()
     found_start_match = start_pattern is None
+    result: list[re.Match[str] | None] = [None] * len(return_patterns)
     while time.monotonic() - start_time < timeout.total_seconds():
         output_to_search = {"stdout": stdout, "stderr": stderr}[output_type]
         if not found_start_match and start_pattern and start_pattern.search(output_to_search):
             found_start_match = True
-        if found_start_match and (end_match := end_pattern.search(output_to_search)):
-            return end_match
+        if found_start_match:
+            for idx, pattern in enumerate(return_patterns):
+                if not result[idx] and (match := pattern.search(output_to_search)):
+                    result[idx] = match
+            if end_pattern.search(output_to_search):
+                return result
         time.sleep(interval.total_seconds())
         new_stdout, new_stderr = _tee_output(
             capsys, always_print=always_print and found_start_match, transformer=transformer

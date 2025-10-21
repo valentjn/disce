@@ -9,6 +9,7 @@ import ast
 import re
 import shutil
 import sys
+from base64 import b64decode
 from collections.abc import Generator
 from datetime import timedelta
 from pathlib import Path
@@ -50,7 +51,7 @@ def _inject_tests_into_pyscript_toml(python_dir: Path) -> None:
     if not isinstance(packages, tomlkit.items.Array):
         msg = "packages is not an array"
         raise TypeError(msg)
-    packages.append("pytest")
+    packages += ["pytest", "pytest-cov", "sqlite3"]
     files = config_toml["files"]
     if not isinstance(files, tomlkit.items.Table):
         msg = "files is not a table"
@@ -74,20 +75,38 @@ def injected_browser(general_browser: Firefox, injected_server_url: str, capsys:
     return general_browser
 
 
-def test_injected(injected_browser: Firefox, capsys: pytest.CaptureFixture[str]) -> None:
-    transformer_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
+class Transformer:
+    CONSOLE_LOG_PATTERN = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
+    HIDE_PATTERN = re.compile(r".*\.coverage file of injected tests.*\n?")
+
+    @staticmethod
+    def transform(output: str) -> str:
+        output = Transformer.HIDE_PATTERN.sub("", output)
+        return Transformer.CONSOLE_LOG_PATTERN.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output)
+
+
+def test_injected(
+    injected_browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
+) -> None:
+    end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
-    match = outputs.watch_output(
+    matches = outputs.watch_output(
         capsys,
         "stderr",
         timeout=timedelta(seconds=20.0),
         start_pattern=re.compile(r"running injected tests"),
-        end_pattern=re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)"),
+        end_pattern=end_pattern,
+        return_patterns=[
+            end_pattern,
+            re.compile(r"\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*)"),
+        ],
         always_print=True,
-        transformer=lambda output: transformer_pattern.sub(
-            lambda match: f"| {ast.literal_eval(match['string'])}", output
-        ),
+        transformer=Transformer.transform,
     )
-    exit_code = int(match["exit_code"])
+    assert matches[0] is not None
+    exit_code = int(matches[0]["exit_code"])
     assert exit_code == 0
+    if request.config.getoption("--copy-coverage"):
+        assert matches[1] is not None
+        (request.config.rootpath / ".coverage").write_bytes(b64decode(matches[1]["coverage_file"].encode()))

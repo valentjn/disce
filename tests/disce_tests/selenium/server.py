@@ -15,19 +15,25 @@ import disce
 import pytest
 
 
-class _HTTPRequestHandler(SimpleHTTPRequestHandler):
-    DIRECTORY = Path(disce.__file__).parent.parent.parent
+def _get_http_request_handler_type(server_root_dir: Path) -> type[SimpleHTTPRequestHandler]:
+    class HTTPRequestHandler(SimpleHTTPRequestHandler):
+        def __init__(
+            self, request: socket | tuple[bytes, socket], client_address: tuple[str, int], server: HTTPServer
+        ) -> None:
+            super().__init__(request, client_address, server, directory=str(server_root_dir))
 
-    def __init__(
-        self, request: socket | tuple[bytes, socket], client_address: tuple[str, int], server: HTTPServer
-    ) -> None:
-        super().__init__(request, client_address, server, directory=str(_HTTPRequestHandler.DIRECTORY))
+    return HTTPRequestHandler
 
 
 @pytest.fixture(scope="session")
-def server_url() -> Generator[str]:
+def server_root_dir() -> Path:
+    return Path(disce.__file__).parent.parent.parent
+
+
+@pytest.fixture(scope="session")
+def server_url(server_root_dir: Path) -> Generator[str]:
     host = "127.0.0.1"
-    server = HTTPServer((host, 0), _HTTPRequestHandler)
+    server = HTTPServer((host, 0), _get_http_request_handler_type(server_root_dir))
     url = f"http://{host}:{server.server_port}/"
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()

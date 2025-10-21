@@ -142,12 +142,13 @@ def _forward_to_stderr() -> Generator[BufferedWriter]:
 
 
 @pytest.fixture
-def browser(
-    general_browser: Firefox, server_url: str, request: pytest.FixtureRequest, capsys: pytest.CaptureFixture[str]
-) -> Firefox:
-    url = f"{server_url.rstrip('/')}/{getattr(request, 'param', '').lstrip('/')}"
-    browser = general_browser
-    browser.get(url)
+def browser(general_browser: Firefox, server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
+    prepare_browser(general_browser, server_url, capsys)
+    return general_browser
+
+
+def prepare_browser(browser: Firefox, server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
+    browser.get(server_url)
     outputs.watch_output(capsys, "stderr", timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
     time.sleep(0.5)
     return browser

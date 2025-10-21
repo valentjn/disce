@@ -6,4 +6,4 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from disce_tests.selenium.browsers import browser, driver_path, general_browser  # noqa: F401
-from disce_tests.selenium.servers import server_root_dir, server_url  # noqa: F401
+from disce_tests.selenium.servers import server_url  # noqa: F401

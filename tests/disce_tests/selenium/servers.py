@@ -6,6 +6,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from collections.abc import Generator
+from contextlib import contextmanager
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from socket import socket
@@ -26,18 +27,21 @@ def _get_http_request_handler_type(server_root_dir: Path) -> type[SimpleHTTPRequ
 
 
 @pytest.fixture(scope="session")
-def server_root_dir() -> Path:
-    return Path(disce.__file__).parent.parent.parent
+def server_url() -> Generator[str]:
+    with start_server(Path(disce.__file__).parent.parent.parent) as url:
+        yield url
 
 
-@pytest.fixture(scope="session")
-def server_url(server_root_dir: Path) -> Generator[str]:
+@contextmanager
+def start_server(server_root_dir: Path) -> Generator[str]:
     host = "127.0.0.1"
     server = HTTPServer((host, 0), _get_http_request_handler_type(server_root_dir))
     url = f"http://{host}:{server.server_port}/"
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    yield url
-    server.shutdown()
-    server.server_close()
-    thread.join()
+    try:
+        yield url
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()

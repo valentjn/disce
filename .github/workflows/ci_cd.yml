@@ -20,6 +20,8 @@ jobs:
     ci:
         name: CI
         runs-on: ubuntu-latest
+        env:
+            FORCE_COLOR: 1
         steps:
             - &checkout
               name: checkout

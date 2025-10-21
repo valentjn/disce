@@ -8,7 +8,7 @@
 import pytest
 from disce.storage.base import AbstractStorage
 
-from disce_tests.storage.dict import DictStorage
+from disce_tests.unit.storage.dict import DictStorage
 
 
 class TestAbstractStorage:

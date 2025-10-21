@@ -11,7 +11,7 @@ from typing import override
 import pytest
 from disce.data import AbstractStoredModel, Card, CardSide, Configuration, DeckData, UUIDModel, UUIDModelList
 
-from disce_tests.storage.dict import DictStorage
+from disce_tests.unit.storage.dict import DictStorage
 
 
 class DummyStoredModel(AbstractStoredModel, UUIDModel):

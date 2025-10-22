@@ -37,7 +37,7 @@ def parse_arguments() -> argparse.Namespace:
 def install_firefox() -> None:
     """Install Firefox if not already installed."""
     if which("firefox") is not None:
-        _logger.info("Firefox is already installed.")
+        _logger.info("Firefox is already installed")
         return
     with urllib.request.urlopen("https://packages.mozilla.org/apt/repo-signing-key.gpg") as response:
         keyring = response.read()

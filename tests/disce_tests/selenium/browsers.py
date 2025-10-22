@@ -15,7 +15,7 @@ import tarfile
 import time
 import urllib.request
 import zipfile
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager, suppress
 from datetime import timedelta
 from enum import Enum, auto
@@ -102,14 +102,25 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
 
 @pytest.fixture(scope="session")
 def general_browser(driver_path: Path) -> Generator[Firefox]:
+    with create_browser(driver_path) as browser:
+        yield browser
+
+
+@contextmanager
+def create_browser(driver_path: Path, preferences: Mapping[str, str | int | bool] | None = None) -> Generator[Firefox]:
     options = Options()
     options.add_argument("--headless")
     options.set_preference("devtools.console.stdout.content", value=True)
+    preferences = preferences or {}
+    for key, value in preferences.items():
+        options.set_preference(key, value)
     with _forward_to_stderr() as forwarded_stderr:
         service = FirefoxService(executable_path=str(driver_path), log_output=forwarded_stderr)
         browser = Firefox(options=options, service=service)
-        yield browser
-        browser.quit()
+        try:
+            yield browser
+        finally:
+            browser.quit()
 
 
 @contextmanager

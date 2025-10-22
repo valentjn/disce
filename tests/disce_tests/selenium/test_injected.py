@@ -20,7 +20,7 @@ import tomlkit
 import tomlkit.items
 from selenium.webdriver import Firefox
 
-from disce_tests.selenium.browsers import prepare_browser
+from disce_tests.selenium.browsers import create_browser, prepare_browser
 from disce_tests.selenium.outputs import watch_output
 from disce_tests.selenium.servers import start_server
 
@@ -72,9 +72,12 @@ def injected_server_url(injected_server_root_dir: Path) -> Generator[str]:
 
 
 @pytest.fixture
-def injected_browser(general_browser: Firefox, injected_server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
-    prepare_browser(general_browser, injected_server_url, capsys)
-    return general_browser
+def injected_browser(
+    driver_path: Path, injected_server_url: str, capsys: pytest.CaptureFixture[str]
+) -> Generator[Firefox]:
+    with create_browser(driver_path) as browser:
+        prepare_browser(browser, injected_server_url, capsys)
+        yield browser
 
 
 class Transformer:

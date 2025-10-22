@@ -86,7 +86,7 @@ def test_run_injected_tests(
 ) -> None:
     end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
     console_log_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
-    hide_pattern = re.compile(r".*\.coverage file of injected tests.*\n?")
+    coverage_pattern = re.compile(r".*\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*).*\n?")
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
     matches = watch_output(
@@ -95,13 +95,10 @@ def test_run_injected_tests(
         timeout=timedelta(seconds=20.0),
         start_pattern=re.compile(r"running injected tests"),
         end_pattern=end_pattern,
-        return_patterns=[
-            end_pattern,
-            re.compile(r"\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*)"),
-        ],
+        return_patterns=[end_pattern, coverage_pattern],
         always_print=True,
         transformers=[
-            lambda output: hide_pattern.sub("", output),
+            lambda output: coverage_pattern.sub("", output),
             lambda output: console_log_pattern.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
         ],
     )

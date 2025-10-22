@@ -80,20 +80,12 @@ def injected_browser(
         yield browser
 
 
-class Transformer:
-    CONSOLE_LOG_PATTERN = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
-    HIDE_PATTERN = re.compile(r".*\.coverage file of injected tests.*\n?")
-
-    @staticmethod
-    def transform(output: str) -> str:
-        output = Transformer.HIDE_PATTERN.sub("", output)
-        return Transformer.CONSOLE_LOG_PATTERN.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output)
-
-
-def test_injected(
+def test_run_injected_tests(
     injected_browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
 ) -> None:
     end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
+    console_log_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
+    hide_pattern = re.compile(r".*\.coverage file of injected tests.*\n?")
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
     matches = watch_output(
@@ -107,7 +99,10 @@ def test_injected(
             re.compile(r"\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*)"),
         ],
         always_print=True,
-        transformer=Transformer.transform,
+        transformers=[
+            lambda output: hide_pattern.sub("", output),
+            lambda output: console_log_pattern.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
+        ],
     )
     assert matches[0] is not None
     exit_code = int(matches[0]["exit_code"])

@@ -29,9 +29,9 @@ def watch_output(  # noqa: PLR0913
     end_pattern: re.Pattern[str],
     return_patterns: Sequence[re.Pattern[str]] = (),
     always_print: bool = False,
-    transformer: Callable[[str], str] | None = None,
+    transformers: Sequence[Callable[[str], str]] = (),
 ) -> list[re.Match[str] | None]:
-    stdout, stderr = _tee_output(capsys, transformer=transformer)
+    stdout, stderr = _tee_output(capsys, transformers=transformers)
     start_time = time.monotonic()
     found_start_match = start_pattern is None
     result: list[re.Match[str] | None] = [None] * len(return_patterns)
@@ -47,7 +47,7 @@ def watch_output(  # noqa: PLR0913
                 return result
         time.sleep(interval.total_seconds())
         new_stdout, new_stderr = _tee_output(
-            capsys, always_print=always_print and found_start_match, transformer=transformer
+            capsys, always_print=always_print and found_start_match, transformers=transformers
         )
         stdout += new_stdout
         stderr += new_stderr
@@ -60,18 +60,18 @@ def watch_output(  # noqa: PLR0913
 
 
 def _tee_output(
-    capsys: pytest.CaptureFixture[str], *, always_print: bool = False, transformer: Callable[[str], str] | None = None
+    capsys: pytest.CaptureFixture[str], *, always_print: bool = False, transformers: Sequence[Callable[[str], str]] = ()
 ) -> tuple[str, str]:
-    if not transformer:
-        transformer = _identity_transformer
     stdout, stderr = capsys.readouterr()
     with capsys.disabled() if always_print else _suspend_capsys(capsys):
-        print(transformer(stdout), end="")  # noqa: T201
-        print(transformer(stderr), end="", file=sys.stderr)  # noqa: T201
+        print(_transform(stdout, transformers), end="")  # noqa: T201
+        print(_transform(stderr, transformers), end="", file=sys.stderr)  # noqa: T201
     return stdout, stderr
 
 
-def _identity_transformer(output: str) -> str:
+def _transform(output: str, transformers: Sequence[Callable[[str], str]]) -> str:
+    for transformer in transformers:
+        output = transformer(output)
     return output
 
 

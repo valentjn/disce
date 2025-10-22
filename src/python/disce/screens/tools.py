@@ -102,7 +102,7 @@ def upload_file(accepted_types: str, listener: Callable[[str], None]) -> Element
             add_event_listener(reader, "load", process_loaded_data)
             reader.readAsText(file)
 
-    def process_loaded_data(event: Event) -> None:
+    def process_loaded_data(event: Event) -> None:  # pragma: no cover
         listener(event.currentTarget.result)
 
     input_element = create_element(

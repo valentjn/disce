@@ -12,8 +12,10 @@ import shutil
 import sys
 from base64 import b64decode
 from collections.abc import Generator
+from dataclasses import dataclass, fields
 from datetime import timedelta
 from pathlib import Path
+from time import sleep
 
 import disce
 import pytest
@@ -22,11 +24,11 @@ import tomlkit.items
 from selenium.webdriver import Firefox
 
 from disce_tests.selenium.browsers import create_browser, prepare_browser
-from disce_tests.selenium.outputs import watch_output
+from disce_tests.selenium.outputs import tee_output, watch_output
 from disce_tests.selenium.servers import start_server
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def injected_server_root_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     root_dir = _copy_disce_with_tests(tmp_path_factory.mktemp("server_root_dir") / "root")
     _inject_tests_into_index_html(root_dir / "index.html")
@@ -66,24 +68,57 @@ def _inject_tests_into_pyscript_toml(python_dir: Path) -> None:
     config_toml_path.write_text(tomlkit.dumps(config_toml))
 
 
-@pytest.fixture(scope="session")
-def injected_server_url(injected_server_root_dir: Path) -> Generator[str]:
+@pytest.fixture(scope="module")
+def server_url(injected_server_root_dir: Path) -> Generator[str]:
     with start_server(injected_server_root_dir) as url:
         yield url
 
 
+@pytest.fixture(scope="module")
+def download_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    return tmp_path_factory.mktemp("download_dir")
+
+
 @pytest.fixture
-def injected_browser(
-    driver_path: Path, injected_server_url: str, capsys: pytest.CaptureFixture[str]
+def browser(
+    driver_path: Path, server_url: str, capsys: pytest.CaptureFixture[str], download_dir: Path
 ) -> Generator[Firefox]:
-    with create_browser(driver_path) as browser:
-        prepare_browser(browser, injected_server_url, capsys)
+    preferences: dict[str, str | int | bool] = {
+        # don't open download dialog
+        "browser.download.dir": str(download_dir),
+        "browser.download.folderList": 2,
+        "browser.helperApps.neverAsk.saveToDisk": "application/json",
+        # disable beforeunload dialogs
+        "dom.disable_beforeunload": True,
+    }
+    with create_browser(driver_path, preferences=preferences) as browser:
+        prepare_browser(browser, server_url, capsys)
         yield browser
 
 
+@dataclass
+class PostRunResults:
+    screens_tools_upload_file = False
+
+    def output_transformer(self, message: str) -> str:
+        if "test_upload_file: listener called correctly" in message:
+            self.screens_tools_upload_file = True
+        return message
+
+    def check_all_passed(self) -> bool:
+        return all(getattr(self, test.name) for test in fields(self))
+
+    def assert_all_passed(self) -> None:
+        for test in fields(self):
+            passed = getattr(self, test.name)
+            assert passed, f"{test} did not pass"
+
+
+@pytest.mark.order(0)
 def test_run_injected_tests(
-    injected_browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
+    browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
 ) -> None:
+    post_run_results = PostRunResults()
     end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
     console_log_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
     coverage_pattern = re.compile(r".*\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*).*\n?")
@@ -100,6 +135,7 @@ def test_run_injected_tests(
         transformers=[
             lambda output: coverage_pattern.sub("", output),
             lambda output: console_log_pattern.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
+            post_run_results.output_transformer,
         ],
     )
     assert matches[0] is not None
@@ -110,3 +146,12 @@ def test_run_injected_tests(
         (request.config.rootpath / ".coverage").write_bytes(
             gzip.decompress(b64decode(matches[1]["coverage_file"].encode()))
         )
+    if not post_run_results.check_all_passed():
+        sleep(1.0)
+        tee_output(capsys, transformers=[post_run_results.output_transformer])
+    post_run_results.assert_all_passed()
+
+
+@pytest.mark.order(1)
+def test_screens_tools_download_file(download_dir: Path) -> None:
+    assert (download_dir / "test_screens_tools_download_file.json").read_text() == '{"key": "value"}'

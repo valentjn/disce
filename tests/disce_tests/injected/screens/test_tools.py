@@ -5,11 +5,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import logging
 from collections.abc import Generator
 
 import pytest
-from disce.screens.tools import Element, Event, append_child, create_element, hide_element, set_theme, show_element
+from disce.screens.tools import (
+    Element,
+    Event,
+    append_child,
+    create_element,
+    download_file,
+    hide_element,
+    set_theme,
+    show_element,
+    upload_file,
+)
 from pyscript import document, window
+
+_logger = logging.getLogger(__name__)
 
 
 class TestCreateElement:
@@ -118,3 +131,21 @@ def test_set_theme(theme: str, restore_theme: None) -> None:
 def test_set_theme_auto(restore_theme: None) -> None:
     set_theme()
     assert document.documentElement.getAttribute("data-bs-theme") in {"dark", "light"}
+
+
+def test_screens_tools_download_file() -> None:
+    download_file("test_screens_tools_download_file.json", "application/json", '{"key": "value"}')
+
+
+def test_upload_file() -> None:
+    def listener(content_: str) -> None:
+        if content_ == '{"key": "value"}':
+            _logger.info("test_upload_file: listener called correctly")
+
+    element = upload_file("application/json", listener)
+    data_transfer = window.DataTransfer.new()
+    data_transfer.items.add(
+        window.File.new(['{"key": "value"}'], "test_upload_file.json", {"type": "application/json"})
+    )
+    element.files = data_transfer.files
+    element.dispatchEvent(window.Event.new("change"))

@@ -92,7 +92,7 @@ def download_file(filename: str, type_: str, content: str) -> None:
     window.URL.revokeObjectURL(url)
 
 
-def upload_file(accepted_types: str, listener: Callable[[str], None]) -> None:
+def upload_file(accepted_types: str, listener: Callable[[str], None]) -> Element:
     """Open a file dialog and handle the selected file with the given listener."""
 
     def handle_uploaded_file(event: Event) -> None:
@@ -109,3 +109,4 @@ def upload_file(accepted_types: str, listener: Callable[[str], None]) -> None:
         "input", event_listeners={"change": handle_uploaded_file}, type="file", accept=accepted_types
     )
     input_element.click()
+    return input_element

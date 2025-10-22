@@ -31,7 +31,7 @@ def watch_output(  # noqa: PLR0913
     always_print: bool = False,
     transformers: Sequence[Callable[[str], str]] = (),
 ) -> list[re.Match[str] | None]:
-    stdout, stderr = _tee_output(capsys, transformers=transformers)
+    stdout, stderr = tee_output(capsys, transformers=transformers)
     start_time = time.monotonic()
     found_start_match = start_pattern is None
     result: list[re.Match[str] | None] = [None] * len(return_patterns)
@@ -46,7 +46,7 @@ def watch_output(  # noqa: PLR0913
             if end_pattern.search(output_to_search):
                 return result
         time.sleep(interval.total_seconds())
-        new_stdout, new_stderr = _tee_output(
+        new_stdout, new_stderr = tee_output(
             capsys, always_print=always_print and found_start_match, transformers=transformers
         )
         stdout += new_stdout
@@ -59,7 +59,7 @@ def watch_output(  # noqa: PLR0913
     raise TimeoutError(msg)
 
 
-def _tee_output(
+def tee_output(
     capsys: pytest.CaptureFixture[str], *, always_print: bool = False, transformers: Sequence[Callable[[str], str]] = ()
 ) -> tuple[str, str]:
     stdout, stderr = capsys.readouterr()

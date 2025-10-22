@@ -239,7 +239,7 @@ class DecksScreen(AbstractScreen):
                 for deck_data, deck_metadata in zip(deck_data_to_export, deck_metadata_to_export, strict=True)
             ]
         )
-        download_file(f"{stem}.json", deck_export.model_dump_json(indent=4))
+        download_file(f"{stem}.json", "application/json", deck_export.model_dump_json(indent=4))
         self.render()
 
     def delete_decks(self, _event: Event | None = None) -> None:

@@ -83,9 +83,9 @@ def set_theme(theme: str | None = None) -> None:
     document.documentElement.setAttribute("data-bs-theme", theme)
 
 
-def download_file(filename: str, content: str) -> None:
+def download_file(filename: str, type_: str, content: str) -> None:
     """Offer a file for download with the given content."""
-    blob = window.Blob.new([content], {"type": "text/plain"})
+    blob = window.Blob.new([content], {"type": type_})
     url = window.URL.createObjectURL(blob)
     a_element = create_element("a", href=url, download=filename)
     a_element.click()

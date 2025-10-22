@@ -27,7 +27,7 @@ import pytest
 from selenium.webdriver import Firefox, FirefoxService
 from selenium.webdriver.firefox.options import Options
 
-from disce_tests.selenium import outputs
+from disce_tests.selenium.outputs import watch_output
 
 _logger = logging.getLogger(__name__)
 
@@ -149,6 +149,6 @@ def browser(general_browser: Firefox, server_url: str, capsys: pytest.CaptureFix
 
 def prepare_browser(browser: Firefox, server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
     browser.get(server_url)
-    outputs.watch_output(capsys, "stderr", timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
+    watch_output(capsys, "stderr", timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
     time.sleep(0.5)
     return browser

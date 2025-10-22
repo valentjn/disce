@@ -20,7 +20,9 @@ import tomlkit
 import tomlkit.items
 from selenium.webdriver import Firefox
 
-from disce_tests.selenium import browsers, outputs, servers
+from disce_tests.selenium.browsers import prepare_browser
+from disce_tests.selenium.outputs import watch_output
+from disce_tests.selenium.servers import start_server
 
 
 @pytest.fixture(scope="session")
@@ -65,13 +67,13 @@ def _inject_tests_into_pyscript_toml(python_dir: Path) -> None:
 
 @pytest.fixture(scope="session")
 def injected_server_url(injected_server_root_dir: Path) -> Generator[str]:
-    with servers.start_server(injected_server_root_dir) as url:
+    with start_server(injected_server_root_dir) as url:
         yield url
 
 
 @pytest.fixture
 def injected_browser(general_browser: Firefox, injected_server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
-    browsers.prepare_browser(general_browser, injected_server_url, capsys)
+    prepare_browser(general_browser, injected_server_url, capsys)
     return general_browser
 
 
@@ -91,7 +93,7 @@ def test_injected(
     end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
-    matches = outputs.watch_output(
+    matches = watch_output(
         capsys,
         "stderr",
         timeout=timedelta(seconds=20.0),

@@ -99,10 +99,10 @@ def upload_file(accepted_types: str, listener: Callable[[str], None]) -> Element
         input_element = event.currentTarget
         for file in input_element.files:
             reader = window.FileReader.new()
-            add_event_listener(reader, "load", process_imported_data)
+            add_event_listener(reader, "load", process_loaded_data)
             reader.readAsText(file)
 
-    def process_imported_data(event: Event) -> None:
+    def process_loaded_data(event: Event) -> None:
         listener(event.currentTarget.result)
 
     input_element = create_element(

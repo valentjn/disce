@@ -5,6 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import gzip
 import logging
 from base64 import b64encode
 from pathlib import Path
@@ -35,5 +36,7 @@ def main() -> None:
             "disce_tests/injected",
         ]
     )
-    _logger.info(".coverage file of injected tests: %s", b64encode(Path(".coverage").read_bytes()).decode())
+    _logger.info(
+        ".coverage file of injected tests: %s", b64encode(gzip.compress(Path(".coverage").read_bytes())).decode()
+    )
     _logger.info("finished injected tests, exit code: %d", exit_code)

@@ -6,6 +6,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import ast
+import gzip
 import re
 import shutil
 import sys
@@ -109,4 +110,6 @@ def test_run_injected_tests(
     assert exit_code == 0
     if request.config.getoption("--copy-coverage"):
         assert matches[1] is not None
-        (request.config.rootpath / ".coverage").write_bytes(b64decode(matches[1]["coverage_file"].encode()))
+        (request.config.rootpath / ".coverage").write_bytes(
+            gzip.decompress(b64decode(matches[1]["coverage_file"].encode()))
+        )

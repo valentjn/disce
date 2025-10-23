@@ -125,7 +125,12 @@ def create_browser(driver_path: Path, preferences: Mapping[str, str | int | bool
         try:
             yield browser
         finally:
-            browser.quit()
+            thread = Thread(target=browser.quit, daemon=True)
+            thread.start()
+            thread.join(timeout=5.0)
+            if thread.is_alive():
+                _logger.warning("timed out waiting for browser to quit, killing the process")
+                browser.service.process.kill()
 
 
 @contextmanager

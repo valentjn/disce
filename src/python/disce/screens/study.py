@@ -11,8 +11,8 @@ from typing import override
 import disce.screens.decks as decks_screen
 from disce.data import Card, CardSide, Configuration, DeckData
 from disce.diffs import Diff
-from disce.screens.base import AbstractScreen, EventBinding
-from disce.screens.tools import Event, hide_element, show_element
+from disce.pyscript import Event, EventBinding, hide_element, show_element
+from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
 
 

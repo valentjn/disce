@@ -9,7 +9,7 @@ import logging
 from collections.abc import Generator
 
 import pytest
-from disce.screens.tools import (
+from disce.pyscript import (
     Element,
     Event,
     append_child,
@@ -133,19 +133,19 @@ def test_set_theme_auto(restore_theme: None) -> None:
     assert document.documentElement.getAttribute("data-bs-theme") in {"dark", "light"}
 
 
-def test_screens_tools_download_file() -> None:
-    download_file("test_screens_tools_download_file.json", "application/json", '{"key": "value"}')
+def test_download_file() -> None:
+    download_file("test_pyscript_test_download_file.json", "application/json", '{"key": "value"}')
 
 
 def test_upload_file() -> None:
     def listener(content_: str) -> None:
         if content_ == '{"key": "value"}':
-            _logger.info("test_upload_file: listener called correctly")
+            _logger.info("test_pyscript.py::test_upload_file: listener called correctly")
 
     element = upload_file("application/json", listener)
     data_transfer = window.DataTransfer.new()
     data_transfer.items.add(
-        window.File.new(['{"key": "value"}'], "test_upload_file.json", {"type": "application/json"})
+        window.File.new(['{"key": "value"}'], "test_pyscript_test_upload_file.json", {"type": "application/json"})
     )
     element.files = data_transfer.files
     element.dispatchEvent(window.Event.new("change"))

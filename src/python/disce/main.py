@@ -17,9 +17,9 @@ _logger = logging.getLogger(__name__)
 
 def main() -> None:  # pragma: no cover
     """Run the main application logic."""
+    from disce.pyscript import set_theme  # noqa: PLC0415
     from disce.screens.decks import DecksScreen  # noqa: PLC0415
     from disce.screens.load import LoadScreen  # noqa: PLC0415
-    from disce.screens.tools import set_theme  # noqa: PLC0415
     from disce.storage.local import LocalStorage  # noqa: PLC0415
 
     set_up_logging()

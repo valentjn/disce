@@ -98,11 +98,11 @@ def browser(
 
 @dataclass
 class PostRunResults:
-    screens_tools_upload_file = False
+    test_pyscript_test_alert = False
 
     def output_transformer(self, message: str) -> str:
-        if "test_upload_file: listener called correctly" in message:
-            self.screens_tools_upload_file = True
+        if "test_pyscript.py::test_upload_file: listener called correctly" in message:
+            self.test_pyscript_test_upload_file = True
         return message
 
     def check_all_passed(self) -> bool:
@@ -153,5 +153,5 @@ def test_run_injected_tests(
 
 
 @pytest.mark.order(1)
-def test_screens_tools_download_file(download_dir: Path) -> None:
-    assert (download_dir / "test_screens_tools_download_file.json").read_text() == '{"key": "value"}'
+def test_pyscript_download_file(download_dir: Path) -> None:
+    assert (download_dir / "test_pyscript_test_download_file.json").read_text() == '{"key": "value"}'

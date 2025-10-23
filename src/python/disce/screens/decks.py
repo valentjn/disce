@@ -11,13 +11,24 @@ import re
 from typing import override
 
 from pydantic import ValidationError
-from pyscript import document, window
 
 import disce.screens.edit_deck as edit_deck_screen
 import disce.screens.study as study_screen
 from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
-from disce.screens.base import AbstractScreen, EventBinding
-from disce.screens.tools import Event, append_child, create_element, download_file, select_all_elements, upload_file
+from disce.pyscript import (
+    Event,
+    EventBinding,
+    alert,
+    append_child,
+    confirm,
+    create_element,
+    download_file,
+    prompt,
+    select_all_elements,
+    show_modal,
+    upload_file,
+)
+from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
 from disce.tools import format_plural
 
@@ -156,13 +167,13 @@ class DecksScreen(AbstractScreen):
             try:
                 deck_export = DeckExport.model_validate_json(json)
             except ValidationError as exception:
-                window.alert(f"failed to parse imported data: {exception}")
+                alert(f"failed to parse imported data: {exception}")
                 return
             configuration = Configuration.load_from_storage_or_create(self._storage)
             overwriting_deck_uuids = {deck.metadata.uuid for deck in deck_export.decks} & {
                 deck.uuid for deck in configuration.deck_metadata
             }
-            if overwriting_deck_uuids and not window.confirm(
+            if overwriting_deck_uuids and not confirm(
                 f"The imported data contains {format_plural(len(overwriting_deck_uuids), 'deck')} (see below) that "
                 f"will overwrite existing decks. Do you want to continue?\n\n"
                 f"{format_plural(len(overwriting_deck_uuids), 'Name', omit_number=True)} of "
@@ -196,12 +207,12 @@ class DecksScreen(AbstractScreen):
         """Merge selected decks."""
         selected_deck_uuids = self.get_selected_deck_uuids()
         if len(selected_deck_uuids) < DecksScreen._MINIMUM_NUMBER_OF_DECKS_TO_MERGE:
-            window.alert(
+            alert(
                 f"Please select at least {format_plural(DecksScreen._MINIMUM_NUMBER_OF_DECKS_TO_MERGE, 'deck')} to "
                 "merge."
             )
             return
-        merged_deck_name = window.prompt("Enter a name for the merged deck:", "Merged Deck")
+        merged_deck_name = prompt("Enter a name for the merged deck:", "Merged Deck")
         if not merged_deck_name:
             return
         configuration = Configuration.load_from_storage_or_create(self._storage)
@@ -219,7 +230,7 @@ class DecksScreen(AbstractScreen):
         """Export selected decks."""
         selected_deck_uuids = self.get_selected_deck_uuids()
         if not selected_deck_uuids:
-            window.alert("Please select at least one deck to export.")
+            alert("Please select at least one deck to export.")
             return
         deck_data_to_export = [
             DeckData.load_from_storage(self._storage, deck_uuid) for deck_uuid in selected_deck_uuids
@@ -246,11 +257,9 @@ class DecksScreen(AbstractScreen):
         """Delete selected decks."""
         selected_deck_uuids = self.get_selected_deck_uuids()
         if not selected_deck_uuids:
-            window.alert("Please select at least one deck to delete.")
+            alert("Please select at least one deck to delete.")
             return
-        if window.confirm(
-            f"Are you sure you want to delete the selected {format_plural(len(selected_deck_uuids), 'deck')}?"
-        ):
+        if confirm(f"Are you sure you want to delete the selected {format_plural(len(selected_deck_uuids), 'deck')}?"):
             configuration = Configuration.load_from_storage_or_create(self._storage)
             for deck_uuid in selected_deck_uuids:
                 DeckData.delete_from_storage(self._storage, deck_uuid)
@@ -289,7 +298,7 @@ class DecksScreen(AbstractScreen):
         original_deck_uuid: UUID = event.currentTarget.getAttribute("data-deck-uuid")
         configuration = Configuration.load_from_storage_or_create(self._storage)
         original_deck_metadata = configuration.deck_metadata[original_deck_uuid]
-        new_deck_name = window.prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
+        new_deck_name = prompt("Enter a name for the duplicated deck:", f"Copy of {original_deck_metadata.name}")
         if not new_deck_name:
             return
         original_deck_data = DeckData.load_from_storage(self._storage, original_deck_uuid)
@@ -314,7 +323,7 @@ class DecksScreen(AbstractScreen):
         deck_uuid: UUID = event.currentTarget.getAttribute("data-deck-uuid")
         configuration = Configuration.load_from_storage_or_create(self._storage)
         deck_metadata = configuration.deck_metadata[deck_uuid]
-        if window.confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):
+        if confirm(f'Are you sure you want to delete the deck "{deck_metadata.name}"?'):
             DeckData.delete_from_storage(self._storage, deck_uuid)
             del configuration.deck_metadata[deck_uuid]
             configuration.save_to_storage(self._storage)
@@ -323,15 +332,15 @@ class DecksScreen(AbstractScreen):
     def open_settings_modal(self, _event: Event | None = None) -> None:
         """Open the settings modal and populate fields from configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
-        document.getElementById("disce-history-length-input").value = configuration.history_length
-        document.getElementById("disce-typewriter-mode-input").checked = configuration.typewriter_mode
-        window.bootstrap.Modal.new(self.select_child(".disce-settings-modal")).show()
+        self.select_child(".disce-history-length-input").value = str(configuration.history_length)
+        self.select_child(".disce-typewriter-mode-input").checked = configuration.typewriter_mode
+        show_modal(self.select_child(".disce-settings-modal"))
 
     def save_settings(self, _event: Event | None = None) -> None:
         """Save settings from the modal dialog to configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
-        configuration.history_length = int(document.getElementById("disce-history-length-input").value)
-        configuration.typewriter_mode = document.getElementById("disce-typewriter-mode-input").checked
+        configuration.history_length = int(self.select_child(".disce-history-length-input").value)
+        configuration.typewriter_mode = self.select_child(".disce-typewriter-mode-input").checked
         configuration.save_to_storage(self._storage)
 
     def get_deck_uuids(self) -> list[UUID]:

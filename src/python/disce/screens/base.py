@@ -7,32 +7,8 @@
 """Module defining the base class for all screens."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
-from pyodide.ffi import JsNull
-from pyodide.ffi.wrappers import add_event_listener, remove_event_listener  # pyright: ignore[reportMissingModuleSource]
-
-from disce.screens.tools import Element, EventListener, hide_element, select_element, show_element
-
-
-@dataclass
-class EventBinding:
-    """Data class representing an event binding."""
-
-    element: Element
-    """Element to which the event listener is attached."""
-    event: str
-    """Name of the event."""
-    listener: EventListener
-    """Event listener function."""
-
-    def register(self) -> None:
-        """Register the event listener."""
-        add_event_listener(self.element, self.event, self.listener)
-
-    def unregister(self) -> None:
-        """Unregister the event listener."""
-        remove_event_listener(self.element, self.event, self.listener)
+from disce.pyscript import Element, EventBinding, hide_element, is_null, select_element, show_element
 
 
 class AbstractScreen(ABC):
@@ -95,9 +71,9 @@ class AbstractScreen(ABC):
     def select_child(self, selector: str) -> Element:
         """Select a child element within the screen."""
         element = self.element.querySelector(selector)
-        if isinstance(element, JsNull):
+        if is_null(element):
             msg = f"could not find child element of {self.selector} matching selector: {selector}"
-            raise ValueError(msg)  # noqa: TRY004
+            raise ValueError(msg)
         return element
 
     def select_all_children(self, selector: str) -> list[Element]:

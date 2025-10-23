@@ -8,12 +8,19 @@
 
 from typing import override
 
-from pyscript import window
-
 import disce.screens.decks as decks_screen
 from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata, UUIDModelList
-from disce.screens.base import AbstractScreen, EventBinding
-from disce.screens.tools import Element, Event, append_child, create_element, select_all_elements
+from disce.pyscript import (
+    Element,
+    Event,
+    EventBinding,
+    append_child,
+    confirm,
+    create_element,
+    select_all_elements,
+    show_toast,
+)
+from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
 from disce.tools import format_plural
 
@@ -170,7 +177,7 @@ class EditDeckScreen(AbstractScreen):
         configuration.deck_metadata.set(deck_metadata)
         configuration.save_to_storage(self._storage)
         deck_data.save_to_storage(self._storage)
-        window.bootstrap.Toast.new(self.select_child(".disce-deck-saved-toast")).show()
+        show_toast(self.select_child(".disce-deck-saved-toast"))
 
     def select_all_decks(self, _event: Event | None = None) -> None:
         """Select or deselect all decks."""
@@ -186,9 +193,7 @@ class EditDeckScreen(AbstractScreen):
         selected_card_uuids = set(self.get_selected_card_uuids())
         if not selected_card_uuids:
             return
-        if window.confirm(
-            f"Are you sure you want to delete the selected {format_plural(len(selected_card_uuids), 'card')}?"
-        ):
+        if confirm(f"Are you sure you want to delete the selected {format_plural(len(selected_card_uuids), 'card')}?"):
             deck_data, deck_metadata = self.get_deck()
             deck_data.cards = UUIDModelList([card for card in deck_data.cards if card.uuid not in selected_card_uuids])
             self.render(deck_metadata)
@@ -220,7 +225,7 @@ class EditDeckScreen(AbstractScreen):
                 unsaved_changes = True
         else:
             unsaved_changes = len(deck_data.cards) > 0
-        if unsaved_changes and not window.confirm("You have unsaved changes. Do you want to discard them?"):
+        if unsaved_changes and not confirm("You have unsaved changes. Do you want to discard them?"):
             return
         decks_screen.DecksScreen(self._storage).show()
         self.hide()

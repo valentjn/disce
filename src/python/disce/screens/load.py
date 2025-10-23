@@ -8,7 +8,8 @@
 
 from typing import override
 
-from disce.screens.base import AbstractScreen, EventBinding
+from disce.pyscript import EventBinding
+from disce.screens.base import AbstractScreen
 
 
 class LoadScreen(AbstractScreen):

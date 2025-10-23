@@ -9,9 +9,9 @@
 from collections.abc import Iterator
 from typing import cast, override
 
-from pyodide.ffi import JsNull
 from pyscript import window
 
+from disce.pyscript import is_null
 from disce.storage.base import AbstractStorage
 
 
@@ -26,7 +26,7 @@ class LocalStorage(AbstractStorage):
     @override
     def __getitem__(self, key: str) -> str:
         value = cast("str", window.localStorage.getItem(key))
-        if isinstance(value, JsNull):
+        if is_null(value):
             raise KeyError(key)
         return value
 

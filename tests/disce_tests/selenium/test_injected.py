@@ -99,17 +99,21 @@ class PostRunResults:
     test_pyscript_test_alert = False
 
     def output_transformer(self, message: str) -> str:
-        if "test_pyscript.py::test_upload_file: listener called correctly" in message:
+        if "test_pyscript.py::test_upload_file: listener_called_correctly" in message:
             self.test_pyscript_test_upload_file = True
         return message
 
+    @property
+    def field_names(self) -> list[str]:
+        return [field.name for field in fields(self) if field.name != "browser"]
+
     def check_all_passed(self) -> bool:
-        return all(getattr(self, test.name) for test in fields(self))
+        return all(getattr(self, field_name) for field_name in self.field_names)
 
     def assert_all_passed(self) -> None:
-        for test in fields(self):
-            passed = getattr(self, test.name)
-            assert passed, f"{test} did not pass"
+        for field_name in self.field_names:
+            passed = getattr(self, field_name)
+            assert passed, f"{field_name} did not pass"
 
 
 @pytest.mark.order(0)

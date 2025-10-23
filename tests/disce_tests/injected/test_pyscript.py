@@ -137,10 +137,10 @@ def test_download_file() -> None:
     download_file("test_pyscript_test_download_file.json", "application/json", '{"key": "value"}')
 
 
-def test_upload_file() -> None:
+def test_upload_file(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     def listener(content_: str) -> None:
         if content_ == '{"key": "value"}':
-            _logger.info("test_pyscript.py::test_upload_file: listener called correctly")
+            print_signal("listener_called_correctly", capsys, request)
 
     element = upload_file("application/json", listener)
     data_transfer = window.DataTransfer.new()

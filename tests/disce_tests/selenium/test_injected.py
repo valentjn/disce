@@ -11,21 +11,28 @@ import re
 import shutil
 import sys
 from base64 import b64decode
-from collections.abc import Generator
-from dataclasses import dataclass, fields
+from collections.abc import Callable, Generator
+from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 from pathlib import Path
 from time import sleep
+from typing import TYPE_CHECKING
 
 import disce
 import pytest
 import tomlkit
 import tomlkit.items
 from selenium.webdriver import Firefox
+from selenium.webdriver.support.expected_conditions import alert_is_present
+from selenium.webdriver.support.ui import WebDriverWait
 
 from disce_tests.selenium.browsers import create_browser, prepare_browser
 from disce_tests.selenium.outputs import tee_output, watch_output
 from disce_tests.selenium.servers import start_server
+
+if TYPE_CHECKING:
+    from selenium.webdriver.common.alert import Alert
 
 
 @pytest.fixture(scope="module")
@@ -95,32 +102,89 @@ def browser(
 
 
 @dataclass
-class PostRunResults:
-    test_pyscript_test_alert = False
-
-    def output_transformer(self, message: str) -> str:
-        if "test_pyscript.py::test_upload_file: listener_called_correctly" in message:
-            self.test_pyscript_test_upload_file = True
-        return message
+class Signal:
+    filename: str
+    test_name: str
+    signal_name: str
+    handler: Callable[[], None] | None
+    received: bool = False
 
     @property
-    def field_names(self) -> list[str]:
-        return [field.name for field in fields(self) if field.name != "browser"]
+    def message(self) -> str:
+        return f"{self.filename}::{self.test_name}: {self.signal_name}"
 
-    def check_all_passed(self) -> bool:
-        return all(getattr(self, field_name) for field_name in self.field_names)
 
-    def assert_all_passed(self) -> None:
-        for field_name in self.field_names:
-            passed = getattr(self, field_name)
-            assert passed, f"{field_name} did not pass"
+@dataclass
+class Signals:
+    signal_list: list[Signal]
+
+    def output_transformer(self, message: str) -> str:
+        for signal in self.signal_list:
+            if signal.message in message:
+                if signal.received:
+                    msg = f"received duplicate signal: {signal.message}"
+                    raise AssertionError(msg)
+                if signal.handler:
+                    signal.handler()
+                signal.received = True
+        return message
+
+    def check_all_received(self) -> bool:
+        return all(test.received for test in self.signal_list)
+
+    def assert_all_received(self) -> None:
+        missing_signals = [signal for signal in self.signal_list if not signal.received]
+        if missing_signals:
+            missing_messages = ", ".join(signal.message for signal in missing_signals)
+            msg = f"did not receive expected signals: {missing_messages}"
+            raise AssertionError(msg)
+
+
+def _create_signals(browser: Firefox) -> Signals:
+    return Signals(
+        [
+            Signal("test_pyscript.py", "test_alert", "before_alert", partial(_wait_for_alert, browser)),
+            Signal("test_pyscript.py", "test_confirm_accepted", "before_confirm", partial(_wait_for_alert, browser)),
+            Signal(
+                "test_pyscript.py",
+                "test_confirm_dismissed",
+                "before_confirm",
+                lambda: _wait_for_alert(browser, accept=False),
+            ),
+            Signal(
+                "test_pyscript.py",
+                "test_prompt_accepted",
+                "before_prompt",
+                lambda: _wait_for_alert(browser, input_="user_value"),
+            ),
+            Signal("test_pyscript.py", "test_prompt_default", "before_prompt", partial(_wait_for_alert, browser)),
+            Signal(
+                "test_pyscript.py",
+                "test_prompt_dismissed",
+                "before_prompt",
+                lambda: _wait_for_alert(browser, accept=False),
+            ),
+            Signal("test_pyscript.py", "test_upload_file", "listener_called_correctly", None),
+        ]
+    )
+
+
+def _wait_for_alert(browser: Firefox, *, accept: bool = True, input_: str | None = None) -> None:
+    alert: Alert = WebDriverWait(browser, 1.0).until(alert_is_present())
+    assert alert.text == "message"
+    if input_ is not None:
+        alert.send_keys(input_)
+    if accept:
+        alert.accept()
+    else:
+        alert.dismiss()
 
 
 @pytest.mark.order(0)
 def test_run_injected_tests(
     browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
 ) -> None:
-    post_run_results = PostRunResults()
+    signals = _create_signals(browser)
     end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
     console_log_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
     coverage_pattern = re.compile(r".*\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*).*\n?")
@@ -137,7 +201,7 @@ def test_run_injected_tests(
         transformers=[
             lambda output: coverage_pattern.sub("", output),
             lambda output: console_log_pattern.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
-            post_run_results.output_transformer,
+            signals.output_transformer,
         ],
     )
     assert matches[0] is not None
@@ -148,10 +212,10 @@ def test_run_injected_tests(
         (request.config.rootpath / ".coverage").write_bytes(
             gzip.decompress(b64decode(matches[1]["coverage_file"].encode()))
         )
-    if not post_run_results.check_all_passed():
+    if not signals.check_all_received():
         sleep(1.0)
-        tee_output(capsys, transformers=[post_run_results.output_transformer])
-    post_run_results.assert_all_passed()
+        tee_output(capsys, transformers=[signals.output_transformer])
+    signals.assert_all_received()
 
 
 @pytest.mark.order(1)

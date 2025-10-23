@@ -12,17 +12,45 @@ import pytest
 from disce.pyscript import (
     Element,
     Event,
+    EventBinding,
+    alert,
     append_child,
+    confirm,
     create_element,
     download_file,
     hide_element,
+    is_null,
+    prompt,
     set_theme,
     show_element,
     upload_file,
 )
+from pyodide.ffi import JsNull
 from pyscript import document, window
 
+from disce_tests.injected.tools import print_signal
+
 _logger = logging.getLogger(__name__)
+
+
+class TestEventBinding:
+    @staticmethod
+    def test_register_unregister() -> None:
+        clicked = False
+
+        def on_click(event: Event) -> None:
+            nonlocal clicked
+            clicked = True
+
+        element = create_element("div")
+        binding = EventBinding(element, "click", on_click)
+        binding.register()
+        element.dispatchEvent(window.Event.new("click"))
+        assert clicked
+        clicked = False
+        binding.unregister()
+        element.dispatchEvent(window.Event.new("click"))
+        assert not clicked
 
 
 class TestCreateElement:
@@ -149,3 +177,38 @@ def test_upload_file(capsys: pytest.CaptureFixture[str], request: pytest.Fixture
     )
     element.files = data_transfer.files
     element.dispatchEvent(window.Event.new("change"))
+
+
+def test_alert(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
+    print_signal("before_alert", capsys, request)
+    alert("message")
+
+
+def test_confirm_accepted(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
+    print_signal("before_confirm", capsys, request)
+    assert confirm("message")
+
+
+def test_confirm_dismissed(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
+    print_signal("before_confirm", capsys, request)
+    assert not confirm("message")
+
+
+def test_prompt_accepted(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
+    print_signal("before_prompt", capsys, request)
+    assert prompt("message", "default_value") == "user_value"
+
+
+def test_prompt_default(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
+    print_signal("before_prompt", capsys, request)
+    assert prompt("message", "default_value") == "default_value"
+
+
+def test_prompt_dismissed(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
+    print_signal("before_prompt", capsys, request)
+    assert prompt("message", "default_value") is None
+
+
+def test_is_null() -> None:
+    assert is_null(JsNull())
+    assert not is_null("non_null_value")

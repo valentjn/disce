@@ -88,8 +88,6 @@ def browser(
         "browser.download.dir": str(download_dir),
         "browser.download.folderList": 2,
         "browser.helperApps.neverAsk.saveToDisk": "application/json",
-        # disable beforeunload dialogs
-        "dom.disable_beforeunload": True,
     }
     with create_browser(driver_path, preferences=preferences) as browser:
         prepare_browser(browser, server_url, capsys)

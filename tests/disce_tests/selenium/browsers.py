@@ -110,8 +110,13 @@ def general_browser(driver_path: Path) -> Generator[Firefox]:
 def create_browser(driver_path: Path, preferences: Mapping[str, str | int | bool] | None = None) -> Generator[Firefox]:
     options = Options()
     options.add_argument("--headless")
-    options.set_preference("devtools.console.stdout.content", value=True)
-    preferences = preferences or {}
+    default_preferences: dict[str, str | int | bool] = {
+        # enable logging from the browser console to stderr
+        "devtools.console.stdout.content": True,
+        # disable beforeunload dialogs
+        "dom.disable_beforeunload": True,
+    }
+    preferences = default_preferences | (dict(preferences) if preferences else {})
     for key, value in preferences.items():
         options.set_preference(key, value)
     with _forward_to_stderr() as forwarded_stderr:

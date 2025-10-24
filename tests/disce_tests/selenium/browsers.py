@@ -68,7 +68,7 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
     geckodriver_filename = "geckodriver.exe" if operating_system is _OperatingSystem.WINDOWS else "geckodriver"
     geckodriver_path = geckodriver_dir / geckodriver_filename
     if geckodriver_path.exists():
-        _logger.info("Using cached geckodriver from %s", geckodriver_path)
+        _logger.info("using cached geckodriver from %s", geckodriver_path)
         return geckodriver_path
     with urllib.request.urlopen("https://api.github.com/repos/mozilla/geckodriver/releases/latest") as response:
         release_info = json.load(response)
@@ -87,7 +87,7 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
         for asset in release_info["assets"]
         if asset["browser_download_url"].endswith(suffix)
     )
-    _logger.info("Downloading geckodriver from %s", asset_url)
+    _logger.info("downloading geckodriver from %s", asset_url)
     with urllib.request.urlopen(asset_url) as response:
         archive = response.read()
     with BytesIO(archive) as archive_file:

@@ -65,16 +65,14 @@ def tee_output(
     stdout, stderr = capsys.readouterr()
     for output, output_type in ((stdout, "stdout"), (stderr, "stderr")):
         if output:
-            with capsys.disabled() if always_print else _suspend_capsys(capsys):
-                file = sys.stdout if output_type == "stdout" else sys.stderr
-                print(_transform(output, transformers), end="", file=file)
+            transformed_output = output
+            for transformer in transformers:
+                transformed_output = transformer(transformed_output)
+            if transformed_output:
+                with capsys.disabled() if always_print else _suspend_capsys(capsys):
+                    file = sys.stdout if output_type == "stdout" else sys.stderr
+                    print(transformed_output, end="", file=file)
     return stdout, stderr
-
-
-def _transform(output: str, transformers: Sequence[Callable[[str], str]]) -> str:
-    for transformer in transformers:
-        output = transformer(output)
-    return output
 
 
 @contextmanager

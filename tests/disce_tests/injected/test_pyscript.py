@@ -181,32 +181,32 @@ def test_upload_file(capsys: pytest.CaptureFixture[str], request: pytest.Fixture
 
 def test_alert(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     print_signal("before_alert", capsys, request)
-    alert("message")
+    alert("test_alert_message")
 
 
 def test_confirm_accepted(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     print_signal("before_confirm", capsys, request)
-    assert confirm("message")
+    assert confirm("test_confirm_accepted_message")
 
 
 def test_confirm_dismissed(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     print_signal("before_confirm", capsys, request)
-    assert not confirm("message")
+    assert not confirm("test_confirm_dismissed_message")
 
 
 def test_prompt_accepted(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     print_signal("before_prompt", capsys, request)
-    assert prompt("message", "default_value") == "user_value"
+    assert prompt("test_prompt_accepted_message", "default_value") == "user_value"
 
 
 def test_prompt_default(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     print_signal("before_prompt", capsys, request)
-    assert prompt("message", "default_value") == "default_value"
+    assert prompt("test_prompt_default_message", "default_value") == "default_value"
 
 
 def test_prompt_dismissed(capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     print_signal("before_prompt", capsys, request)
-    assert prompt("message", "default_value") is None
+    assert prompt("test_prompt_dismissed_message", "default_value") is None
 
 
 def test_is_null() -> None:

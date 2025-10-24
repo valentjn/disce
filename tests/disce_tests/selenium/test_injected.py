@@ -14,7 +14,6 @@ from base64 import b64decode
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import partial
 from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
@@ -143,35 +142,50 @@ class Signals:
 def _create_signals(browser: Firefox) -> Signals:
     return Signals(
         [
-            Signal("test_pyscript.py", "test_alert", "before_alert", partial(_wait_for_alert, browser)),
-            Signal("test_pyscript.py", "test_confirm_accepted", "before_confirm", partial(_wait_for_alert, browser)),
+            Signal(
+                "test_pyscript.py",
+                "test_alert",
+                "before_alert",
+                lambda: _wait_for_alert(browser, "test_alert_message"),
+            ),
+            Signal(
+                "test_pyscript.py",
+                "test_confirm_accepted",
+                "before_confirm",
+                lambda: _wait_for_alert(browser, "test_confirm_accepted_message"),
+            ),
             Signal(
                 "test_pyscript.py",
                 "test_confirm_dismissed",
                 "before_confirm",
-                lambda: _wait_for_alert(browser, accept=False),
+                lambda: _wait_for_alert(browser, "test_confirm_dismissed_message", accept=False),
             ),
             Signal(
                 "test_pyscript.py",
                 "test_prompt_accepted",
                 "before_prompt",
-                lambda: _wait_for_alert(browser, input_="user_value"),
+                lambda: _wait_for_alert(browser, "test_prompt_accepted_message", input_="user_value"),
             ),
-            Signal("test_pyscript.py", "test_prompt_default", "before_prompt", partial(_wait_for_alert, browser)),
+            Signal(
+                "test_pyscript.py",
+                "test_prompt_default",
+                "before_prompt",
+                lambda: _wait_for_alert(browser, "test_prompt_default_message"),
+            ),
             Signal(
                 "test_pyscript.py",
                 "test_prompt_dismissed",
                 "before_prompt",
-                lambda: _wait_for_alert(browser, accept=False),
+                lambda: _wait_for_alert(browser, "test_prompt_dismissed_message", accept=False),
             ),
             Signal("test_pyscript.py", "test_upload_file", "listener_called_correctly", None),
         ]
     )
 
 
-def _wait_for_alert(browser: Firefox, *, accept: bool = True, input_: str | None = None) -> None:
+def _wait_for_alert(browser: Firefox, expected_message: str, *, accept: bool = True, input_: str | None = None) -> None:
     alert: Alert = WebDriverWait(browser, 1.0).until(alert_is_present())
-    assert alert.text == "message"
+    assert alert.text == expected_message
     if input_ is not None:
         alert.send_keys(input_)
     if accept:

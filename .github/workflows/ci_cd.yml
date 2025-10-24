@@ -39,7 +39,7 @@ jobs:
             - name: check formatting
               run: npm run fmt:check
             - name: run tests
-              run: npm test
+              run: npm run test
     cd:
         name: CD
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

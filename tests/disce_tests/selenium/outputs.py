@@ -63,9 +63,11 @@ def tee_output(
     capsys: pytest.CaptureFixture[str], *, always_print: bool = False, transformers: Sequence[Callable[[str], str]] = ()
 ) -> tuple[str, str]:
     stdout, stderr = capsys.readouterr()
-    with capsys.disabled() if always_print else _suspend_capsys(capsys):
-        print(_transform(stdout, transformers), end="")  # noqa: T201
-        print(_transform(stderr, transformers), end="", file=sys.stderr)  # noqa: T201
+    for output, output_type in ((stdout, "stdout"), (stderr, "stderr")):
+        if output:
+            with capsys.disabled() if always_print else _suspend_capsys(capsys):
+                file = sys.stdout if output_type == "stdout" else sys.stderr
+                print(_transform(output, transformers), end="", file=file)
     return stdout, stderr
 
 

@@ -30,12 +30,15 @@ def watch_output(  # noqa: PLR0913
     return_patterns: Sequence[re.Pattern[str]] = (),
     always_print: bool = False,
     transformers: Sequence[Callable[[str], str]] = (),
+    periodic_callback: Callable[[], None] | None = None,
 ) -> list[re.Match[str] | None]:
     stdout, stderr = tee_output(capsys, transformers=transformers)
     start_time = time.monotonic()
     found_start_match = start_pattern is None
     result: list[re.Match[str] | None] = [None] * len(return_patterns)
     while time.monotonic() - start_time < timeout.total_seconds():
+        if periodic_callback is not None:
+            periodic_callback()
         output_to_search = {"stdout": stdout, "stderr": stderr}[output_type]
         if not found_start_match and start_pattern and start_pattern.search(output_to_search):
             found_start_match = True

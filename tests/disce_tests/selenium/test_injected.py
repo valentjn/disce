@@ -14,7 +14,7 @@ import sys
 from base64 import b64decode
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
@@ -101,6 +101,24 @@ def browser(
     with create_browser(driver_path, preferences=preferences) as browser:
         prepare_browser(browser, server_url, capsys)
         yield browser
+
+
+@dataclass
+class FreezeDetector:
+    last_output_time: datetime | None = None
+    timeout: timedelta = timedelta(seconds=10.0)
+    pattern: re.Pattern[str] = re.compile(r"\[(?:ERROR|FAILED|PASSED|SKIPPED)\] *\[ *[0-9]+%\]")
+
+    def output_transformer(self, output: str) -> str:
+        now = datetime.now(tz=UTC)
+        if self.pattern.search(output):
+            self.last_output_time = now
+        return output
+
+    def assert_no_freeze(self) -> None:
+        if self.last_output_time and datetime.now(tz=UTC) - self.last_output_time > self.timeout:
+            msg = "no test output detected for too long"
+            raise TimeoutError(msg)
 
 
 @dataclass
@@ -203,6 +221,7 @@ def _wait_for_alert(browser: Firefox, expected_message: str, *, accept: bool = T
 def test_run_injected_tests(
     browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
 ) -> None:
+    freeze_detector = FreezeDetector()
     signals = _create_signals(browser)
     end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
     console_log_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
@@ -212,7 +231,7 @@ def test_run_injected_tests(
     matches = watch_output(
         capsys,
         "stderr",
-        timeout=timedelta(seconds=20.0),
+        timeout=timedelta(hours=1.0),
         start_pattern=re.compile(r"running injected tests"),
         end_pattern=end_pattern,
         return_patterns=[end_pattern, coverage_pattern],
@@ -220,8 +239,10 @@ def test_run_injected_tests(
         transformers=[
             lambda output: coverage_pattern.sub("", output),
             lambda output: console_log_pattern.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
+            freeze_detector.output_transformer,
             signals.output_transformer,
         ],
+        periodic_callback=freeze_detector.assert_no_freeze,
     )
     assert matches[0] is not None
     exit_code = int(matches[0]["exit_code"])

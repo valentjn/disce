@@ -19,6 +19,10 @@ class LocalStorage(AbstractStorage):
     """Local storage implementation using browser's localStorage."""
 
     @override
+    def __len__(self) -> int:
+        return cast("int", window.localStorage.length)
+
+    @override
     def __iter__(self) -> Iterator[str]:
         for index in range(window.localStorage.length):
             yield window.localStorage.key(index)

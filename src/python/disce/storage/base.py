@@ -32,3 +32,12 @@ class AbstractStorage(ABC):
     def __delitem__(self, key: str) -> None:
         """Delete a value from storage if it exists (no error if it does not)."""
         raise NotImplementedError
+
+    def __len__(self) -> int:
+        """Get the number of items in storage."""
+        return sum(1 for _ in self)
+
+    def clear(self) -> None:
+        """Clear all items from storage."""
+        for key in list(self):
+            del self[key]

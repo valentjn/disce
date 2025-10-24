@@ -5,6 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+
 import pytest
 from disce.storage.base import AbstractStorage
 
@@ -36,3 +37,16 @@ class TestAbstractStorage:
     def test_delitem(storage: DictStorage) -> None:
         with pytest.raises(NotImplementedError):
             AbstractStorage.__delitem__(storage, "key")
+
+    @staticmethod
+    def test_len(storage: DictStorage) -> None:
+        storage["key1"] = "value1"
+        storage["key2"] = "value2"
+        assert len(storage) == 2
+
+    @staticmethod
+    def test_clear(storage: DictStorage) -> None:
+        storage["key1"] = "value1"
+        storage["key2"] = "value2"
+        storage.clear()
+        assert len(storage) == 0

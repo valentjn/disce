@@ -17,8 +17,13 @@ class TestLocalStorage:
     def storage() -> Generator[LocalStorage]:
         local_storage = LocalStorage()
         yield local_storage
-        for key in list(local_storage):
-            del local_storage[key]
+        local_storage.clear()
+
+    @staticmethod
+    def test_len(storage: LocalStorage) -> None:
+        storage["key1"] = "value1"
+        storage["key2"] = "value2"
+        assert len(storage) == 2
 
     @staticmethod
     def test_iter(storage: LocalStorage) -> None:

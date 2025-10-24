@@ -7,6 +7,7 @@
 
 import ast
 import gzip
+import logging
 import re
 import shutil
 import sys
@@ -32,6 +33,8 @@ from disce_tests.selenium.servers import start_server
 
 if TYPE_CHECKING:
     from selenium.webdriver.common.alert import Alert
+
+_logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
@@ -184,7 +187,9 @@ def _create_signals(browser: Firefox) -> Signals:
 
 
 def _wait_for_alert(browser: Firefox, expected_message: str, *, accept: bool = True, input_: str | None = None) -> None:
+    _logger.info("waiting for alert with message: %s", expected_message)
     alert: Alert = WebDriverWait(browser, 1.0).until(alert_is_present())
+    _logger.info("alert present, reacting")
     assert alert.text == expected_message
     if input_ is not None:
         alert.send_keys(input_)

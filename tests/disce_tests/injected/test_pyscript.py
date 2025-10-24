@@ -28,7 +28,7 @@ from disce.pyscript import (
 from pyodide.ffi import JsNull
 from pyscript import document, window
 
-from disce_tests.injected.tools import print_signal
+from disce_tests.injected.tools import insert_element, print_signal
 
 _logger = logging.getLogger(__name__)
 
@@ -119,9 +119,8 @@ def test_append_child() -> None:
 @pytest.fixture
 def inserted_element() -> Generator[Element]:
     element = create_element("div")
-    document.body.appendChild(element)
-    yield element
-    document.body.removeChild(element)
+    with insert_element(element):
+        yield element
 
 
 def test_hide_element(inserted_element: Element) -> None:

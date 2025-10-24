@@ -21,7 +21,7 @@ class AbstractScreen(ABC):
         self._selector = selector
 
     @property
-    def selector(self) -> Element:
+    def selector(self) -> str:
         """CSS selector for the screen's root element."""
         return self._selector
 

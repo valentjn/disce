@@ -5,6 +5,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from collections.abc import Sequence
+
 import pytest
 from disce.screens.decks import DecksScreen
 from disce.storage.local import LocalStorage
@@ -24,10 +26,13 @@ class TestDecksScreen:
 
     @staticmethod
     def test_render(screen: DecksScreen) -> None:
+        TestDecksScreen._assert_rendered_decks(screen, ["deck1_name", "deck2_name"])
+
+    @staticmethod
+    def _assert_rendered_decks(screen: DecksScreen, expected_deck_names: Sequence[str]) -> None:
         rows = screen.select_child(".disce-decks").children
-        assert len(rows) == 2
-        assert rows[0].querySelector(".disce-deck-name-label").innerText == "Test Deck 1"
-        assert rows[1].querySelector(".disce-deck-name-label").innerText == "Test Deck 2"
+        for row, expected_name in zip(rows, expected_deck_names, strict=True):
+            assert row.querySelector(".disce-deck-name-label").innerText == expected_name
 
     @staticmethod
     def test_render_no_decks(screen: DecksScreen) -> None:

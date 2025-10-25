@@ -20,8 +20,9 @@ _logger = logging.getLogger(__name__)
 def main() -> None:
     set_up_logging()
     _logger.info("Disce started")
-    sleep(1.0)
+    sleep(0.5)
     _logger.info("running injected tests")
+    sleep(0.5)
     exit_code = pytest.main(
         [
             "--color=yes",

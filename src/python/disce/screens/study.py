@@ -6,6 +6,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Screen for studying a deck."""
 
+from collections.abc import Sequence
 from typing import override
 
 import disce.screens.decks as decks_screen
@@ -19,10 +20,10 @@ from disce.storage.base import AbstractStorage
 class StudyScreen(AbstractScreen):
     """Screen for studying a deck."""
 
-    def __init__(self, deck_uuids: list[str], storage: AbstractStorage) -> None:
+    def __init__(self, deck_uuids: Sequence[str], storage: AbstractStorage) -> None:
         """Initialize the screen."""
         super().__init__("#disce-study-screen")
-        self._deck_uuids = deck_uuids
+        self._deck_uuids = list(deck_uuids)
         self._storage = storage
         self._configuration = Configuration.load_from_storage_or_create(self._storage)
         self._deck_data_list = [DeckData.load_from_storage(self._storage, uuid) for uuid in deck_uuids]

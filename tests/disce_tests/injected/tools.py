@@ -7,10 +7,12 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Any
 
 import pytest
 from disce.pyscript import Element
-from pyscript import document
+from disce.screens.base import AbstractScreen
+from pyscript import document, window
 
 
 @contextmanager
@@ -25,3 +27,17 @@ def insert_element(element: Element) -> Generator[Element]:
 def print_signal(signal_name: str, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest) -> None:
     with capsys.disabled():
         print(f"{request.node.nodeid}: {signal_name}")  # noqa: T201
+
+
+def assert_hidden(obj: Element | AbstractScreen) -> None:
+    assert get_style(obj).display == "none"
+
+
+def assert_visible(obj: Element | AbstractScreen) -> None:
+    assert get_style(obj).display != "none"
+
+
+def get_style(obj: Element | AbstractScreen) -> Any:  # noqa: ANN401
+    if isinstance(obj, AbstractScreen):
+        obj = obj.element
+    return window.getComputedStyle(obj)

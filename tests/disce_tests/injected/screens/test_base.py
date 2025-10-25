@@ -13,7 +13,7 @@ from disce.pyscript import Event, EventBinding, append_child, create_element
 from disce.screens.base import AbstractScreen
 from pyscript import window
 
-from disce_tests.injected.tools import insert_element
+from disce_tests.injected.tools import assert_hidden, assert_visible, insert_element
 
 
 class DummyScreen(AbstractScreen):
@@ -119,11 +119,10 @@ class TestAbstractScreen:
 
     @staticmethod
     def test_show_hide(screen: DummyScreen) -> None:
-        style = window.getComputedStyle(screen.element)
         screen.show()
         screen.assert_click_works()
         assert screen.rendered
-        assert style.display != "none"
+        assert_visible(screen)
         screen.hide()
         screen.assert_click_works(expected=False)
-        assert style.display == "none"
+        assert_hidden(screen)

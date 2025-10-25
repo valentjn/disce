@@ -28,7 +28,7 @@ from disce.pyscript import (
 from pyodide.ffi import JsNull
 from pyscript import document, window
 
-from disce_tests.injected.tools import insert_element, print_signal
+from disce_tests.injected.tools import assert_hidden, assert_visible, insert_element, print_signal
 
 _logger = logging.getLogger(__name__)
 
@@ -124,19 +124,17 @@ def inserted_element() -> Generator[Element]:
 
 
 def test_hide_element(inserted_element: Element) -> None:
-    style = window.getComputedStyle(inserted_element)
     hide_element(inserted_element)
-    assert style.display == "none"
+    assert_hidden(inserted_element)
     hide_element(inserted_element, hide=False)
-    assert style.display != "none"
+    assert_visible(inserted_element)
 
 
 def test_show_element(inserted_element: Element) -> None:
-    style = window.getComputedStyle(inserted_element)
     show_element(inserted_element)
-    assert style.display != "none"
+    assert_visible(inserted_element)
     show_element(inserted_element, show=False)
-    assert style.display == "none"
+    assert_hidden(inserted_element)
 
 
 @pytest.fixture

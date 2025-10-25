@@ -5,20 +5,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from collections.abc import Generator
 
 import pytest
 from disce.storage.local import LocalStorage
 
 
 class TestLocalStorage:
-    @staticmethod
-    @pytest.fixture
-    def storage() -> Generator[LocalStorage]:
-        local_storage = LocalStorage()
-        yield local_storage
-        local_storage.clear()
-
     @staticmethod
     def test_len(storage: LocalStorage) -> None:
         storage["key1"] = "value1"

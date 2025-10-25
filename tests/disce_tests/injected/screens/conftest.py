@@ -8,35 +8,19 @@
 from collections.abc import Generator
 
 import pytest
-from disce.data import Card, Configuration, DeckData, DeckMetadata, UUIDModelList
+from disce.data import Configuration
 from disce.storage.local import LocalStorage
+
+from disce_tests.injected.screens.tools import create_decks
 
 
 @pytest.fixture(autouse=True)
 def decks_and_configuration() -> Generator[None]:
     local_storage = LocalStorage()
-    DeckData(
-        uuid="deck1",
-        cards=UUIDModelList(
-            [
-                Card(uuid="deck1_card1", front="deck1_card1_front", back="deck1_card1_back"),
-                Card(uuid="deck1_card2", front="deck1_card2_front", back="deck1_card2_back"),
-            ]
-        ),
-    ).save_to_storage(local_storage)
-    DeckData(
-        uuid="deck2",
-        cards=UUIDModelList([Card(uuid="deck2_card1", front="deck2_card1_front", back="deck2_card1_back")]),
-    ).save_to_storage(local_storage)
-    configuration = Configuration(
-        deck_metadata=UUIDModelList(
-            [
-                DeckMetadata(uuid="deck1", name="Test Deck 1", number_of_cards=2),
-                DeckMetadata(uuid="deck2", name="Test Deck 2", number_of_cards=1),
-            ]
-        ),
-        history_length=2,
-    )
+    deck_data_list, deck_metadata_list = create_decks("")
+    for deck_data in deck_data_list:
+        deck_data.save_to_storage(local_storage)
+    configuration = Configuration(deck_metadata=deck_metadata_list, history_length=2)
     configuration.save_to_storage(local_storage)
     yield
     local_storage.clear()

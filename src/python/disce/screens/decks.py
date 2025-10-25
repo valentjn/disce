@@ -167,7 +167,7 @@ class DecksScreen(AbstractScreen):
             try:
                 deck_export = DeckExport.model_validate_json(json)
             except ValidationError as exception:
-                alert(f"failed to parse imported data: {exception}")
+                alert(f"Failed to parse imported data: {exception}")
                 return
             configuration = Configuration.load_from_storage_or_create(self._storage)
             overwriting_deck_uuids = {deck.metadata.uuid for deck in deck_export.decks} & {

@@ -32,11 +32,11 @@ class AbstractScreen(ABC):
 
     def register_static_event_bindings(self) -> None:
         """Register all static event listeners."""
-        for binding in self._get_static_event_bindings():
+        for binding in self.get_static_event_bindings():
             self.register_event_binding(binding, dynamic=False)
 
     @abstractmethod
-    def _get_static_event_bindings(self) -> list[EventBinding]:
+    def get_static_event_bindings(self) -> list[EventBinding]:
         """Get all static event listeners."""
         raise NotImplementedError
 

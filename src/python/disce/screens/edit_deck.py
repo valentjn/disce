@@ -34,7 +34,7 @@ class EditDeckScreen(AbstractScreen):
         self._storage = storage
 
     @override
-    def _get_static_event_bindings(self) -> list[EventBinding]:
+    def get_static_event_bindings(self) -> list[EventBinding]:
         return [
             EventBinding(element=self.select_child(".disce-save-deck-btn"), event="click", listener=self.save_deck),
             EventBinding(

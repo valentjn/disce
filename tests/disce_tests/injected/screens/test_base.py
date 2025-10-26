@@ -27,7 +27,7 @@ class DummyScreen(AbstractScreen):
         self.rendered = True
 
     @override
-    def _get_static_event_bindings(self) -> list[EventBinding]:
+    def get_static_event_bindings(self) -> list[EventBinding]:
         return [EventBinding(self.element, "click", self.set_clicked)]
 
     def set_clicked(self, _: Event | None = None) -> None:
@@ -65,7 +65,7 @@ class TestAbstractScreen:
     @staticmethod
     def test_get_static_event_bindings(screen: DummyScreen) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractScreen._get_static_event_bindings(screen)  # noqa: SLF001
+            AbstractScreen.get_static_event_bindings(screen)
 
     @staticmethod
     @pytest.mark.parametrize("dynamic", [True, False])

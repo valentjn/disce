@@ -20,7 +20,7 @@ class LoadScreen(AbstractScreen):
         super().__init__("#disce-load-screen")
 
     @override
-    def _get_static_event_bindings(self) -> list[EventBinding]:
+    def get_static_event_bindings(self) -> list[EventBinding]:
         return []
 
     @override

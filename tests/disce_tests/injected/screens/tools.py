@@ -59,13 +59,25 @@ def assert_same_elements[T: UUIDModel](
         actual = actual.root
     if isinstance(expected, UUIDModelList):
         expected = expected.root
-    assert len(actual) == len(expected)
-    indices = set(range(len(expected)))
-    for actual_element in actual:
-        for idx in indices:
-            if actual_element == expected[idx]:
-                indices.remove(idx)
+    actual_without_expected = _set_difference(actual, expected)
+    expected_without_actual = _set_difference(expected, actual)
+    if actual_without_expected or expected_without_actual:
+        msg = "actual and expected collections differ:"
+        if actual_without_expected:
+            msg += f"\n    actual contains unexpected elements: {actual_without_expected}"
+        if expected_without_actual:
+            msg += f"\n    actual is missing expected elements: {expected_without_actual}"
+        raise AssertionError(msg)
+
+
+def _set_difference[T](sequence1: Sequence[T], sequence2: Sequence[T]) -> list[T]:
+    unmatched_indices2 = set(range(len(sequence2)))
+    difference = []
+    for item1 in sequence1:
+        for idx2 in unmatched_indices2:
+            if item1 == sequence2[idx2]:
+                unmatched_indices2.remove(idx2)
                 break
         else:
-            msg = f"actual element {actual_element} not found in expected collection {expected}"
-            raise AssertionError(msg)
+            difference.append(item1)
+    return difference

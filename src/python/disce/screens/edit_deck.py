@@ -34,7 +34,7 @@ class EditDeckScreen(AbstractScreen):
         self._storage = storage
 
     @override
-    def _get_static_event_listeners(self) -> list[EventBinding]:
+    def _get_static_event_bindings(self) -> list[EventBinding]:
         return [
             EventBinding(element=self.select_child(".disce-save-deck-btn"), event="click", listener=self.save_deck),
             EventBinding(
@@ -58,7 +58,7 @@ class EditDeckScreen(AbstractScreen):
                 configuration.deck_metadata[self._deck_uuid] if self._deck_uuid is not None else DeckMetadata()
             )
         self.select_child(".disce-deck-name-textbox").value = deck_metadata.name
-        self.unregister_event_listeners(dynamic=True)
+        self.unregister_event_bindings(dynamic=True)
         cards_div = self.select_child(".disce-cards")
         cards_div.innerHTML = ""
         cards = (
@@ -81,7 +81,7 @@ class EditDeckScreen(AbstractScreen):
             title="Select this card for bulk actions",
             data_card_uuid=card.uuid,
         )
-        self.register_event_listener(
+        self.register_event_binding(
             EventBinding(element=selected_checkbox, event="change", listener=self.update_bulk_buttons), dynamic=True
         )
         append_child(card_div, "div", create_element("div", selected_checkbox, class_="form-check"), class_="col-auto")
@@ -93,7 +93,7 @@ class EditDeckScreen(AbstractScreen):
             placeholder="Front",
             data_card_uuid=card.uuid,
         )
-        self.register_event_listener(
+        self.register_event_binding(
             EventBinding(element=front_textbox, event="input", listener=self.card_text_changed), dynamic=True
         )
         append_child(card_div, "div", front_textbox, class_="col-sm")
@@ -105,7 +105,7 @@ class EditDeckScreen(AbstractScreen):
             placeholder="Back",
             data_card_uuid=card.uuid,
         )
-        self.register_event_listener(
+        self.register_event_binding(
             EventBinding(element=back_textbox, event="input", listener=self.card_text_changed), dynamic=True
         )
         append_child(card_div, "div", back_textbox, class_="col-sm")

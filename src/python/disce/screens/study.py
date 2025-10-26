@@ -38,7 +38,7 @@ class StudyScreen(AbstractScreen):
         return self._merged_deck_data.get_card_to_study(history_length=self._configuration.history_length)
 
     @override
-    def _get_static_event_listeners(self) -> list[EventBinding]:
+    def _get_static_event_bindings(self) -> list[EventBinding]:
         return [
             EventBinding(
                 element=self.select_child(".disce-correct-answer-btn"), event="click", listener=self.handle_answer

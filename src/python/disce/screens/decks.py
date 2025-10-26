@@ -45,7 +45,7 @@ class DecksScreen(AbstractScreen):
         self._storage = storage
 
     @override
-    def _get_static_event_listeners(self) -> list[EventBinding]:
+    def _get_static_event_bindings(self) -> list[EventBinding]:
         return [
             EventBinding(element=self.select_child(".disce-add-deck-btn"), event="click", listener=self.add_deck),
             EventBinding(
@@ -73,7 +73,7 @@ class DecksScreen(AbstractScreen):
     @override
     def render(self) -> None:
         """Render the list of decks."""
-        self.unregister_event_listeners(dynamic=True)
+        self.unregister_event_bindings(dynamic=True)
         decks_div = self.select_child(".disce-decks")
         decks_div.innerHTML = ""
         configuration = Configuration.load_from_storage_or_create(self._storage)
@@ -91,7 +91,7 @@ class DecksScreen(AbstractScreen):
                 class_="disce-selected-checkbox form-check-input me-2",
                 data_deck_uuid=deck_metadata.uuid,
             )
-            self.register_event_listener(
+            self.register_event_binding(
                 EventBinding(element=selected_checkbox, event="change", listener=self.update_bulk_buttons), dynamic=True
             )
             append_child(
@@ -110,7 +110,7 @@ class DecksScreen(AbstractScreen):
                 title=f'Study the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
-            self.register_event_listener(
+            self.register_event_binding(
                 EventBinding(element=study_deck_button, event="click", listener=self.study_deck), dynamic=True
             )
             edit_deck_button = append_child(
@@ -122,7 +122,7 @@ class DecksScreen(AbstractScreen):
                 title=f'Edit the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
-            self.register_event_listener(
+            self.register_event_binding(
                 EventBinding(element=edit_deck_button, event="click", listener=self.edit_deck), dynamic=True
             )
             duplicate_deck_button = append_child(
@@ -134,7 +134,7 @@ class DecksScreen(AbstractScreen):
                 title=f'Duplicate the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
-            self.register_event_listener(
+            self.register_event_binding(
                 EventBinding(element=duplicate_deck_button, event="click", listener=self.duplicate_deck), dynamic=True
             )
             delete_deck_button = append_child(
@@ -146,7 +146,7 @@ class DecksScreen(AbstractScreen):
                 title=f'Delete the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
-            self.register_event_listener(
+            self.register_event_binding(
                 EventBinding(element=delete_deck_button, event="click", listener=self.delete_deck), dynamic=True
             )
             decks_div.appendChild(deck_div)

@@ -21,7 +21,7 @@ class TestLoadScreen:
 
     @staticmethod
     def test_get_static_event_listeners(screen: LoadScreen) -> None:
-        assert screen._get_static_event_listeners() == []  # noqa: SLF001
+        assert screen._get_static_event_bindings() == []  # noqa: SLF001
 
     @staticmethod
     def test_render(screen: LoadScreen) -> None:

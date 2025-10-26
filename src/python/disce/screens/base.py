@@ -30,30 +30,30 @@ class AbstractScreen(ABC):
         """Render the screen."""
         raise NotImplementedError
 
-    def register_static_event_listeners(self) -> None:
+    def register_static_event_bindings(self) -> None:
         """Register all static event listeners."""
-        for binding in self._get_static_event_listeners():
-            self.register_event_listener(binding, dynamic=False)
+        for binding in self._get_static_event_bindings():
+            self.register_event_binding(binding, dynamic=False)
 
     @abstractmethod
-    def _get_static_event_listeners(self) -> list[EventBinding]:
+    def _get_static_event_bindings(self) -> list[EventBinding]:
         """Get all static event listeners."""
         raise NotImplementedError
 
-    def register_event_listener(self, binding: EventBinding, *, dynamic: bool) -> None:
-        """Register a specific event listener."""
+    def register_event_binding(self, binding: EventBinding, *, dynamic: bool) -> None:
+        """Register a specific event binding."""
         binding.register()
         event_bindings = self._get_event_bindings(dynamic=dynamic)
         event_bindings.append(binding)
 
-    def unregister_event_listeners(self, *, dynamic: bool) -> None:
-        """Unregister all event listeners."""
+    def unregister_event_bindings(self, *, dynamic: bool) -> None:
+        """Unregister all event bindings."""
         event_bindings = self._get_event_bindings(dynamic=dynamic)
         for event_binding in event_bindings.copy():
             event_binding.unregister()
 
-    def unregister_event_listener(self, binding: EventBinding, *, dynamic: bool) -> None:
-        """Unregister a specific event listener."""
+    def unregister_event_binding(self, binding: EventBinding, *, dynamic: bool) -> None:
+        """Unregister a specific event binding."""
         event_bindings = self._get_event_bindings(dynamic=dynamic)
         if binding in event_bindings:
             binding.unregister()
@@ -82,12 +82,12 @@ class AbstractScreen(ABC):
 
     def show(self) -> None:
         """Show the screen."""
-        self.register_static_event_listeners()
+        self.register_static_event_bindings()
         self.render()
         show_element(self.element)
 
     def hide(self) -> None:
         """Hide the screen."""
-        self.unregister_event_listeners(dynamic=True)
-        self.unregister_event_listeners(dynamic=False)
+        self.unregister_event_bindings(dynamic=True)
+        self.unregister_event_bindings(dynamic=False)
         hide_element(self.element)

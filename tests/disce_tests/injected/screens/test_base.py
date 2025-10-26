@@ -27,7 +27,7 @@ class DummyScreen(AbstractScreen):
         self.rendered = True
 
     @override
-    def _get_static_event_listeners(self) -> list[EventBinding]:
+    def _get_static_event_bindings(self) -> list[EventBinding]:
         return [EventBinding(self.element, "click", self.set_clicked)]
 
     def set_clicked(self, _: Event | None = None) -> None:
@@ -58,35 +58,35 @@ class TestAbstractScreen:
             AbstractScreen.render(screen)
 
     @staticmethod
-    def test_register_static_event_listeners(screen: DummyScreen) -> None:
-        screen.register_static_event_listeners()
+    def test_register_static_event_bindings(screen: DummyScreen) -> None:
+        screen.register_static_event_bindings()
         screen.assert_click_works()
 
     @staticmethod
-    def test_get_static_event_listeners(screen: DummyScreen) -> None:
+    def test_get_static_event_bindings(screen: DummyScreen) -> None:
         with pytest.raises(NotImplementedError):
-            AbstractScreen._get_static_event_listeners(screen)  # noqa: SLF001
+            AbstractScreen._get_static_event_bindings(screen)  # noqa: SLF001
 
     @staticmethod
     @pytest.mark.parametrize("dynamic", [True, False])
-    def test_register_unregister_event_listener(screen: DummyScreen, *, dynamic: bool) -> None:
+    def test_register_unregister_event_binding(screen: DummyScreen, *, dynamic: bool) -> None:
         binding = EventBinding(screen.element, "click", screen.set_clicked)
-        screen.register_event_listener(binding, dynamic=dynamic)
+        screen.register_event_binding(binding, dynamic=dynamic)
         screen.assert_click_works()
-        screen.unregister_event_listener(binding, dynamic=not dynamic)
+        screen.unregister_event_binding(binding, dynamic=not dynamic)
         screen.assert_click_works()
-        screen.unregister_event_listener(binding, dynamic=dynamic)
+        screen.unregister_event_binding(binding, dynamic=dynamic)
         screen.assert_click_works(expected=False)
 
     @staticmethod
     @pytest.mark.parametrize("dynamic", [True, False])
-    def test_unregister_event_listeners(screen: DummyScreen, *, dynamic: bool) -> None:
+    def test_unregister_event_bindings(screen: DummyScreen, *, dynamic: bool) -> None:
         binding = EventBinding(screen.element, "click", screen.set_clicked)
-        screen.register_event_listener(binding, dynamic=dynamic)
+        screen.register_event_binding(binding, dynamic=dynamic)
         screen.assert_click_works()
-        screen.unregister_event_listeners(dynamic=not dynamic)
+        screen.unregister_event_bindings(dynamic=not dynamic)
         screen.assert_click_works()
-        screen.unregister_event_listeners(dynamic=dynamic)
+        screen.unregister_event_bindings(dynamic=dynamic)
         screen.assert_click_works(expected=False)
 
     @staticmethod

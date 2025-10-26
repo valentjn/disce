@@ -28,10 +28,10 @@ def deck_metadata_list() -> list[DeckMetadata]:
 
 @pytest.fixture(autouse=True)
 def decks_and_configuration(deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata]) -> Generator[None]:
-    local_storage = LocalStorage()
+    storage = LocalStorage()
     for deck_data in deck_data_list:
-        deck_data.save_to_storage(local_storage)
+        deck_data.save_to_storage(storage)
     configuration = Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=2)
-    configuration.save_to_storage(local_storage)
+    configuration.save_to_storage(storage)
     yield
-    local_storage.clear()
+    storage.clear()

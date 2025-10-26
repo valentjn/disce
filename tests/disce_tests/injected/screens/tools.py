@@ -47,11 +47,11 @@ def create_decks(prefix: str) -> tuple[UUIDModelList[DeckData], UUIDModelList[De
 
 
 def assert_decks(expected_deck_data: Sequence[DeckData], expected_deck_metadata: Sequence[DeckMetadata]) -> None:
-    local_storage = LocalStorage()
-    configuration = Configuration.load_from_storage(local_storage)
+    storage = LocalStorage()
+    configuration = Configuration.load_from_storage(storage)
     assert_same_elements(configuration.deck_metadata, expected_deck_metadata)
     actual_deck_data = [
-        DeckData.load_from_storage(local_storage, deck_metadata.uuid) for deck_metadata in expected_deck_metadata
+        DeckData.load_from_storage(storage, deck_metadata.uuid) for deck_metadata in expected_deck_metadata
     ]
     assert_same_elements(actual_deck_data, expected_deck_data)
 

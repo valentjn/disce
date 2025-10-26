@@ -21,6 +21,6 @@ def wait() -> None:
 
 @pytest.fixture(autouse=True)
 def storage() -> Generator[LocalStorage]:
-    local_storage = LocalStorage()
-    yield local_storage
-    local_storage.clear()
+    storage = LocalStorage()
+    yield storage
+    storage.clear()

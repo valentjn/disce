@@ -7,9 +7,13 @@
 
 
 from collections.abc import Sequence
+from types import MethodType
 
 from disce.data import Card, Configuration, DeckData, DeckMetadata, UUIDModel, UUIDModelList
+from disce.pyscript import Event, EventBinding
+from disce.screens.base import AbstractScreen
 from disce.storage.local import LocalStorage
+from pyscript import window
 
 
 def create_decks(prefix: str) -> tuple[UUIDModelList[DeckData], UUIDModelList[DeckMetadata]]:
@@ -81,3 +85,24 @@ def _set_difference[T](sequence1: Sequence[T], sequence2: Sequence[T]) -> list[T
         else:
             difference.append(item1)
     return difference
+
+
+def assert_event_bindings_registered(bindings: Sequence[EventBinding]) -> None:
+    for binding in bindings:
+        if not isinstance(binding.listener, MethodType):
+            msg = "listener must be an instance method"
+            raise TypeError(msg)
+        listener_self, listener_func = binding.listener.__self__, binding.listener.__func__
+        original_code = binding.listener.__code__
+        listener_func.__code__ = _dummy_event_listener.__code__
+        listener_self.dummy_event_listener_called = False  # type: ignore[attr-defined]
+        try:
+            binding.element.dispatchEvent(window.Event.new(binding.event_name))
+            assert listener_self.dummy_event_listener_called  # type: ignore[attr-defined]
+        finally:
+            del listener_self.dummy_event_listener_called  # type: ignore[attr-defined]
+            listener_func.__code__ = original_code
+
+
+def _dummy_event_listener(self: AbstractScreen, _event: Event | None = None) -> None:
+    self.dummy_event_listener_called = True  # type: ignore[attr-defined]

@@ -10,11 +10,12 @@ from unittest.mock import call, patch
 
 import pytest
 from disce.data import DeckData, DeckExport, DeckMetadata, ExportedDeck
+from disce.pyscript import EventBinding
 from disce.screens.decks import DecksScreen
 from disce.screens.edit_deck import EditDeckScreen
 from disce.storage.local import LocalStorage
 
-from disce_tests.injected.screens.tools import assert_decks, create_decks
+from disce_tests.injected.screens.tools import assert_decks, assert_event_bindings_registered, create_decks
 from disce_tests.injected.tools import assert_hidden, assert_visible
 
 
@@ -33,6 +34,17 @@ class TestDecksScreen:
     @staticmethod
     def test_render(screen: DecksScreen) -> None:
         TestDecksScreen._assert_rendered_decks(screen, ["deck1_name", "deck2_name"])
+        row = screen.select_child(".disce-decks").children[0]
+        assert_event_bindings_registered(
+            [
+                *screen.get_static_event_bindings(),
+                EventBinding(row.querySelector(".disce-selected-checkbox"), "change", screen.update_bulk_buttons),
+                EventBinding(row.querySelector(".disce-study-deck-btn"), "click", screen.study_deck),
+                EventBinding(row.querySelector(".disce-edit-deck-btn"), "click", screen.edit_deck),
+                EventBinding(row.querySelector(".disce-duplicate-deck-btn"), "click", screen.duplicate_deck),
+                EventBinding(row.querySelector(".disce-delete-deck-btn"), "click", screen.delete_deck),
+            ]
+        )
 
     @staticmethod
     def _assert_rendered_decks(screen: DecksScreen, expected_deck_names: Sequence[str]) -> None:

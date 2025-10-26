@@ -17,7 +17,6 @@ from disce.pyscript import (
     append_child,
     confirm,
     create_element,
-    select_all_elements,
     show_toast,
 )
 from disce.screens.base import AbstractScreen
@@ -184,7 +183,7 @@ class EditDeckScreen(AbstractScreen):
         card_uuids = self.get_card_uuids()
         selected_card_uuids = self.get_selected_card_uuids()
         select_all = len(selected_card_uuids) < len(card_uuids)
-        for checkbox in select_all_elements("#disce-edit-deck-screen .disce-selected-checkbox"):
+        for checkbox in self.select_all_children(".disce-selected-checkbox"):
             checkbox.checked = select_all
         self.update_bulk_buttons()
 
@@ -234,7 +233,7 @@ class EditDeckScreen(AbstractScreen):
         """Get the current deck from the edit deck screen."""
         deck_name = self.select_child(".disce-deck-name-textbox").value
         cards = UUIDModelList[Card]()
-        for card_div in select_all_elements("#disce-edit-deck-screen .disce-card"):
+        for card_div in self.select_all_children(".disce-card"):
             uuid: UUID = card_div.getAttribute("data-card-uuid")
             front: str = card_div.querySelector(".disce-front-textbox").value
             back: str = card_div.querySelector(".disce-back-textbox").value

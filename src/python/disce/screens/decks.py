@@ -24,7 +24,6 @@ from disce.pyscript import (
     create_element,
     download_file,
     prompt,
-    select_all_elements,
     show_modal,
     upload_file,
 )
@@ -194,7 +193,7 @@ class DecksScreen(AbstractScreen):
         deck_uuids = self.get_deck_uuids()
         selected_deck_uuids = self.get_selected_deck_uuids()
         select_all = len(selected_deck_uuids) < len(deck_uuids)
-        for checkbox in select_all_elements("#disce-decks-screen .disce-selected-checkbox"):
+        for checkbox in self.select_all_children(".disce-selected-checkbox"):
             checkbox.checked = select_all
         self.update_bulk_buttons()
 
@@ -345,15 +344,12 @@ class DecksScreen(AbstractScreen):
 
     def get_deck_uuids(self) -> list[UUID]:
         """Get the UUIDs of all decks."""
-        return [
-            deck_div.getAttribute("data-deck-uuid")
-            for deck_div in select_all_elements("#disce-decks-screen .disce-deck")
-        ]
+        return [deck_div.getAttribute("data-deck-uuid") for deck_div in self.select_all_children(".disce-deck")]
 
     def get_selected_deck_uuids(self) -> list[UUID]:
         """Get the UUIDs of the selected decks."""
         return [
             checkbox.getAttribute("data-deck-uuid")
-            for checkbox in select_all_elements("#disce-decks-screen .disce-selected-checkbox")
+            for checkbox in self.select_all_children(".disce-selected-checkbox")
             if checkbox.checked
         ]

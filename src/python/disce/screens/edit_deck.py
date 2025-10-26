@@ -36,18 +36,10 @@ class EditDeckScreen(AbstractScreen):
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
         return [
-            EventBinding(element=self.select_child(".disce-save-deck-btn"), event="click", listener=self.save_deck),
-            EventBinding(
-                element=self.select_child(".disce-select-all-btn"), event="click", listener=self.select_all_decks
-            ),
-            EventBinding(
-                element=self.select_child(".disce-delete-cards-btn"), event="click", listener=self.delete_selected_cards
-            ),
-            EventBinding(
-                element=self.select_child(".disce-back-to-decks-screen-btn"),
-                event="click",
-                listener=self.back_to_decks_screen,
-            ),
+            EventBinding(self.select_child(".disce-save-deck-btn"), "click", self.save_deck),
+            EventBinding(self.select_child(".disce-select-all-btn"), "click", self.select_all_decks),
+            EventBinding(self.select_child(".disce-delete-cards-btn"), "click", self.delete_selected_cards),
+            EventBinding(self.select_child(".disce-back-to-decks-screen-btn"), "click", self.back_to_decks_screen),
         ]
 
     @override
@@ -81,9 +73,7 @@ class EditDeckScreen(AbstractScreen):
             title="Select this card for bulk actions",
             data_card_uuid=card.uuid,
         )
-        self.register_event_binding(
-            EventBinding(element=selected_checkbox, event="change", listener=self.update_bulk_buttons), dynamic=True
-        )
+        self.register_event_binding(EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True)
         append_child(card_div, "div", create_element("div", selected_checkbox, class_="form-check"), class_="col-auto")
         front_textbox = create_element(
             "input",
@@ -93,9 +83,7 @@ class EditDeckScreen(AbstractScreen):
             placeholder="Front",
             data_card_uuid=card.uuid,
         )
-        self.register_event_binding(
-            EventBinding(element=front_textbox, event="input", listener=self.card_text_changed), dynamic=True
-        )
+        self.register_event_binding(EventBinding(front_textbox, "input", self.card_text_changed), dynamic=True)
         append_child(card_div, "div", front_textbox, class_="col-sm")
         back_textbox = create_element(
             "input",
@@ -105,9 +93,7 @@ class EditDeckScreen(AbstractScreen):
             placeholder="Back",
             data_card_uuid=card.uuid,
         )
-        self.register_event_binding(
-            EventBinding(element=back_textbox, event="input", listener=self.card_text_changed), dynamic=True
-        )
+        self.register_event_binding(EventBinding(back_textbox, "input", self.card_text_changed), dynamic=True)
         append_child(card_div, "div", back_textbox, class_="col-sm")
         append_child(
             card_div,

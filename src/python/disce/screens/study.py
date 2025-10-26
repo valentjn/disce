@@ -40,27 +40,13 @@ class StudyScreen(AbstractScreen):
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
         return [
-            EventBinding(
-                element=self.select_child(".disce-correct-answer-btn"), event="click", listener=self.handle_answer
-            ),
-            EventBinding(
-                element=self.select_child(".disce-wrong-answer-btn"), event="click", listener=self.handle_answer
-            ),
-            EventBinding(element=self.select_child(".disce-skip-card-btn"), event="click", listener=self.skip_card),
-            EventBinding(element=self.select_child(".disce-show-answer-btn"), event="click", listener=self.show_answer),
-            EventBinding(
-                element=self.select_child(".disce-answer-textbox"),
-                event="keydown",
-                listener=self.handle_textbox_keydown,
-            ),
-            EventBinding(
-                element=self.select_child(".disce-submit-answer-btn"), event="click", listener=self.submit_answer
-            ),
-            EventBinding(
-                element=self.select_child(".disce-back-to-decks-screen-btn"),
-                event="click",
-                listener=self.back_to_decks_screen,
-            ),
+            EventBinding(self.select_child(".disce-correct-answer-btn"), "click", self.handle_answer),
+            EventBinding(self.select_child(".disce-wrong-answer-btn"), "click", self.handle_answer),
+            EventBinding(self.select_child(".disce-skip-card-btn"), "click", self.skip_card),
+            EventBinding(self.select_child(".disce-show-answer-btn"), "click", self.show_answer),
+            EventBinding(self.select_child(".disce-answer-textbox"), "keydown", self.handle_textbox_keydown),
+            EventBinding(self.select_child(".disce-submit-answer-btn"), "click", self.submit_answer),
+            EventBinding(self.select_child(".disce-back-to-decks-screen-btn"), "click", self.back_to_decks_screen),
         ]
 
     @override

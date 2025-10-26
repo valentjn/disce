@@ -191,7 +191,7 @@ class DecksScreen(AbstractScreen):
                 "merge."
             )
             return
-        merged_deck_name = prompt("Enter a name for the merged deck:", "Merged Deck")
+        merged_deck_name = prompt("Enter a name for the merged deck:", "Merge Decks")
         if not merged_deck_name:
             return
         configuration = Configuration.load_from_storage_or_create(self._storage)

@@ -312,14 +312,14 @@ class DecksScreen(AbstractScreen):
         """Open the settings modal and populate fields from configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         self.select_child(".disce-history-length-input").value = str(configuration.history_length)
-        self.select_child(".disce-typewriter-mode-input").checked = configuration.typewriter_mode
+        self.select_child(".disce-typewriter-mode-checkbox").checked = configuration.typewriter_mode
         show_modal(self.select_child(".disce-settings-modal"))
 
     def save_settings(self, _event: Event | None = None) -> None:
         """Save settings from the modal dialog to configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         configuration.history_length = int(self.select_child(".disce-history-length-input").value)
-        configuration.typewriter_mode = self.select_child(".disce-typewriter-mode-input").checked
+        configuration.typewriter_mode = self.select_child(".disce-typewriter-mode-checkbox").checked
         configuration.save_to_storage(self._storage)
 
     def get_deck_uuids(self) -> list[UUID]:

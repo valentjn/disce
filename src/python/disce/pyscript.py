@@ -28,18 +28,18 @@ class EventBinding:
 
     element: Element
     """Element to which the event listener is attached."""
-    event: str
+    event_name: str
     """Name of the event."""
     listener: EventListener
     """Event listener function."""
 
     def register(self) -> None:
         """Register the event listener."""
-        add_event_listener(self.element, self.event, self.listener)
+        add_event_listener(self.element, self.event_name, self.listener)
 
     def unregister(self) -> None:
         """Unregister the event listener."""
-        remove_event_listener(self.element, self.event, self.listener)
+        remove_event_listener(self.element, self.event_name, self.listener)
 
 
 def create_element(

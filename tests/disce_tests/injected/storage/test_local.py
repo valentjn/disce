@@ -7,34 +7,33 @@
 
 
 import pytest
-from disce.storage.local import LocalStorage
 
 
 class TestLocalStorage:
     @staticmethod
-    def test_len(storage: LocalStorage) -> None:
+    def test_len(storage: AbstractStorage) -> None:
         storage["key1"] = "value1"
         storage["key2"] = "value2"
         assert len(storage) == 2
 
     @staticmethod
-    def test_iter(storage: LocalStorage) -> None:
+    def test_iter(storage: AbstractStorage) -> None:
         storage["key1"] = "value1"
         storage["key2"] = "value2"
         assert set(storage) == {"key1", "key2"}
 
     @staticmethod
-    def test_getitem_setitem(storage: LocalStorage) -> None:
+    def test_getitem_setitem(storage: AbstractStorage) -> None:
         storage["key"] = "value"
         assert storage["key"] == "value"
 
     @staticmethod
-    def test_getitem_key_error(storage: LocalStorage) -> None:
+    def test_getitem_key_error(storage: AbstractStorage) -> None:
         with pytest.raises(KeyError, match=r"^'key'$"):
             storage["key"]
 
     @staticmethod
-    def test_delitem(storage: LocalStorage) -> None:
+    def test_delitem(storage: AbstractStorage) -> None:
         storage["key"] = "value"
         del storage["key"]
         assert "key" not in storage

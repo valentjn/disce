@@ -9,6 +9,7 @@ from collections.abc import Generator
 from time import sleep
 
 import pytest
+from disce.storage.base import AbstractStorage
 from disce.storage.local import LocalStorage
 
 
@@ -20,7 +21,7 @@ def wait() -> None:
 
 
 @pytest.fixture(autouse=True)
-def storage() -> Generator[LocalStorage]:
+def storage() -> Generator[AbstractStorage]:
     storage = LocalStorage()
     yield storage
     storage.clear()

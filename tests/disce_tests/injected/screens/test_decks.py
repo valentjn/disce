@@ -15,7 +15,7 @@ from disce.pyscript import EventBinding
 from disce.screens.decks import DecksScreen
 from disce.screens.edit_deck import EditDeckScreen
 from disce.screens.study import StudyScreen
-from disce.storage.local import LocalStorage
+from disce.storage.base import AbstractStorage
 
 from disce_tests.injected.screens.tools import assert_decks, assert_event_bindings_registered, create_decks
 from disce_tests.injected.tools import assert_hidden, assert_visible
@@ -24,8 +24,8 @@ from disce_tests.injected.tools import assert_hidden, assert_visible
 class TestDecksScreen:
     @staticmethod
     @pytest.fixture
-    def screen() -> DecksScreen:
-        screen = DecksScreen(LocalStorage())
+    def screen(storage: AbstractStorage) -> DecksScreen:
+        screen = DecksScreen(storage)
         screen.show()
         return screen
 
@@ -55,18 +55,18 @@ class TestDecksScreen:
             assert row.querySelector(".disce-deck-name-label").innerText == expected_name
 
     @staticmethod
-    def test_render_no_decks(screen: DecksScreen) -> None:
-        LocalStorage().clear()
+    def test_render_no_decks(storage: AbstractStorage, screen: DecksScreen) -> None:
+        storage.clear()
         screen.render()
         rows = screen.select_child(".disce-decks").children
         assert len(rows) == 1
         assert rows[0].innerText == "No decks available. Please add a deck."
 
     @staticmethod
-    def test_add_deck(screen: DecksScreen) -> None:
+    def test_add_deck(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.add_deck()
         assert_hidden(screen)
-        assert_visible(EditDeckScreen(None, LocalStorage()))
+        assert_visible(EditDeckScreen(None, storage))
 
     @staticmethod
     @pytest.fixture
@@ -180,28 +180,30 @@ class TestDecksScreen:
             assert not checkbox.checked
 
     @staticmethod
-    def test_study_decks(screen: DecksScreen) -> None:
+    def test_study_decks(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.select_child(".disce-selected-checkbox").checked = True
         screen.study_decks()
         assert_hidden(screen)
-        assert_visible(EditDeckScreen("deck1", LocalStorage()))
+        assert_visible(EditDeckScreen("deck1", storage))
 
     @staticmethod
-    def test_merge_decks(screen: DecksScreen) -> None:
+    def test_merge_decks(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.select_all_decks()
         with patch("disce.screens.decks.prompt", return_value="merged_deck_name") as prompt_mock:
             screen.merge_decks()
         assert prompt_mock.call_args_list == [call("Enter a name for the merged deck:", "Merge Decks")]
         TestDecksScreen._assert_rendered_decks(screen, ["deck1_name", "deck2_name", "merged_deck_name"])
         TestDecksScreen._assert_texts_of_deck(
+            storage,
             "merged_deck_name",
             {"deck1_card1_front", "deck1_card2_front", "deck2_card1_front"},
             {"deck1_card1_back", "deck1_card2_back", "deck2_card1_back"},
         )
 
     @staticmethod
-    def _assert_texts_of_deck(deck_name: str, expected_front_texts: set[str], expected_back_texts: set[str]) -> None:
-        storage = LocalStorage()
+    def _assert_texts_of_deck(
+        storage: AbstractStorage, deck_name: str, expected_front_texts: set[str], expected_back_texts: set[str]
+    ) -> None:
         configuration = Configuration.load_from_storage(storage)
         deck_metadata = next(
             deck_metadata for deck_metadata in configuration.deck_metadata if deck_metadata.name == deck_name
@@ -249,8 +251,7 @@ class TestDecksScreen:
         assert download_file_mock.call_args_list == [call("deck1-name.json", "application/json", ANY)]
 
     @staticmethod
-    def test_export_deck_single_deck_invalid_name(screen: DecksScreen) -> None:
-        storage = LocalStorage()
+    def test_export_deck_single_deck_invalid_name(storage: AbstractStorage, screen: DecksScreen) -> None:
         configuration = Configuration.load_from_storage_or_create(storage)
         configuration.deck_metadata["deck1"].name = "???"
         configuration.save_to_storage(storage)
@@ -309,25 +310,28 @@ class TestDecksScreen:
         assert screen.select_child(".disce-delete-decks-btn").disabled == (number_of_selected_decks < 1)
 
     @staticmethod
-    def test_study_deck(screen: DecksScreen) -> None:
+    def test_study_deck(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.study_deck(SimpleNamespace(currentTarget=screen.select_child(".disce-study-deck-btn")))
         assert_hidden(screen)
-        assert_visible(StudyScreen(["deck1"], LocalStorage()))
+        assert_visible(StudyScreen(["deck1"], storage))
 
     @staticmethod
-    def test_edit_deck(screen: DecksScreen) -> None:
+    def test_edit_deck(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.edit_deck(SimpleNamespace(currentTarget=screen.select_child(".disce-edit-deck-btn")))
         assert_hidden(screen)
-        assert_visible(EditDeckScreen("deck1", LocalStorage()))
+        assert_visible(EditDeckScreen("deck1", storage))
 
     @staticmethod
-    def test_duplicate_deck(screen: DecksScreen) -> None:
+    def test_duplicate_deck(storage: AbstractStorage, screen: DecksScreen) -> None:
         with patch("disce.screens.decks.prompt", return_value="deck1_copy_name") as prompt_mock:
             screen.duplicate_deck(SimpleNamespace(currentTarget=screen.select_child(".disce-duplicate-deck-btn")))
         assert prompt_mock.call_args_list == [call("Enter a name for the duplicated deck:", "Copy of deck1_name")]
         TestDecksScreen._assert_rendered_decks(screen, ["deck1_copy_name", "deck1_name", "deck2_name"])
         TestDecksScreen._assert_texts_of_deck(
-            "deck1_copy_name", {"deck1_card1_front", "deck1_card2_front"}, {"deck1_card1_back", "deck1_card2_back"}
+            storage,
+            "deck1_copy_name",
+            {"deck1_card1_front", "deck1_card2_front"},
+            {"deck1_card1_back", "deck1_card2_back"},
         )
 
     @staticmethod
@@ -367,11 +371,11 @@ class TestDecksScreen:
         assert not screen.select_child(".disce-typewriter-mode-checkbox").checked
 
     @staticmethod
-    def test_save_settings(screen: DecksScreen) -> None:
+    def test_save_settings(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.select_child(".disce-history-length-input").value = "5"
         screen.select_child(".disce-typewriter-mode-checkbox").checked = True
         screen.save_settings()
-        configuration = Configuration.load_from_storage(LocalStorage())
+        configuration = Configuration.load_from_storage(storage)
         assert configuration.history_length == 5
         assert configuration.typewriter_mode
 

@@ -8,7 +8,7 @@
 
 import pytest
 from disce.data import Configuration, DeckData, DeckMetadata, UUIDModelList
-from disce.storage.local import LocalStorage
+from disce.storage.base import AbstractStorage
 
 from disce_tests.injected.screens.tools import create_decks
 
@@ -27,7 +27,7 @@ def deck_metadata_list() -> list[DeckMetadata]:
 
 @pytest.fixture(autouse=True)
 def save_decks_and_configuration(
-    storage: LocalStorage, deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata]
+    storage: AbstractStorage, deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata]
 ) -> None:
     for deck_data in deck_data_list:
         deck_data.save_to_storage(storage)

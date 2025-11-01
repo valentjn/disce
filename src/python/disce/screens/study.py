@@ -23,19 +23,18 @@ class StudyScreen(AbstractScreen):
     def __init__(self, deck_uuids: Sequence[str], storage: AbstractStorage) -> None:
         """Initialize the screen."""
         super().__init__("#disce-study-screen")
-        self._deck_uuids = list(deck_uuids)
         self._storage = storage
-        self._configuration = Configuration.load_from_storage_or_create(self._storage)
-        self._deck_data_list = [DeckData.load_from_storage(self._storage, uuid) for uuid in deck_uuids]
-        self._merged_deck_data = DeckData.from_merge(self._deck_data_list)
+        deck_data_list = [DeckData.load_from_storage(storage, uuid) for uuid in deck_uuids]
+        self._merged_deck_data = DeckData.from_merge(deck_data_list)
         self._card_uuid_to_deck_uuid = {
-            card.uuid: deck_data.uuid for deck_data in self._deck_data_list for card in deck_data.cards
+            card.uuid: deck_data.uuid for deck_data in deck_data_list for card in deck_data.cards
         }
         self._current_card, self._current_card_side = self.get_card_to_study()
 
     def get_card_to_study(self) -> tuple[Card, CardSide]:
         """Get the card and side that should be studied next (based on the answer history)."""
-        return self._merged_deck_data.get_card_to_study(history_length=self._configuration.history_length)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
+        return self._merged_deck_data.get_card_to_study(history_length=configuration.history_length)
 
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
@@ -51,8 +50,8 @@ class StudyScreen(AbstractScreen):
 
     @override
     def render(self) -> None:
-        self._configuration = Configuration.load_from_storage_or_create(self._storage)
-        typewriter_mode = self._configuration.typewriter_mode
+        configuration = Configuration.load_from_storage_or_create(self._storage)
+        typewriter_mode = configuration.typewriter_mode
         self.select_child(
             ".disce-study-card-question-side .disce-study-card-side-content"
         ).innerText = self._current_card.get_side(self._current_card_side)

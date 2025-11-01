@@ -5,7 +5,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from collections.abc import Generator
 
 import pytest
 from disce.data import Configuration, DeckData, DeckMetadata, UUIDModelList
@@ -27,11 +26,10 @@ def deck_metadata_list() -> list[DeckMetadata]:
 
 
 @pytest.fixture(autouse=True)
-def decks_and_configuration(deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata]) -> Generator[None]:
-    storage = LocalStorage()
+def save_decks_and_configuration(
+    storage: LocalStorage, deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata]
+) -> None:
     for deck_data in deck_data_list:
         deck_data.save_to_storage(storage)
     configuration = Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=2)
     configuration.save_to_storage(storage)
-    yield
-    storage.clear()

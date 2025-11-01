@@ -25,15 +25,35 @@ def create_decks(prefix: str) -> tuple[UUIDModelList[DeckData], UUIDModelList[De
                 uuid=f"{prefix}deck1",
                 cards=UUIDModelList(
                     [
-                        Card(uuid=f"{prefix}deck1_card1", front="deck1_card1_front", back="deck1_card1_back"),
-                        Card(uuid=f"{prefix}deck1_card2", front="deck1_card2_front", back="deck1_card2_back"),
+                        Card(
+                            uuid=f"{prefix}deck1_card1",
+                            front="deck1_card1_front",
+                            back="deck1_card1_back",
+                            front_answer_history=[False, False, False, False, False],
+                            back_answer_history=[False, False, False, False, True],
+                        ),
+                        Card(
+                            uuid=f"{prefix}deck1_card2",
+                            front="deck1_card2_front",
+                            back="deck1_card2_back",
+                            front_answer_history=[False, False, False, True, True],
+                            back_answer_history=[False, False, True, True, True],
+                        ),
                     ]
                 ),
             ),
             DeckData(
                 uuid=f"{prefix}deck2",
                 cards=UUIDModelList(
-                    [Card(uuid=f"{prefix}deck2_card1", front="deck2_card1_front", back="deck2_card1_back")]
+                    [
+                        Card(
+                            uuid=f"{prefix}deck2_card1",
+                            front="deck2_card1_front",
+                            back="deck2_card1_back",
+                            front_answer_history=[False, True, True, True, True],
+                            back_answer_history=[True, True, True, True, True],
+                        )
+                    ]
                 ),
             ),
         ]

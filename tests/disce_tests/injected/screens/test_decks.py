@@ -363,12 +363,13 @@ class TestDecksScreen:
         assert_decks(deck_data_list, deck_metadata_list)
 
     @staticmethod
-    def test_open_settings_modal(screen: DecksScreen) -> None:
+    def test_open_settings_modal(storage: AbstractStorage, screen: DecksScreen) -> None:
         with patch("disce.screens.decks.show_modal") as show_modal_mock:
             screen.open_settings_modal()
         assert show_modal_mock.call_args_list == [call(screen.select_child(".disce-settings-modal"))]
-        assert screen.select_child(".disce-history-length-input").value == "2"
-        assert not screen.select_child(".disce-typewriter-mode-checkbox").checked
+        configuration = Configuration.load_from_storage_or_create(storage)
+        assert screen.select_child(".disce-history-length-input").value == str(configuration.history_length)
+        assert screen.select_child(".disce-typewriter-mode-checkbox").checked == configuration.typewriter_mode
 
     @staticmethod
     def test_save_settings(storage: AbstractStorage, screen: DecksScreen) -> None:

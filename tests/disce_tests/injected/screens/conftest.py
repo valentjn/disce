@@ -30,5 +30,5 @@ def save_decks_and_configuration(
 ) -> None:
     for deck_data in deck_data_list:
         deck_data.save_to_storage(storage)
-    configuration = Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=2)
+    configuration = Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=10)
     configuration.save_to_storage(storage)

@@ -5,37 +5,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from collections.abc import Generator
 
 import pytest
+from disce.storage.local import LocalStorage
+
+from disce_tests.injected.storage.base import BaseTestStorage, clear_storage
 
 
-class TestLocalStorage:
-    @staticmethod
-    def test_len(storage: AbstractStorage) -> None:
-        storage["key1"] = "value1"
-        storage["key2"] = "value2"
-        assert len(storage) == 2
+@pytest.fixture
+def test_storage() -> Generator[LocalStorage]:
+    with clear_storage(LocalStorage()) as storage:
+        yield storage
 
-    @staticmethod
-    def test_iter(storage: AbstractStorage) -> None:
-        storage["key1"] = "value1"
-        storage["key2"] = "value2"
-        assert set(storage) == {"key1", "key2"}
 
-    @staticmethod
-    def test_getitem_setitem(storage: AbstractStorage) -> None:
-        storage["key"] = "value"
-        assert storage["key"] == "value"
-
-    @staticmethod
-    def test_getitem_key_error(storage: AbstractStorage) -> None:
-        with pytest.raises(KeyError, match=r"^'key'$"):
-            storage["key"]
-
-    @staticmethod
-    def test_delitem(storage: AbstractStorage) -> None:
-        storage["key"] = "value"
-        del storage["key"]
-        assert "key" not in storage
-        del storage["key"]
-        assert "key" not in storage
+class TestLocalStorage(BaseTestStorage):
+    pass

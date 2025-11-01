@@ -12,6 +12,8 @@ import pytest
 from disce.storage.base import AbstractStorage
 from disce.storage.local import LocalStorage
 
+from disce_tests.injected.storage.base import clear_storage
+
 
 @pytest.fixture(autouse=True)
 def wait() -> None:
@@ -22,6 +24,5 @@ def wait() -> None:
 
 @pytest.fixture(autouse=True)
 def storage() -> Generator[AbstractStorage]:
-    storage = LocalStorage()
-    yield storage
-    storage.clear()
+    with clear_storage(LocalStorage()) as storage:
+        yield storage

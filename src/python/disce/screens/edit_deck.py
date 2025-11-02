@@ -38,7 +38,7 @@ class EditDeckScreen(AbstractScreen):
         return [
             EventBinding(self.select_child(".disce-save-deck-btn"), "click", self.save_deck),
             EventBinding(self.select_child(".disce-select-all-btn"), "click", self.select_all_decks),
-            EventBinding(self.select_child(".disce-delete-cards-btn"), "click", self.delete_selected_cards),
+            EventBinding(self.select_child(".disce-delete-cards-btn"), "click", self.delete_cards),
             EventBinding(self.select_child(".disce-back-to-decks-screen-btn"), "click", self.back_to_decks_screen),
         ]
 
@@ -173,7 +173,7 @@ class EditDeckScreen(AbstractScreen):
             checkbox.checked = select_all
         self.update_bulk_buttons()
 
-    def delete_selected_cards(self, _event: Event | None = None) -> None:
+    def delete_cards(self, _event: Event | None = None) -> None:
         """Delete the selected cards."""
         selected_card_uuids = set(self.get_selected_card_uuids())
         if not selected_card_uuids:

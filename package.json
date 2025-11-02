@@ -6,18 +6,18 @@
         "prettier-plugin-toml": ">=2.0.6"
     },
     "scripts": {
-        "fmt": "npm run fmt:prettier && npm run fmt:ruff && npm run fmt:misc",
         "fmt:check": "npx prettier --check . && uv run ruff format --diff",
-        "fmt:prettier": "npx prettier --write .",
         "fmt:misc": "",
+        "fmt:prettier": "npx prettier --write .",
         "fmt:ruff": "uv run ruff format",
-        "lint": "npm run lint:mypy && npm run lint:ruff && npm run lint:misc",
-        "lint:fix": "npm run lint:fix:ruff && npm run lint:fix:misc",
+        "fmt": "npm run fmt:prettier && npm run fmt:ruff && npm run fmt:misc",
         "lint:fix:misc": "uv run python scripts/sync_pyscript.py",
         "lint:fix:ruff": "uv run ruff check --fix",
+        "lint:fix": "npm run lint:fix:ruff && npm run lint:fix:misc",
         "lint:misc": "uv run python scripts/sync_pyscript.py --check",
         "lint:mypy": "uv run mypy",
         "lint:ruff": "uv run ruff check",
+        "lint": "npm run lint:mypy && npm run lint:ruff && npm run lint:misc",
         "test": "uv run pytest --copy-coverage -k injected --no-cov && uv run pytest --cov-append -k 'not injected'"
     }
 }

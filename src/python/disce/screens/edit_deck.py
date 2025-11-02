@@ -43,7 +43,7 @@ class EditDeckScreen(AbstractScreen):
         ]
 
     @override
-    def render(self, deck_metadata: DeckMetadata | None = None) -> None:
+    def render(self, deck_data: DeckData | None = None, deck_metadata: DeckMetadata | None = None) -> None:
         if deck_metadata is None:
             configuration = Configuration.load_from_storage_or_create(self._storage)
             deck_metadata = (
@@ -54,9 +54,13 @@ class EditDeckScreen(AbstractScreen):
         cards_div = self.select_child(".disce-cards")
         cards_div.innerHTML = ""
         cards = (
-            DeckData.load_from_storage(self._storage, deck_metadata.uuid).cards
-            if DeckData.exists_in_storage(self._storage, deck_metadata.uuid)
-            else UUIDModelList()
+            deck_data.cards.model_copy()
+            if deck_data
+            else (
+                DeckData.load_from_storage(self._storage, deck_metadata.uuid).cards
+                if DeckData.exists_in_storage(self._storage, deck_metadata.uuid)
+                else UUIDModelList()
+            )
         )
         cards.set(Card())
         for card in cards:
@@ -180,7 +184,8 @@ class EditDeckScreen(AbstractScreen):
         if confirm(f"Are you sure you want to delete the selected {format_plural(len(selected_card_uuids), 'card')}?"):
             deck_data, deck_metadata = self.get_deck()
             deck_data.cards = UUIDModelList([card for card in deck_data.cards if card.uuid not in selected_card_uuids])
-            self.render(deck_metadata)
+            deck_metadata.number_of_cards = len(deck_data.cards)
+            self.render(deck_data=deck_data, deck_metadata=deck_metadata)
 
     def update_bulk_buttons(self, _event: Event | None = None) -> None:
         """Update the bulk action buttons based on selection."""

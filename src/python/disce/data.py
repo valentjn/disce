@@ -140,6 +140,11 @@ class CardSide(StrEnum):
     BACK = auto()
     """Back side (e.g., answer or term in native language)."""
 
+    @property
+    def opposite(self) -> "CardSide":
+        """Get the opposite side."""
+        return CardSide.BACK if self is CardSide.FRONT else CardSide.FRONT
+
 
 class Card(UUIDModel):
     """A flashcard."""
@@ -158,10 +163,6 @@ class Card(UUIDModel):
     def get_side(self, side: CardSide) -> str:
         """Get the text on the specified side of the card."""
         return self.front if side is CardSide.FRONT else self.back
-
-    def get_opposite_side(self, side: CardSide) -> str:
-        """Get the text on the opposite side of the card."""
-        return self.back if side is CardSide.FRONT else self.front
 
     def record_answer(self, side: CardSide, *, correct: bool) -> None:
         """Record an answer for the specified side of the card."""

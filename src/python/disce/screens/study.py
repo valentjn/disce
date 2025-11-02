@@ -83,7 +83,7 @@ class StudyScreen(AbstractScreen):
         """Show the answer side of the current card."""
         self.select_child(
             ".disce-study-card-answer-side .disce-study-card-side-content"
-        ).innerText = self._current_card.get_opposite_side(self._current_card_side)
+        ).innerText = self._current_card.get_side(self._current_card_side.opposite)
         hide_element(self.select_child(".disce-show-answer-btn"))
 
     def handle_textbox_keydown(self, event: Event) -> None:
@@ -94,7 +94,7 @@ class StudyScreen(AbstractScreen):
     def submit_answer(self, _event: Event | None = None) -> None:
         """Submit the answer typed by the user and show the answer side."""
         user_answer = self.select_child(".disce-answer-textbox").value.strip()
-        correct_answer = self._current_card.get_opposite_side(self._current_card_side).strip()
+        correct_answer = self._current_card.get_side(self._current_card_side.opposite).strip()
         diff = Diff.from_strings(user_answer, correct_answer)
         self.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML = diff.to_html()
         hide_element(self.select_child(".disce-answer-textbox"))

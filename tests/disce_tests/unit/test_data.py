@@ -131,18 +131,19 @@ class TestUUIDModelList:
             del cards["uuid2"]
 
 
+class TestCardSide:
+    @staticmethod
+    def test_opposite() -> None:
+        assert CardSide.FRONT.opposite is CardSide.BACK
+        assert CardSide.BACK.opposite is CardSide.FRONT
+
+
 class TestCard:
     @staticmethod
     def test_get_side() -> None:
         card = Card(front="front", back="back")
         assert card.get_side(CardSide.FRONT) == "front"
         assert card.get_side(CardSide.BACK) == "back"
-
-    @staticmethod
-    def test_get_opposite_side() -> None:
-        card = Card(front="front", back="back")
-        assert card.get_opposite_side(CardSide.FRONT) == "back"
-        assert card.get_opposite_side(CardSide.BACK) == "front"
 
     @staticmethod
     def test_record_answer() -> None:

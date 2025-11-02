@@ -37,7 +37,7 @@ def watch_output(  # noqa: PLR0913
     found_start_match = start_pattern is None
     result: list[re.Match[str] | None] = [None] * len(return_patterns)
     while time.monotonic() - start_time < timeout.total_seconds():
-        if periodic_callback is not None:
+        if periodic_callback:
             periodic_callback()
         output_to_search = {"stdout": stdout, "stderr": stderr}[output_type]
         if not found_start_match and start_pattern and start_pattern.search(output_to_search):

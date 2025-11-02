@@ -164,10 +164,13 @@ class Card(UUIDModel):
         """Get the text on the specified side of the card."""
         return self.front if side is CardSide.FRONT else self.back
 
+    def get_answer_history(self, side: CardSide) -> list[bool]:
+        """Get the answer history for the specified side of the card."""
+        return self.front_answer_history if side is CardSide.FRONT else self.back_answer_history
+
     def record_answer(self, side: CardSide, *, correct: bool) -> None:
         """Record an answer for the specified side of the card."""
-        answer_history = self.front_answer_history if side is CardSide.FRONT else self.back_answer_history
-        answer_history.append(correct)
+        self.get_answer_history(side).append(correct)
 
 
 class DeckData(AbstractStoredModel, UUIDModel):
@@ -219,7 +222,7 @@ class DeckData(AbstractStoredModel, UUIDModel):
                 continue
             for side in CardSide:
                 append = False
-                answer_history = card.front_answer_history if side is CardSide.FRONT else card.back_answer_history
+                answer_history = card.get_answer_history(side)
                 relevant_answer_history = answer_history[-history_length:]
                 score = sum(relevant_answer_history)
                 if (

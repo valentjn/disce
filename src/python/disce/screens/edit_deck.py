@@ -135,13 +135,12 @@ class EditDeckScreen(AbstractScreen):
 
     def card_text_changed(self, _event: Event | None = None) -> None:
         """Make sure there's always an empty card at the end."""
-        cards = self.select_all_children(".disce-card")
-        if not cards:
-            msg = "no cards found in edit deck screen"
-            raise RuntimeError(msg)
-        last_card_front = cards[-1].querySelector(".disce-front-textbox").value
-        last_card_back = cards[-1].querySelector(".disce-back-textbox").value
-        if last_card_front or last_card_back:
+        card_divs = self.select_all_children(".disce-card")
+        if (
+            not card_divs
+            or card_divs[-1].querySelector(".disce-front-textbox").value
+            or card_divs[-1].querySelector(".disce-back-textbox").value
+        ):
             cards_div = self.select_child(".disce-cards")
             cards_div.appendChild(self.create_card_div(Card()))
         self.update_bulk_buttons()

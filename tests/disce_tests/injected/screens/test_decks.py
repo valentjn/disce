@@ -184,7 +184,7 @@ class TestDecksScreen:
         screen.select_child(".disce-selected-checkbox").checked = True
         screen.study_decks()
         assert_hidden(screen)
-        assert_visible(EditDeckScreen("deck1", storage))
+        assert_visible(StudyScreen(["deck1"], storage))
 
     @staticmethod
     def test_merge_decks(storage: AbstractStorage, screen: DecksScreen) -> None:

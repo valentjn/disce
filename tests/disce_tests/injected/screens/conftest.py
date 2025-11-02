@@ -7,6 +7,10 @@
 
 import pytest
 from disce.data import Configuration, DeckData, DeckMetadata, UUIDModelList
+from disce.screens.decks import DecksScreen
+from disce.screens.edit_deck import EditDeckScreen
+from disce.screens.load import LoadScreen
+from disce.screens.study import StudyScreen
 from disce.storage.base import AbstractStorage
 
 from disce_tests.injected.screens.tools import create_decks
@@ -32,3 +36,11 @@ def save_decks_and_configuration(
         deck_data.save_to_storage(storage)
     configuration = Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=10)
     configuration.save_to_storage(storage)
+
+
+@pytest.fixture(autouse=True)
+def hide_all_screens(storage: AbstractStorage, save_decks_and_configuration: None) -> None:
+    DecksScreen(storage).hide()
+    EditDeckScreen(None, storage).hide()
+    LoadScreen().hide()
+    StudyScreen(["deck1"], storage).hide()

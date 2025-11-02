@@ -306,8 +306,8 @@ class TestDecksScreen:
             " Deselect All" if number_of_selected_decks == 2 else " Select All"
         )
         assert screen.select_child(".disce-merge-decks-btn").disabled == (number_of_selected_decks < 2)
-        assert screen.select_child(".disce-export-decks-btn").disabled == (number_of_selected_decks < 1)
-        assert screen.select_child(".disce-delete-decks-btn").disabled == (number_of_selected_decks < 1)
+        assert screen.select_child(".disce-export-decks-btn").disabled == (number_of_selected_decks == 0)
+        assert screen.select_child(".disce-delete-decks-btn").disabled == (number_of_selected_decks == 0)
 
     @staticmethod
     def test_study_deck(storage: AbstractStorage, screen: DecksScreen) -> None:

@@ -29,12 +29,12 @@ def print_signal(signal_name: str, capsys: pytest.CaptureFixture[str], request: 
         print(f"{request.node.nodeid}: {signal_name}")  # noqa: T201
 
 
-def assert_hidden(obj: Element | AbstractScreen) -> None:
-    assert get_style(obj).display == "none"
+def assert_hidden(obj: Element | AbstractScreen, *, hidden: bool = True) -> None:
+    assert (get_style(obj).display == "none") == hidden
 
 
-def assert_visible(obj: Element | AbstractScreen) -> None:
-    assert get_style(obj).display != "none"
+def assert_visible(obj: Element | AbstractScreen, *, visible: bool = True) -> None:
+    assert_hidden(obj, hidden=not visible)
 
 
 def get_style(obj: Element | AbstractScreen) -> Any:  # noqa: ANN401

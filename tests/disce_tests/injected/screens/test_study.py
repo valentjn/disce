@@ -85,7 +85,6 @@ class TestStudyScreen:
     def _assert_render(
         screen: StudyScreen, expected_question_text: str, *, expected_typewriter_mode: bool = False
     ) -> None:
-        assert_event_bindings_registered(screen.get_static_event_bindings())
         assert (
             screen.select_child(".disce-study-card-question-side .disce-study-card-side-content").innerText
             == expected_question_text
@@ -96,6 +95,7 @@ class TestStudyScreen:
         assert_visible(screen.select_child(".disce-show-answer-btn"), visible=not expected_typewriter_mode)
         assert_visible(answer_textbox, visible=expected_typewriter_mode)
         assert_visible(screen.select_child(".disce-submit-answer-btn"), visible=expected_typewriter_mode)
+        assert_event_bindings_registered(screen.get_static_event_bindings())
 
     @staticmethod
     @pytest.mark.parametrize("is_correct", [False, True])

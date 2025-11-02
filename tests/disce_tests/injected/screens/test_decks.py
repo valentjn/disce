@@ -36,15 +36,15 @@ class TestDecksScreen:
     @staticmethod
     def test_render(screen: DecksScreen) -> None:
         TestDecksScreen._assert_rendered_decks(screen, ["deck1_name", "deck2_name"])
-        row = screen.select_child(".disce-decks").children[0]
+        element = screen.select_child(".disce-decks").children[0]
         assert_event_bindings_registered(
             [
                 *screen.get_static_event_bindings(),
-                EventBinding(row.querySelector(".disce-selected-checkbox"), "change", screen.update_bulk_buttons),
-                EventBinding(row.querySelector(".disce-study-deck-btn"), "click", screen.study_deck),
-                EventBinding(row.querySelector(".disce-edit-deck-btn"), "click", screen.edit_deck),
-                EventBinding(row.querySelector(".disce-duplicate-deck-btn"), "click", screen.duplicate_deck),
-                EventBinding(row.querySelector(".disce-delete-deck-btn"), "click", screen.delete_deck),
+                EventBinding(element.querySelector(".disce-selected-checkbox"), "change", screen.update_bulk_buttons),
+                EventBinding(element.querySelector(".disce-study-deck-btn"), "click", screen.study_deck),
+                EventBinding(element.querySelector(".disce-edit-deck-btn"), "click", screen.edit_deck),
+                EventBinding(element.querySelector(".disce-duplicate-deck-btn"), "click", screen.duplicate_deck),
+                EventBinding(element.querySelector(".disce-delete-deck-btn"), "click", screen.delete_deck),
             ]
         )
 

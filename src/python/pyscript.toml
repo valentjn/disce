@@ -11,6 +11,7 @@ packages = ["pydantic"]
 "disce/__main__.py" = "./disce/"
 "disce/data.py" = "./disce/"
 "disce/diffs.py" = "./disce/"
+"disce/furigana.py" = "./disce/"
 "disce/main.py" = "./disce/"
 "disce/py.typed" = "./disce/"
 "disce/pyscript.py" = "./disce/"

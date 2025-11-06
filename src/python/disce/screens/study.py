@@ -12,6 +12,7 @@ from typing import override
 import disce.screens.decks as decks_screen
 from disce.data import Card, CardSide, Configuration, DeckData
 from disce.diffs import Diff
+from disce.furigana import FuriganaPart
 from disce.pyscript import Event, EventBinding, hide_element, show_element
 from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
@@ -52,9 +53,9 @@ class StudyScreen(AbstractScreen):
     def render(self) -> None:
         configuration = Configuration.load_from_storage_or_create(self._storage)
         typewriter_mode = configuration.typewriter_mode
-        self.select_child(
-            ".disce-study-card-question-side .disce-study-card-side-content"
-        ).innerText = self._current_card.get_side(self._current_card_side)
+        question = self._current_card.get_side(self._current_card_side)
+        question = FuriganaPart.get_stripped_text(FuriganaPart.parse_all(question))
+        self.select_child(".disce-study-card-question-side .disce-study-card-side-content").innerText = question
         self.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML = ""
         answer_textbox = self.select_child(".disce-answer-textbox")
         answer_textbox.value = ""
@@ -81,9 +82,14 @@ class StudyScreen(AbstractScreen):
 
     def show_answer(self, _event: Event | None = None) -> None:
         """Show the answer side of the current card."""
+        question = self._current_card.get_side(self._current_card_side)
+        answer = self._current_card.get_side(self._current_card_side.opposite)
+        self.select_child(
+            ".disce-study-card-question-side .disce-study-card-side-content"
+        ).innerHTML = FuriganaPart.to_html(FuriganaPart.parse_all(question))
         self.select_child(
             ".disce-study-card-answer-side .disce-study-card-side-content"
-        ).innerText = self._current_card.get_side(self._current_card_side.opposite)
+        ).innerHTML = FuriganaPart.to_html(FuriganaPart.parse_all(answer))
         hide_element(self.select_child(".disce-show-answer-btn"))
 
     def handle_textbox_keydown(self, event: Event) -> None:
@@ -93,6 +99,10 @@ class StudyScreen(AbstractScreen):
 
     def submit_answer(self, _event: Event | None = None) -> None:
         """Submit the answer typed by the user and show the answer side."""
+        question = self._current_card.get_side(self._current_card_side)
+        self.select_child(
+            ".disce-study-card-question-side .disce-study-card-side-content"
+        ).innerHTML = FuriganaPart.to_html(FuriganaPart.parse_all(question))
         user_answer = self.select_child(".disce-answer-textbox").value.strip()
         correct_answer = self._current_card.get_side(self._current_card_side.opposite).strip()
         diff = Diff.from_strings(user_answer, correct_answer)

@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 
+from disce.furigana import FuriganaPart, FuriganaPartType
+
 
 class Tag(StrEnum):
     """Tag for a diff opcode."""
@@ -31,38 +33,24 @@ class Opcode:
 
     tag: Tag
     """Tag indicating the type of operation."""
-    source_substring: str
-    """Substring from the source string."""
-    source_start: int
-    """Start index (inclusive) in source string."""
-    source_end: int
-    """End index (exclusive) in source string."""
-    target_substring: str
-    """Substring from the target string."""
-    target_start: int
-    """Start index (inclusive) in target string."""
-    target_end: int
-    """End index (exclusive) in target string."""
-
-    @staticmethod
-    def from_tuple(source: str, target: str, tuple_: tuple[str, int, int, int, int]) -> "Opcode":
-        """Create an Opcode from a tuple."""
-        tag_str, i1, i2, j1, j2 = tuple_
-        return Opcode(Tag(tag_str), source[i1:i2], i1, i2, target[j1:j2], j1, j2)
+    source: str
+    """String before applying the operation."""
+    target: str
+    """String after applying the operation."""
 
     def to_html(self) -> str:
         """Render the opcode as HTML."""
+        source_html = html.escape(self.source)
+        target_html = FuriganaPart.to_html(FuriganaPart.parse_all(self.target))
         match self.tag:
             case Tag.EQUAL:
-                result = f'<span class="disce-matching-answer-part">{html.escape(self.source_substring)}</span>'
+                result = f'<span class="disce-matching-answer-part">{target_html}</span>'
             case Tag.INSERT:
-                result = f"<ins>{html.escape(self.target_substring)}</ins>"
+                result = f"<ins>{target_html}</ins>"
             case Tag.DELETE:
-                result = f"<del>{html.escape(self.source_substring)}</del>"
+                result = f"<del>{source_html}</del>"
             case Tag.REPLACE:
-                result = (
-                    f"<del>{html.escape(self.source_substring)}</del><ins>{html.escape(self.target_substring)}</ins>"
-                )
+                result = f"<del>{source_html}</del><ins>{target_html}</ins>"
             case _:
                 msg = f"unknown tag: {self.tag}"
                 raise ValueError(msg)
@@ -83,9 +71,54 @@ class Diff:
     @staticmethod
     def from_strings(source: str, target: str) -> "Diff":
         """Compute the diff between two strings."""
-        matcher = SequenceMatcher(a=source, b=target)
-        opcodes = tuple(Opcode.from_tuple(source, target, opcode) for opcode in matcher.get_opcodes())
-        return Diff(source, target, opcodes)
+        furigana_parts = FuriganaPart.parse_all(target)
+        stripped_target = FuriganaPart.get_stripped_text(furigana_parts)
+        matcher = SequenceMatcher(a=source, b=stripped_target)
+        furigana_index = 0
+        furigana_start = 0
+        opcodes = []
+        for tag, source_start, source_end, target_start, target_end in matcher.get_opcodes():
+            target_substring, furigana_index, furigana_start = Diff._insert_furigana(
+                stripped_target, target_start, target_end, furigana_parts, furigana_index, furigana_start
+            )
+            opcodes.append(Opcode(Tag(tag), source[source_start:source_end], target_substring))
+        return Diff(source, target, tuple(opcodes))
+
+    @staticmethod
+    def _insert_furigana(  # noqa: PLR0913
+        target: str,
+        target_start: int,
+        target_end: int,
+        furigana_parts: list[FuriganaPart],
+        furigana_part_idx: int,
+        furigana_part_start: int,
+    ) -> tuple[str, int, int]:
+        """Insert furigana annotations into a target substring.
+
+        :param target: The target string without furigana annotations.
+        :param target_start: Start index (inclusive) in ``target``.
+        :param target_end: End index (exclusive) in ``target``.
+        :param furigana_parts: List of furigana parts to insert.
+        :param furigana_part_idx: Index of the current furigana part.
+        :param furigana_part_start: Start index (inclusive) of the current furigana part in ``target``.
+        :return: A tuple of the target substring with furigana annotations, the updated furigana part index, and the
+            updated furigana part start index in ``target``.
+        """
+        parts = []
+        last_index = target_start
+        while last_index < target_end and furigana_part_idx < len(furigana_parts) and furigana_part_start < target_end:
+            part = furigana_parts[furigana_part_idx]
+            if furigana_part_start < last_index or part.type is not FuriganaPartType.KANJI:
+                furigana_part_idx += 1
+                furigana_part_start += len(part.text)
+            else:
+                parts.append(target[last_index:furigana_part_start])
+                parts.append(FuriganaPart.get_annotated_text(furigana_parts[furigana_part_idx : furigana_part_idx + 4]))
+                last_index = furigana_part_start + len(part.text)
+                furigana_part_idx += 4
+                furigana_part_start += len(part.text)
+        parts.append(target[last_index:target_end])
+        return "".join(parts), furigana_part_idx, furigana_part_start
 
     def to_html(self) -> str:
         """Render the diff as HTML."""

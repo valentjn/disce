@@ -51,6 +51,7 @@ class AbstractScreen(ABC):
         event_bindings = self._get_event_bindings(dynamic=dynamic)
         for event_binding in event_bindings.copy():
             event_binding.unregister()
+            event_bindings.remove(event_binding)
 
     def unregister_event_binding(self, binding: EventBinding, *, dynamic: bool) -> None:
         """Unregister a specific event binding."""

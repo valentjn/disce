@@ -9,7 +9,6 @@
 import random
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
-from copy import deepcopy
 from enum import StrEnum, auto
 from typing import Self, override
 from uuid import uuid4
@@ -192,7 +191,7 @@ class DeckData(AbstractStoredModel, UUIDModel):
         """Create a new deck by merging multiple decks."""
         merged_deck = DeckData()
         for deck_data in deck_data_list:
-            merged_deck.merge(deepcopy(deck_data))
+            merged_deck.merge(deck_data.model_copy(deep=True))
         return merged_deck
 
     def merge(self, other: "DeckData") -> None:

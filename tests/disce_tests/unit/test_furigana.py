@@ -5,31 +5,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import pytest
 from disce.furigana import Token, TokenizedString, TokenType
 
 
 class TestTokenizedString:
-    @pytest.fixture
-    def string(self) -> str:
-        return 2 * "\u6f22[\u304b\u3093]\u5b57[\u3058]\u30c6\u30b9\u30c8"
+    @staticmethod
+    def test_str(furigana_string: str) -> None:
+        assert str(TokenizedString.from_string(furigana_string)) == furigana_string
 
     @staticmethod
-    def test_str(string: str) -> None:
-        assert str(TokenizedString.from_string(string)) == string
+    def test_html(furigana_string: str, furigana_html: str) -> None:
+        tokenized = TokenizedString.from_string(furigana_string)
+        assert tokenized.html == furigana_html
 
     @staticmethod
-    def test_html(string: str) -> None:
-        tokenized = TokenizedString.from_string(string)
-        assert tokenized.html == 2 * (
-            "<ruby>\u6f22<rp>\uff08</rp><rt>\u304b\u3093</rt><rp>\uff09</rp></ruby>"
-            "<ruby>\u5b57<rp>\uff08</rp><rt>\u3058</rt><rp>\uff09</rp></ruby>\u30c6\u30b9\u30c8"
-        )
-
-    @staticmethod
-    def test_strip_furigana(string: str) -> None:
-        tokenized = TokenizedString.from_string(string)
-        assert tokenized.strip_furigana() == TokenizedString(
+    def test_strip_furigana(furigana_string: str, furigana_stripped: str) -> None:
+        stripped = TokenizedString.from_string(furigana_string).strip_furigana()
+        assert stripped == TokenizedString(
             (
                 Token(TokenType.KANJI, "\u6f22", 0, 1),
                 Token(TokenType.KANJI, "\u5b57", 5, 6),
@@ -39,10 +31,11 @@ class TestTokenizedString:
                 Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 21, 24),
             )
         )
+        assert str(stripped) == furigana_stripped
 
     @staticmethod
-    def test_from_string(string: str) -> None:
-        assert TokenizedString.from_string(string) == TokenizedString(
+    def test_from_string(furigana_string: str) -> None:
+        assert TokenizedString.from_string(furigana_string) == TokenizedString(
             (
                 Token(TokenType.KANJI, "\u6f22", 0, 1),
                 Token(TokenType.OPENING_DELIMITER, "[", 1, 2),

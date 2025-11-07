@@ -9,7 +9,17 @@ from copy import deepcopy
 from typing import override
 
 import pytest
-from disce.data import AbstractStoredModel, Card, CardSide, Configuration, DeckData, UUIDModel, UUIDModelList
+from disce.data import (
+    AbstractStoredModel,
+    Card,
+    CardSide,
+    Configuration,
+    DeckData,
+    DeckMetadata,
+    ExportedDeck,
+    UUIDModel,
+    UUIDModelList,
+)
 
 from disce_tests.unit.storage.dict import DictStorage
 
@@ -236,6 +246,30 @@ class TestDeckData:
         deck = DeckData(cards=UUIDModelList([Card(enabled=False)]))
         with pytest.raises(ValueError, match=r"^no enabled cards in deck$"):
             deck.get_card_to_study(history_length=1)
+
+
+class TestExportedDeck:
+    @staticmethod
+    @pytest.fixture
+    def exported_deck() -> ExportedDeck:
+        return ExportedDeck(uuid="uuid1", name="name", cards=UUIDModelList([Card(uuid="uuid2"), Card(uuid="uuid3")]))
+
+    @staticmethod
+    def test_from_deck(exported_deck: ExportedDeck) -> None:
+        deck_data = DeckData(uuid="uuid1", cards=UUIDModelList([Card(uuid="uuid2"), Card(uuid="uuid3")]))
+        deck_metadata = DeckMetadata(uuid="uuid1", name="name", number_of_cards=2)
+        actual_exported_deck = ExportedDeck.from_deck(deck_data, deck_metadata)
+        assert actual_exported_deck == exported_deck
+
+    @staticmethod
+    def test_to_deck_data(exported_deck: ExportedDeck) -> None:
+        deck_data = exported_deck.to_deck_data()
+        assert deck_data == DeckData(uuid="uuid1", cards=exported_deck.cards)
+
+    @staticmethod
+    def test_to_deck_metadata(exported_deck: ExportedDeck) -> None:
+        deck_metadata = exported_deck.to_deck_metadata()
+        assert deck_metadata == DeckMetadata(uuid="uuid1", name="name", number_of_cards=2)
 
 
 class TestConfiguration:

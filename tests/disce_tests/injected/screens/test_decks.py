@@ -74,7 +74,7 @@ class TestDecksScreen:
         deck_data_list, deck_metadata_list = create_decks("exported")
         return DeckExport(
             decks=[
-                ExportedDeck(data=deck_data, metadata=deck_metadata)
+                ExportedDeck.from_deck(deck_data, deck_metadata)
                 for deck_data, deck_metadata in zip(deck_data_list, deck_metadata_list, strict=True)
             ]
         )
@@ -95,8 +95,8 @@ class TestDecksScreen:
             screen, ["deck1_name", "deck2_name", "exported_deck1_name", "exported_deck2_name"]
         )
         assert_decks(
-            deck_data_list + [deck.data for deck in deck_export.decks],
-            deck_metadata_list + [deck.metadata for deck in deck_export.decks],
+            deck_data_list + [deck.to_deck_data() for deck in deck_export.decks],
+            deck_metadata_list + [deck.to_deck_metadata() for deck in deck_export.decks],
         )
 
     @staticmethod
@@ -123,8 +123,7 @@ class TestDecksScreen:
         screen: DecksScreen,
         deck_export: DeckExport,
     ) -> None:
-        deck_export.decks[0].data.uuid = "deck1"
-        deck_export.decks[0].metadata.uuid = "deck1"
+        deck_export.decks[0].uuid = "deck1"
         with (
             patch(
                 "disce.screens.decks.upload_file",
@@ -141,8 +140,8 @@ class TestDecksScreen:
         ]
         TestDecksScreen._assert_rendered_decks(screen, ["deck2_name", "exported_deck1_name", "exported_deck2_name"])
         assert_decks(
-            deck_data_list[1:] + [deck.data for deck in deck_export.decks],
-            deck_metadata_list[1:] + [deck.metadata for deck in deck_export.decks],
+            deck_data_list[1:] + [deck.to_deck_data() for deck in deck_export.decks],
+            deck_metadata_list[1:] + [deck.to_deck_metadata() for deck in deck_export.decks],
         )
 
     @staticmethod
@@ -152,8 +151,7 @@ class TestDecksScreen:
         screen: DecksScreen,
         deck_export: DeckExport,
     ) -> None:
-        deck_export.decks[0].data.uuid = "deck1"
-        deck_export.decks[0].metadata.uuid = "deck1"
+        deck_export.decks[0].uuid = "deck1"
         with (
             patch(
                 "disce.screens.decks.upload_file",
@@ -240,8 +238,8 @@ class TestDecksScreen:
         assert filename == "decks.json"
         assert type_ == "application/json"
         deck_export = DeckExport.model_validate_json(content)
-        assert [deck.data for deck in deck_export.decks] == deck_data_list
-        assert [deck.metadata for deck in deck_export.decks] == deck_metadata_list
+        assert [deck.to_deck_data() for deck in deck_export.decks] == deck_data_list
+        assert [deck.to_deck_metadata() for deck in deck_export.decks] == deck_metadata_list
 
     @staticmethod
     def test_export_deck_single_deck(screen: DecksScreen) -> None:

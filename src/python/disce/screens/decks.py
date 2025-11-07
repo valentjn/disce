@@ -149,7 +149,7 @@ class DecksScreen(AbstractScreen):
                 alert(f"Failed to parse imported data: {exception}")
                 return
             configuration = Configuration.load_from_storage_or_create(self._storage)
-            overwriting_deck_uuids = {deck.metadata.uuid for deck in deck_export.decks} & {
+            overwriting_deck_uuids = {deck.uuid for deck in deck_export.decks} & {
                 deck.uuid for deck in configuration.deck_metadata
             }
             if overwriting_deck_uuids and not confirm(
@@ -161,8 +161,8 @@ class DecksScreen(AbstractScreen):
             ):
                 return
             for exported_deck in deck_export.decks:
-                exported_deck.data.save_to_storage(self._storage)
-                configuration.deck_metadata.set(exported_deck.metadata)
+                exported_deck.to_deck_data().save_to_storage(self._storage)
+                configuration.deck_metadata.set(exported_deck.to_deck_metadata())
             configuration.save_to_storage(self._storage)
             self.render()
 
@@ -225,7 +225,7 @@ class DecksScreen(AbstractScreen):
             stem = "decks"
         deck_export = DeckExport(
             decks=[
-                ExportedDeck(data=deck_data, metadata=deck_metadata)
+                ExportedDeck.from_deck(deck_data, deck_metadata)
                 for deck_data, deck_metadata in zip(deck_data_to_export, deck_metadata_to_export, strict=True)
             ]
         )

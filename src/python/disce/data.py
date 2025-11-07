@@ -248,22 +248,35 @@ class DeckData(AbstractStoredModel, UUIDModel):
         return rng.choice(candidates)
 
 
-class DeckMetadata(UUIDModel):
-    """Metadata for a deck of flashcards."""
+class ExportedDeckMetadata(BaseModel):
+    """Metadata for an exported deck of flashcards."""
 
     name: str = "New Deck"
     """Name of the deck."""
+
+
+class DeckMetadata(UUIDModel, ExportedDeckMetadata):
+    """Metadata for a deck of flashcards."""
+
     number_of_cards: int = 0
     """Number of cards in the deck."""
 
 
-class ExportedDeck(BaseModel):
+class ExportedDeck(DeckData, ExportedDeckMetadata):
     """A deck exported for sharing or backup."""
 
-    data: DeckData
-    """The actual deck data."""
-    metadata: DeckMetadata
-    """Metadata for the deck."""
+    @staticmethod
+    def from_deck(data: DeckData, metadata: DeckMetadata) -> "ExportedDeck":
+        """Create an exported deck from deck data and metadata."""
+        return ExportedDeck(uuid=data.uuid, cards=data.cards.model_copy(deep=True), name=metadata.name)
+
+    def to_deck_data(self) -> DeckData:
+        """Create deck data from the exported deck."""
+        return DeckData(uuid=self.uuid, cards=self.cards.model_copy(deep=True))
+
+    def to_deck_metadata(self) -> "DeckMetadata":
+        """Create deck metadata from the exported deck."""
+        return DeckMetadata(uuid=self.uuid, name=self.name, number_of_cards=len(self.cards))
 
 
 class DeckExport(BaseModel):

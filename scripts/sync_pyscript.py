@@ -20,8 +20,8 @@ _logger = logging.getLogger(__name__)
 
 def main() -> None:
     """Make sure pyscript.toml is up to date."""
-    arguments = parse_arguments()
     logging.basicConfig(format="%(message)s", level=logging.INFO)
+    arguments = parse_arguments()
     old_toml = read_config_toml()
     config = tomlkit.parse(old_toml)
     update_files(config)

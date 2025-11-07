@@ -21,9 +21,9 @@ _logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    """Make sure pyscript.toml is up to date."""
-    parse_arguments()
+    """Install Firefox if not already installed."""
     logging.basicConfig(format="%(message)s", level=logging.INFO)
+    parse_arguments()
     install_firefox()
 
 

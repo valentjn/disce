@@ -265,6 +265,7 @@ class DecksScreen(AbstractScreen):
         self.select_child(".disce-select-all-btn .disce-btn-text").innerText = (
             " Deselect All" if len(selected_deck_uuids) == len(deck_uuids) > 0 else " Select All"
         )
+        self.select_child(".disce-study-decks-btn").disabled = len(selected_deck_uuids) == 0
         self.select_child(".disce-merge-decks-btn").disabled = (
             len(selected_deck_uuids) < DecksScreen._MINIMUM_NUMBER_OF_DECKS_TO_MERGE
         )

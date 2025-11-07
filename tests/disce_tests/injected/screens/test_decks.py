@@ -303,6 +303,7 @@ class TestDecksScreen:
         assert screen.select_child(".disce-select-all-btn .disce-btn-text").innerText == (
             " Deselect All" if number_of_selected_decks == 2 else " Select All"
         )
+        assert screen.select_child(".disce-study-decks-btn").disabled == (number_of_selected_decks == 0)
         assert screen.select_child(".disce-merge-decks-btn").disabled == (number_of_selected_decks < 2)
         assert screen.select_child(".disce-export-decks-btn").disabled == (number_of_selected_decks == 0)
         assert screen.select_child(".disce-delete-decks-btn").disabled == (number_of_selected_decks == 0)

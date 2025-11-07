@@ -8,7 +8,7 @@
 
 import logging
 import re
-from typing import override
+from typing import ClassVar, override
 
 from pydantic import ValidationError
 
@@ -37,7 +37,8 @@ _logger = logging.getLogger(__name__)
 class DecksScreen(AbstractScreen):
     """Screen for listing and editing decks."""
 
-    _MINIMUM_NUMBER_OF_DECKS_TO_MERGE = 2
+    _MINIMUM_NUMBER_OF_DECKS_TO_MERGE: ClassVar[int] = 2
+    _NATURAL_SORT_KEY_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(\d+)")
 
     def __init__(self, storage: AbstractStorage) -> None:
         """Initialize the screen."""
@@ -66,7 +67,7 @@ class DecksScreen(AbstractScreen):
         decks_div.innerHTML = ""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         for deck_metadata in sorted(
-            configuration.deck_metadata, key=lambda deck_metadata: deck_metadata.name.casefold()
+            configuration.deck_metadata, key=lambda deck_metadata: DecksScreen._natural_sort_key(deck_metadata.name)
         ):
             deck_div = create_element(
                 "div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck_metadata.uuid
@@ -133,6 +134,14 @@ class DecksScreen(AbstractScreen):
         if not configuration.deck_metadata:
             decks_div.appendChild(create_element("p", text="No decks available. Please add a deck."))
         self.update_bulk_buttons()
+
+    @staticmethod
+    def _natural_sort_key(name: str) -> list[int | str]:
+        """Generate a natural sort key for a string."""
+        return [
+            int(part) if part.isdigit() else part.casefold()
+            for part in re.split(DecksScreen._NATURAL_SORT_KEY_PATTERN, name)
+        ]
 
     def add_deck(self, _event: Event | None = None) -> None:
         """Add a new deck."""

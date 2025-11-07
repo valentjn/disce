@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 
-from disce.furigana import FuriganaPart, FuriganaPartType
+from disce.furigana import TokenizedString, TokenType
 
 
 class Tag(StrEnum):
@@ -41,7 +41,7 @@ class Opcode:
     def to_html(self) -> str:
         """Render the opcode as HTML."""
         source_html = html.escape(self.source)
-        target_html = FuriganaPart.to_html(FuriganaPart.parse_all(self.target))
+        target_html = TokenizedString.from_string(self.target).html
         match self.tag:
             case Tag.EQUAL:
                 result = f'<span class="disce-matching-answer-part">{target_html}</span>'
@@ -71,15 +71,15 @@ class Diff:
     @staticmethod
     def from_strings(source: str, target: str) -> "Diff":
         """Compute the diff between two strings."""
-        furigana_parts = FuriganaPart.parse_all(target)
-        stripped_target = FuriganaPart.get_stripped_text(furigana_parts)
+        tokenized_target = TokenizedString.from_string(target)
+        stripped_target = str(tokenized_target.strip_furigana())
         matcher = SequenceMatcher(a=source, b=stripped_target)
-        furigana_index = 0
-        furigana_start = 0
+        token_idx = 0
+        token_start = 0
         opcodes = []
         for tag, source_start, source_end, target_start, target_end in matcher.get_opcodes():
-            target_substring, furigana_index, furigana_start = Diff._insert_furigana(
-                stripped_target, target_start, target_end, furigana_parts, furigana_index, furigana_start
+            target_substring, token_idx, token_start = Diff._insert_furigana(
+                stripped_target, target_start, target_end, tokenized_target, token_idx, token_start
             )
             opcodes.append(Opcode(Tag(tag), source[source_start:source_end], target_substring))
         return Diff(source, target, tuple(opcodes))
@@ -89,36 +89,36 @@ class Diff:
         target: str,
         target_start: int,
         target_end: int,
-        furigana_parts: list[FuriganaPart],
-        furigana_part_idx: int,
-        furigana_part_start: int,
+        tokenized_target: TokenizedString,
+        token_idx: int,
+        token_start: int,
     ) -> tuple[str, int, int]:
         """Insert furigana annotations into a target substring.
 
         :param target: The target string without furigana annotations.
         :param target_start: Start index (inclusive) in ``target``.
         :param target_end: End index (exclusive) in ``target``.
-        :param furigana_parts: List of furigana parts to insert.
-        :param furigana_part_idx: Index of the current furigana part.
-        :param furigana_part_start: Start index (inclusive) of the current furigana part in ``target``.
-        :return: A tuple of the target substring with furigana annotations, the updated furigana part index, and the
-            updated furigana part start index in ``target``.
+        :param tokenized_target: Tokenized representation of the target string.
+        :param token_idx: Index of the current token in ``tokenized_target``.
+        :param token_start: Start index (inclusive) of the current token in ``target``.
+        :return: A tuple of the target substring with furigana annotations, the updated token index, and the
+            updated token start index in ``target``.
         """
         parts = []
         last_index = target_start
-        while last_index < target_end and furigana_part_idx < len(furigana_parts) and furigana_part_start < target_end:
-            part = furigana_parts[furigana_part_idx]
-            if furigana_part_start < last_index or part.type is not FuriganaPartType.KANJI:
-                furigana_part_idx += 1
-                furigana_part_start += len(part.text)
+        while last_index < target_end and token_idx < len(tokenized_target.tokens) and token_start < target_end:
+            token = tokenized_target.tokens[token_idx]
+            if token_start < last_index or token.type is not TokenType.KANJI:
+                token_idx += 1
+                token_start += len(token.string)
             else:
-                parts.append(target[last_index:furigana_part_start])
-                parts.append(FuriganaPart.get_annotated_text(furigana_parts[furigana_part_idx : furigana_part_idx + 4]))
-                last_index = furigana_part_start + len(part.text)
-                furigana_part_idx += 4
-                furigana_part_start += len(part.text)
+                parts.append(target[last_index:token_start])
+                parts.append(str(TokenizedString(tokenized_target.tokens[token_idx : token_idx + 4])))
+                last_index = token_start + len(token.string)
+                token_idx += 4
+                token_start += len(token.string)
         parts.append(target[last_index:target_end])
-        return "".join(parts), furigana_part_idx, furigana_part_start
+        return "".join(parts), token_idx, token_start
 
     def to_html(self) -> str:
         """Render the diff as HTML."""

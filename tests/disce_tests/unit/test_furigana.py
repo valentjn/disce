@@ -6,51 +6,61 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import pytest
-from disce.furigana import FuriganaPart, FuriganaPartType
+from disce.furigana import Token, TokenizedString, TokenType
 
 
-class TestFuriganaPart:
+class TestTokenizedString:
     @pytest.fixture
-    def text(self) -> str:
+    def string(self) -> str:
         return 2 * "\u6f22[\u304b\u3093]\u5b57[\u3058]\u30c6\u30b9\u30c8"
 
     @staticmethod
-    def test_parse_all(text: str) -> None:
-        assert FuriganaPart.parse_all(text) == [
-            FuriganaPart(FuriganaPartType.KANJI, "\u6f22", 0, 1),
-            FuriganaPart(FuriganaPartType.OPENING_DELIMITER, "[", 1, 2),
-            FuriganaPart(FuriganaPartType.READING, "\u304b\u3093", 2, 4),
-            FuriganaPart(FuriganaPartType.CLOSING_DELIMITER, "]", 4, 5),
-            FuriganaPart(FuriganaPartType.KANJI, "\u5b57", 5, 6),
-            FuriganaPart(FuriganaPartType.OPENING_DELIMITER, "[", 6, 7),
-            FuriganaPart(FuriganaPartType.READING, "\u3058", 7, 8),
-            FuriganaPart(FuriganaPartType.CLOSING_DELIMITER, "]", 8, 9),
-            FuriganaPart(FuriganaPartType.TEXT, "\u30c6\u30b9\u30c8", 9, 12),
-            FuriganaPart(FuriganaPartType.KANJI, "\u6f22", 12, 13),
-            FuriganaPart(FuriganaPartType.OPENING_DELIMITER, "[", 13, 14),
-            FuriganaPart(FuriganaPartType.READING, "\u304b\u3093", 14, 16),
-            FuriganaPart(FuriganaPartType.CLOSING_DELIMITER, "]", 16, 17),
-            FuriganaPart(FuriganaPartType.KANJI, "\u5b57", 17, 18),
-            FuriganaPart(FuriganaPartType.OPENING_DELIMITER, "[", 18, 19),
-            FuriganaPart(FuriganaPartType.READING, "\u3058", 19, 20),
-            FuriganaPart(FuriganaPartType.CLOSING_DELIMITER, "]", 20, 21),
-            FuriganaPart(FuriganaPartType.TEXT, "\u30c6\u30b9\u30c8", 21, 24),
-        ]
+    def test_str(string: str) -> None:
+        assert str(TokenizedString.from_string(string)) == string
 
     @staticmethod
-    def test_get_annotated_text(text: str) -> None:
-        parts = FuriganaPart.parse_all(text)
-        assert FuriganaPart.get_annotated_text(parts) == text
-
-    @staticmethod
-    def test_get_stripped_text(text: str) -> None:
-        parts = FuriganaPart.parse_all(text)
-        assert FuriganaPart.get_stripped_text(parts) == 2 * "\u6f22\u5b57\u30c6\u30b9\u30c8"
-
-    @staticmethod
-    def test_to_html(text: str) -> None:
-        parts = FuriganaPart.parse_all(text)
-        assert FuriganaPart.to_html(parts) == 2 * (
+    def test_html(string: str) -> None:
+        tokenized = TokenizedString.from_string(string)
+        assert tokenized.html == 2 * (
             "<ruby>\u6f22<rp>\uff08</rp><rt>\u304b\u3093</rt><rp>\uff09</rp></ruby>"
             "<ruby>\u5b57<rp>\uff08</rp><rt>\u3058</rt><rp>\uff09</rp></ruby>\u30c6\u30b9\u30c8"
+        )
+
+    @staticmethod
+    def test_strip_furigana(string: str) -> None:
+        tokenized = TokenizedString.from_string(string)
+        assert tokenized.strip_furigana() == TokenizedString(
+            (
+                Token(TokenType.KANJI, "\u6f22", 0, 1),
+                Token(TokenType.KANJI, "\u5b57", 5, 6),
+                Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 9, 12),
+                Token(TokenType.KANJI, "\u6f22", 12, 13),
+                Token(TokenType.KANJI, "\u5b57", 17, 18),
+                Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 21, 24),
+            )
+        )
+
+    @staticmethod
+    def test_from_string(string: str) -> None:
+        assert TokenizedString.from_string(string) == TokenizedString(
+            (
+                Token(TokenType.KANJI, "\u6f22", 0, 1),
+                Token(TokenType.OPENING_DELIMITER, "[", 1, 2),
+                Token(TokenType.READING, "\u304b\u3093", 2, 4),
+                Token(TokenType.CLOSING_DELIMITER, "]", 4, 5),
+                Token(TokenType.KANJI, "\u5b57", 5, 6),
+                Token(TokenType.OPENING_DELIMITER, "[", 6, 7),
+                Token(TokenType.READING, "\u3058", 7, 8),
+                Token(TokenType.CLOSING_DELIMITER, "]", 8, 9),
+                Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 9, 12),
+                Token(TokenType.KANJI, "\u6f22", 12, 13),
+                Token(TokenType.OPENING_DELIMITER, "[", 13, 14),
+                Token(TokenType.READING, "\u304b\u3093", 14, 16),
+                Token(TokenType.CLOSING_DELIMITER, "]", 16, 17),
+                Token(TokenType.KANJI, "\u5b57", 17, 18),
+                Token(TokenType.OPENING_DELIMITER, "[", 18, 19),
+                Token(TokenType.READING, "\u3058", 19, 20),
+                Token(TokenType.CLOSING_DELIMITER, "]", 20, 21),
+                Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 21, 24),
+            )
         )

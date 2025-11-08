@@ -168,9 +168,9 @@ class Card(UUIDModel):
     enabled: bool = True
     """Whether the card is enabled for review."""
     front_answer_history: list[bool] = []
-    """History of answers when asked for front (correct/incorrect, most recent last, reset when card is edited)."""
+    """History of answers when asked for front (correct/wrong, most recent last, reset when card is edited)."""
     back_answer_history: list[bool] = []
-    """History of answers when asked for back (correct/incorrect, most recent last, reset when card is edited)."""
+    """History of answers when asked for back (correct/wrong, most recent last, reset when card is edited)."""
 
     def get_side(self, side: CardSide) -> str:
         """Get the text on the specified side of the card."""

@@ -88,12 +88,6 @@ class TestEditDeckScreen:
             TestEditDeckScreen._get_card_div_child(card_div, ".disce-enabled-checkbox", expected_card.uuid).checked
             == expected_card.enabled
         )
-        assert TestEditDeckScreen._get_card_div_child(
-            card_div, ".disce-front-answer-history-hidden", expected_card.uuid
-        ).value == "".join("Y" if correct else "N" for correct in expected_card.front_answer_history)
-        assert TestEditDeckScreen._get_card_div_child(
-            card_div, ".disce-back-answer-history-hidden", expected_card.uuid
-        ).value == "".join("Y" if correct else "N" for correct in expected_card.back_answer_history)
 
     @staticmethod
     def _get_card_div_child(card_div: Element, selector: str, expected_card_uuid: UUID) -> Element:
@@ -272,6 +266,10 @@ class TestEditDeckScreen:
         assert confirm_mock.call_args_list == expected_calls
         assert_hidden(screen, hidden=confirm)
         assert_visible(DecksScreen(storage), visible=confirm)
+
+    @staticmethod
+    def test_load_deck_data(screen: EditDeckScreen, deck_data_list: list[DeckData]) -> None:
+        assert screen.load_deck_data() == deck_data_list[0]
 
     @staticmethod
     def test_get_deck(

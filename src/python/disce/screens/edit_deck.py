@@ -53,15 +53,7 @@ class EditDeckScreen(AbstractScreen):
         self.unregister_event_bindings(dynamic=True)
         cards_div = self.select_child(".disce-cards")
         cards_div.innerHTML = ""
-        cards = (
-            deck_data.cards.model_copy()
-            if deck_data
-            else (
-                DeckData.load_from_storage(self._storage, deck_metadata.uuid).cards
-                if DeckData.exists_in_storage(self._storage, deck_metadata.uuid)
-                else UUIDModelList()
-            )
-        )
+        cards = (deck_data if deck_data else self.load_deck_data(uuid=deck_metadata.uuid)).cards.model_copy()
         cards.set(Card())
         for card in cards:
             cards_div.appendChild(self.create_card_div(card))
@@ -118,22 +110,6 @@ class EditDeckScreen(AbstractScreen):
                 class_="form-check",
             ),
             class_="col-auto",
-        )
-        append_child(
-            card_div,
-            "input",
-            type="hidden",
-            class_="disce-front-answer-history-hidden",
-            value="".join("Y" if x else "N" for x in card.front_answer_history),
-            data_card_uuid=card.uuid,
-        )
-        append_child(
-            card_div,
-            "input",
-            type="hidden",
-            class_="disce-back-answer-history-hidden",
-            value="".join("Y" if x else "N" for x in card.back_answer_history),
-            data_card_uuid=card.uuid,
         )
         return card_div
 
@@ -219,35 +195,31 @@ class EditDeckScreen(AbstractScreen):
         decks_screen.DecksScreen(self._storage).show()
         self.hide()
 
+    def load_deck_data(self, uuid: UUID | None = None) -> DeckData:
+        """Load the deck data from storage."""
+        if not uuid:
+            uuid = self._deck_uuid
+        return (
+            DeckData.load_from_storage(self._storage, uuid)
+            if uuid and DeckData.exists_in_storage(self._storage, uuid)
+            else DeckData()
+        )
+
     def get_deck(self) -> tuple[DeckData, DeckMetadata]:
         """Get the current deck from the edit deck screen."""
         deck_name = self.select_child(".disce-deck-name-textbox").value
         cards = UUIDModelList[Card]()
         for card_div in self.select_all_children(".disce-card"):
             uuid: UUID = card_div.getAttribute("data-card-uuid")
+            card = self.load_deck_data().cards.get(uuid, Card(uuid=uuid))
             front: str = card_div.querySelector(".disce-front-textbox").value
             back: str = card_div.querySelector(".disce-back-textbox").value
             if not front and not back:
                 continue
-            enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
-            front_answer_history = [
-                character.upper() == "Y"
-                for character in card_div.querySelector(".disce-front-answer-history-hidden").value
-            ]
-            back_answer_history = [
-                character.upper() == "Y"
-                for character in card_div.querySelector(".disce-back-answer-history-hidden").value
-            ]
-            cards.set(
-                Card(
-                    uuid=uuid,
-                    front=front,
-                    back=back,
-                    enabled=enabled,
-                    front_answer_history=front_answer_history,
-                    back_answer_history=back_answer_history,
-                )
-            )
+            card.front = front
+            card.back = back
+            card.enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
+            cards.set(card)
         deck_data = DeckData(cards=cards)
         deck_metadata = DeckMetadata(name=deck_name, number_of_cards=len(cards))
         if self._deck_uuid is not None:

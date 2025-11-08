@@ -9,7 +9,7 @@
 from typing import override
 
 import disce.screens.decks as decks_screen
-from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata, UUIDModelList
+from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata, ExportedDeck, UUIDModelList
 from disce.pyscript import (
     Element,
     Event,
@@ -221,7 +221,7 @@ class EditDeckScreen(AbstractScreen):
             card.enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
             cards.set(card)
         deck_data = DeckData(cards=cards)
-        deck_metadata = DeckMetadata(name=deck_name, number_of_cards=len(cards))
+        deck_metadata = ExportedDeck(uuid=deck_data.uuid, cards=cards, name=deck_name).to_deck_metadata()
         if self._deck_uuid is not None:
             deck_data.uuid = self._deck_uuid
             deck_metadata.uuid = self._deck_uuid

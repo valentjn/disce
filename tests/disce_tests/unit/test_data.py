@@ -124,6 +124,16 @@ class TestUUIDModelList:
             cards["uuid2"]
 
     @staticmethod
+    def test_get(cards: UUIDModelList[Card]) -> None:
+        card = cards.get("uuid0")
+        assert card is not None
+        assert card.uuid == "uuid0"
+
+    @staticmethod
+    def test_get_nonexistent_key(cards: UUIDModelList[Card]) -> None:
+        assert cards.get("uuid2") is None
+
+    @staticmethod
     @pytest.mark.parametrize("uuid", ["uuid1", "uuid2"])
     def test_set(cards: UUIDModelList[Card], uuid: str) -> None:
         card = Card(uuid=uuid, front="front")

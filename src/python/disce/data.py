@@ -10,7 +10,7 @@ import random
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from enum import StrEnum, auto
-from typing import Self, override
+from typing import Self, overload, override
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, NonNegativeInt, RootModel
@@ -109,6 +109,19 @@ class UUIDModelList[T: UUIDModel](RootModel[list[T]]):
     def __getitem__(self, uuid: UUID) -> T:
         """Get an item by its UUID."""
         return self.root[self._get_index(uuid)]
+
+    @overload
+    def get(self, uuid: UUID, default: T) -> T: ...
+
+    @overload
+    def get(self, uuid: UUID, default: None = None) -> T | None: ...
+
+    def get(self, uuid: UUID, default: T | None = None) -> T | None:
+        """Get an item by its UUID, or return a default value if not found."""
+        try:
+            return self[uuid]
+        except KeyError:
+            return default
 
     def set(self, value: T) -> None:
         """Set an item by its UUID (add if it doesn't exist)."""

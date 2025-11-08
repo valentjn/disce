@@ -61,7 +61,7 @@ class TestStoredModel:
         assert model.field == "value0"
 
     @staticmethod
-    def test_load_from_storage_non_existent_uuid(storage: DictStorage) -> None:
+    def test_load_from_storage_nonexistent_uuid(storage: DictStorage) -> None:
         with pytest.raises(KeyError, match=r"^'dummy-uuid2'$"):
             DummyStoredModel.load_from_storage(storage, "uuid2")
 
@@ -71,7 +71,7 @@ class TestStoredModel:
         assert model.field == "value0"
 
     @staticmethod
-    def test_load_from_storage_or_create_non_existent_uuid(storage: DictStorage) -> None:
+    def test_load_from_storage_or_create_nonexistent_uuid(storage: DictStorage) -> None:
         model = DummyStoredModel.load_from_storage_or_create(
             storage, "uuid2", default=DummyStoredModel(field="default")
         )
@@ -119,7 +119,7 @@ class TestUUIDModelList:
         assert card.uuid == "uuid0"
 
     @staticmethod
-    def test_getitem_non_existent_key(cards: UUIDModelList[Card]) -> None:
+    def test_getitem_nonexistent_key(cards: UUIDModelList[Card]) -> None:
         with pytest.raises(KeyError, match=r"^'uuid2'$"):
             cards["uuid2"]
 
@@ -136,7 +136,7 @@ class TestUUIDModelList:
         assert "uuid0" not in cards
 
     @staticmethod
-    def test_delitem_non_existent_key(cards: UUIDModelList[Card]) -> None:
+    def test_delitem_nonexistent_key(cards: UUIDModelList[Card]) -> None:
         with pytest.raises(KeyError, match=r"^'uuid2'$"):
             del cards["uuid2"]
 

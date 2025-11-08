@@ -32,7 +32,7 @@ def test_compute_source_hash_without_change() -> None:
 
 def test_compute_source_hash_with_change() -> None:
     source_hash = compute_source_hash()
-    path = Path(disce.__file__).with_name("non_existent.py")
+    path = Path(disce.__file__).with_name("nonexistent.py")
     path.touch()
     try:
         assert compute_source_hash() != source_hash

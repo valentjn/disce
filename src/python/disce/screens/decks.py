@@ -83,12 +83,34 @@ class DecksScreen(AbstractScreen):
             self.register_event_binding(
                 EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True
             )
-            append_child(
+            answer_counts = deck_metadata.get_answer_counts(configuration.history_length)
+            if (total := answer_counts.total) > 0:
+                correct_percentage = answer_counts.correct / total * 100.0
+                wrong_percentage = answer_counts.wrong / total * 100.0
+                missing_percentage = answer_counts.missing / total * 100.0
+            else:
+                correct_percentage = wrong_percentage = 0.0
+                missing_percentage = 100.0
+            deck_name_label = append_child(
                 deck_div,
                 "label",
                 text=deck_metadata.name,
                 for_=f"disce-selected-checkbox-{deck_metadata.uuid}",
                 class_="disce-deck-name-label me-2",
+                title=(
+                    f"{format_plural(deck_metadata.number_of_cards, 'card')} "
+                    f"({correct_percentage:.0f}% correct, {wrong_percentage:.0f}% wrong, "
+                    f"{missing_percentage:.0f}% missing answers in last "
+                    f"{configuration.history_length} reviews)"
+                ),
+            )
+            deck_name_label.style.background = (
+                "linear-gradient(to right, "
+                f"rgba(var(--bs-success-rgb), 0.3) 0% {correct_percentage:.0f}%, "
+                "rgba(var(--bs-danger-rgb), 0.3) "
+                f"{correct_percentage:.0f}% {correct_percentage + wrong_percentage:.0f}%, "
+                "rgba(var(--bs-secondary-rgb), 0.3) "
+                f"{correct_percentage + wrong_percentage:.0f}% 100%)"
             )
             study_deck_button = append_child(
                 deck_div,

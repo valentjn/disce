@@ -202,3 +202,8 @@ class TestStudyScreen:
         screen.back_to_decks_screen()
         assert_hidden(screen)
         assert_visible(DecksScreen(storage))
+
+    @staticmethod
+    def test_get_tokenized_side(screen: StudyScreen, expected_question_text: str, expected_answer_text: str) -> None:
+        assert screen.get_tokenized_side(question=True) == TokenizedString.from_string(expected_question_text)
+        assert screen.get_tokenized_side(question=False) == TokenizedString.from_string(expected_answer_text)

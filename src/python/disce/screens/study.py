@@ -54,7 +54,7 @@ class StudyScreen(AbstractScreen):
         configuration = Configuration.load_from_storage_or_create(self._storage)
         typewriter_mode = configuration.typewriter_mode
         self.select_child(".disce-study-card-question-side .disce-study-card-side-content").innerText = str(
-            self._get_tokenized_side(question=True).strip_furigana()
+            self.get_tokenized_side(question=True).strip_furigana()
         )
         self.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML = ""
         answer_textbox = self.select_child(".disce-answer-textbox")
@@ -84,10 +84,10 @@ class StudyScreen(AbstractScreen):
         """Show the answer side of the current card."""
         self.select_child(
             ".disce-study-card-question-side .disce-study-card-side-content"
-        ).innerHTML = self._get_tokenized_side(question=True).html
+        ).innerHTML = self.get_tokenized_side(question=True).html
         self.select_child(
             ".disce-study-card-answer-side .disce-study-card-side-content"
-        ).innerHTML = self._get_tokenized_side(question=False).html
+        ).innerHTML = self.get_tokenized_side(question=False).html
         hide_element(self.select_child(".disce-show-answer-btn"))
 
     def handle_textbox_keydown(self, event: Event) -> None:
@@ -99,7 +99,7 @@ class StudyScreen(AbstractScreen):
         """Submit the answer typed by the user and show the answer side."""
         self.select_child(
             ".disce-study-card-question-side .disce-study-card-side-content"
-        ).innerHTML = self._get_tokenized_side(question=True).html
+        ).innerHTML = self.get_tokenized_side(question=True).html
         user_answer = self.select_child(".disce-answer-textbox").value.strip()
         correct_answer = self._current_card.get_side(self._current_card_side.opposite).strip()
         diff = Diff.from_strings(user_answer, correct_answer)
@@ -112,7 +112,7 @@ class StudyScreen(AbstractScreen):
         decks_screen.DecksScreen(self._storage).show()
         self.hide()
 
-    def _get_tokenized_side(self, *, question: bool) -> TokenizedString:
+    def get_tokenized_side(self, *, question: bool) -> TokenizedString:
         """Get the tokenized string for either the question or answer side of the current card."""
         return TokenizedString.from_string(
             self._current_card.get_side(self._current_card_side if question else self._current_card_side.opposite)

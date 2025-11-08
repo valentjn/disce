@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from unittest.mock import ANY, call, patch
 
 import pytest
-from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata
+from disce.data import UUID, Card, CardSide, Configuration, DeckData, DeckMetadata
 from disce.pyscript import Element, EventBinding
 from disce.screens.decks import DecksScreen
 from disce.screens.edit_deck import EditDeckScreen
@@ -124,7 +124,16 @@ class TestEditDeckScreen:
         configuration = Configuration.load_from_storage(storage)
         assert len(configuration.deck_metadata) == 2
         assert configuration.deck_metadata["deck1"] == deck_metadata_list[0].model_copy(
-            update={"name": "deck1_name_modified", "number_of_cards": 3}
+            update={
+                "name": "deck1_name_modified",
+                "number_of_cards": 3,
+                "answer_counts": {
+                    history_length: answer_counts.model_copy(
+                        update={"missing": answer_counts.missing + history_length * len(CardSide)}
+                    )
+                    for history_length, answer_counts in deck_metadata_list[0].answer_counts.items()
+                },
+            }
         )
         deck_data = DeckData.load_from_storage(storage, "deck1")
         assert len(deck_data.cards) == 3

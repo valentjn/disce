@@ -8,7 +8,7 @@
 from collections.abc import Sequence
 from types import MethodType
 
-from disce.data import Card, Configuration, DeckData, DeckMetadata, UUIDModel, UUIDModelList
+from disce.data import Card, Configuration, DeckData, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
 from disce.pyscript import Event, EventBinding
 from disce.screens.base import AbstractScreen
 from disce.storage.local import LocalStorage
@@ -19,7 +19,7 @@ def create_decks(prefix: str) -> tuple[UUIDModelList[DeckData], UUIDModelList[De
     prefix = prefix.rstrip("_")
     if prefix:
         prefix += "_"
-    return UUIDModelList(
+    deck_data_list = UUIDModelList(
         [
             DeckData(
                 uuid=f"{prefix}deck1",
@@ -57,12 +57,15 @@ def create_decks(prefix: str) -> tuple[UUIDModelList[DeckData], UUIDModelList[De
                 ),
             ),
         ]
-    ), UUIDModelList(
+    )
+    deck_names = [f"{prefix}deck1_name", f"{prefix}deck2_name"]
+    deck_metadata_list = UUIDModelList(
         [
-            DeckMetadata(uuid=f"{prefix}deck1", name=f"{prefix}deck1_name", number_of_cards=2),
-            DeckMetadata(uuid=f"{prefix}deck2", name=f"{prefix}deck2_name", number_of_cards=1),
+            ExportedDeck(uuid=deck_data.uuid, name=deck_name, cards=deck_data.cards).to_deck_metadata()
+            for deck_data, deck_name in zip(deck_data_list, deck_names, strict=True)
         ]
     )
+    return deck_data_list, deck_metadata_list
 
 
 def assert_decks(expected_deck_data: Sequence[DeckData], expected_deck_metadata: Sequence[DeckMetadata]) -> None:

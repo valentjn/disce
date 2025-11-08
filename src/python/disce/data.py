@@ -158,6 +158,22 @@ class CardSide(StrEnum):
         return CardSide.BACK if self is CardSide.FRONT else CardSide.FRONT
 
 
+class AnswerCounts(BaseModel):
+    """Counts of answers."""
+
+    correct: int = 0
+    """Number of correct answers."""
+    wrong: int = 0
+    """Number of wrong answers."""
+    missing: int = 0
+    """Number of missing answers."""
+
+    @property
+    def total(self) -> int:
+        """Get the total number of answers."""
+        return self.correct + self.wrong + self.missing
+
+
 class Card(UUIDModel):
     """A flashcard."""
 
@@ -179,6 +195,22 @@ class Card(UUIDModel):
     def get_answer_history(self, side: CardSide) -> list[bool]:
         """Get the answer history for the specified side of the card."""
         return self.front_answer_history if side is CardSide.FRONT else self.back_answer_history
+
+    def get_answer_counts(self, side: CardSide | None, history_length: int) -> AnswerCounts:
+        """Get the answer counts for the specified side of the card, or for both sides if side is None."""
+        counts = AnswerCounts()
+        if history_length == 0:
+            return counts
+        for current_side in [side] if side else list(CardSide):
+            answer_history = self.get_answer_history(current_side)
+            relevant_answer_history = answer_history[-history_length:]
+            for answer in relevant_answer_history:
+                if answer:
+                    counts.correct += 1
+                else:
+                    counts.wrong += 1
+            counts.missing += max(0, history_length - len(relevant_answer_history))
+        return counts
 
     def record_answer(self, side: CardSide, *, correct: bool) -> None:
         """Record an answer for the specified side of the card."""
@@ -273,6 +305,23 @@ class DeckMetadata(UUIDModel, BaseDeckMetadata):
 
     number_of_cards: int = 0
     """Number of cards in the deck."""
+    answer_counts: dict[int, AnswerCounts] = {}
+    """Counts of answers per history length, across all cards in the deck."""
+
+    def get_answer_counts(self, history_length: int) -> AnswerCounts:
+        """Get the answer counts for the given history length."""
+        if history_length == 0 or not self.answer_counts:
+            return AnswerCounts()
+        maximum_history_length = max(self.answer_counts.keys())
+        if history_length <= maximum_history_length:
+            return self.answer_counts[history_length]
+        maximum_answer_counts = self.answer_counts[maximum_history_length]
+        return maximum_answer_counts.model_copy(
+            update={
+                "missing": maximum_answer_counts.missing
+                + (history_length - maximum_history_length) * self.number_of_cards * len(CardSide),
+            }
+        )
 
 
 class ExportedDeck(DeckData, BaseDeckMetadata):
@@ -289,7 +338,25 @@ class ExportedDeck(DeckData, BaseDeckMetadata):
 
     def to_deck_metadata(self) -> "DeckMetadata":
         """Create deck metadata from the exported deck."""
-        return DeckMetadata(uuid=self.uuid, name=self.name, number_of_cards=len(self.cards))
+        answer_counts: dict[int, AnswerCounts] = {}
+        if self.cards:
+            maximum_history_length = max(
+                max(len(card.front_answer_history), len(card.back_answer_history)) for card in self.cards
+            )
+            current_counts = AnswerCounts()
+            for history_length in range(1, maximum_history_length + 1):
+                for card in self.cards:
+                    for side in CardSide:
+                        if len(answer_history := card.get_answer_history(side)) < history_length:
+                            current_counts.missing += 1
+                        elif answer_history[-history_length]:
+                            current_counts.correct += 1
+                        else:
+                            current_counts.wrong += 1
+                answer_counts[history_length] = current_counts.model_copy()
+        return DeckMetadata(
+            uuid=self.uuid, name=self.name, number_of_cards=len(self.cards), answer_counts=answer_counts
+        )
 
 
 class DeckExport(BaseModel):

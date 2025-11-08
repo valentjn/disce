@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from typing import override
 
 import disce.screens.decks as decks_screen
-from disce.data import Card, CardSide, Configuration, DeckData
+from disce.data import Card, CardSide, Configuration, DeckData, ExportedDeck
 from disce.diffs import Diff
 from disce.furigana import TokenizedString
 from disce.pyscript import Event, EventBinding, hide_element, show_element
@@ -68,11 +68,17 @@ class StudyScreen(AbstractScreen):
     def handle_answer(self, event: Event) -> None:
         """Handle the answer given by the user."""
         is_correct = event.currentTarget == self.select_child(".disce-correct-answer-btn")
-        deck_data = DeckData.load_from_storage(self._storage, self._card_uuid_to_deck_uuid[self._current_card.uuid])
+        deck_uuid = self._card_uuid_to_deck_uuid[self._current_card.uuid]
+        deck_data = DeckData.load_from_storage(self._storage, deck_uuid)
         for current_deck_data in [deck_data, self._merged_deck_data]:
             card = current_deck_data.cards[self._current_card.uuid]
             card.record_answer(self._current_card_side, correct=is_correct)
         deck_data.save_to_storage(self._storage)
+        configuration = Configuration.load_from_storage_or_create(self._storage)
+        deck_metadata = configuration.deck_metadata[deck_uuid]
+        deck_metadata = ExportedDeck.from_deck(deck_data, deck_metadata).to_deck_metadata()
+        configuration.deck_metadata.set(deck_metadata)
+        configuration.save_to_storage(self._storage)
         self.skip_card()
 
     def skip_card(self, _event: Event | None = None) -> None:

@@ -11,6 +11,7 @@ from typing import override
 import pytest
 from disce.data import (
     AbstractStoredModel,
+    AnswerCounts,
     Card,
     CardSide,
     Configuration,
@@ -158,18 +159,49 @@ class TestCardSide:
         assert CardSide.BACK.opposite is CardSide.FRONT
 
 
+class TestAnswerCounts:
+    @staticmethod
+    def test_total() -> None:
+        answer_counts = AnswerCounts(correct=2, wrong=3, missing=1)
+        assert answer_counts.total == 6
+
+
 class TestCard:
     @staticmethod
-    def test_get_side() -> None:
-        card = Card(front="front", back="back")
+    @pytest.fixture
+    def card() -> Card:
+        return Card(front="front", back="back", front_answer_history=[True, False], back_answer_history=[False])
+
+    @staticmethod
+    def test_get_side(card: Card) -> None:
         assert card.get_side(CardSide.FRONT) == "front"
         assert card.get_side(CardSide.BACK) == "back"
 
     @staticmethod
-    def test_get_answer_history() -> None:
-        card = Card(front_answer_history=[True], back_answer_history=[False])
-        assert card.get_answer_history(CardSide.FRONT) == [True]
+    def test_get_answer_history(card: Card) -> None:
+        assert card.get_answer_history(CardSide.FRONT) == [True, False]
         assert card.get_answer_history(CardSide.BACK) == [False]
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("side", "history_length", "expected"),
+        [
+            (CardSide.FRONT, 0, AnswerCounts()),
+            (CardSide.FRONT, 1, AnswerCounts(correct=0, wrong=1, missing=0)),
+            (CardSide.FRONT, 2, AnswerCounts(correct=1, wrong=1, missing=0)),
+            (CardSide.FRONT, 3, AnswerCounts(correct=1, wrong=1, missing=1)),
+            (CardSide.BACK, 0, AnswerCounts()),
+            (CardSide.BACK, 1, AnswerCounts(correct=0, wrong=1, missing=0)),
+            (CardSide.BACK, 2, AnswerCounts(correct=0, wrong=1, missing=1)),
+            (CardSide.BACK, 3, AnswerCounts(correct=0, wrong=1, missing=2)),
+            (None, 0, AnswerCounts()),
+            (None, 1, AnswerCounts(correct=0, wrong=2, missing=0)),
+            (None, 2, AnswerCounts(correct=1, wrong=2, missing=1)),
+            (None, 3, AnswerCounts(correct=1, wrong=2, missing=3)),
+        ],
+    )
+    def test_get_answer_counts(card: Card, side: CardSide | None, history_length: int, expected: AnswerCounts) -> None:
+        assert card.get_answer_counts(side, history_length) == expected
 
     @staticmethod
     def test_record_answer() -> None:
@@ -258,15 +290,50 @@ class TestDeckData:
             deck.get_card_to_study(history_length=1)
 
 
+class TestDeckMetadata:
+    @staticmethod
+    @pytest.fixture
+    def deck_metadata() -> DeckMetadata:
+        return DeckMetadata(
+            number_of_cards=2,
+            answer_counts={
+                1: AnswerCounts(correct=1, wrong=2, missing=1),
+                2: AnswerCounts(correct=2, wrong=2, missing=4),
+            },
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("history_length", "expected"),
+        [
+            (0, AnswerCounts()),
+            (1, AnswerCounts(correct=1, wrong=2, missing=1)),
+            (2, AnswerCounts(correct=2, wrong=2, missing=4)),
+            (3, AnswerCounts(correct=2, wrong=2, missing=8)),
+        ],
+    )
+    def test_get_answer_counts(deck_metadata: DeckMetadata, history_length: int, expected: AnswerCounts) -> None:
+        assert deck_metadata.get_answer_counts(history_length) == expected
+
+
 class TestExportedDeck:
     @staticmethod
     @pytest.fixture
     def exported_deck() -> ExportedDeck:
-        return ExportedDeck(uuid="uuid1", name="name", cards=UUIDModelList([Card(uuid="uuid2"), Card(uuid="uuid3")]))
+        return ExportedDeck(
+            uuid="uuid1",
+            name="name",
+            cards=UUIDModelList(
+                [
+                    Card(uuid="uuid2", front_answer_history=[True, False], back_answer_history=[False]),
+                    Card(uuid="uuid3", front_answer_history=[True], back_answer_history=[]),
+                ]
+            ),
+        )
 
     @staticmethod
     def test_from_deck(exported_deck: ExportedDeck) -> None:
-        deck_data = DeckData(uuid="uuid1", cards=UUIDModelList([Card(uuid="uuid2"), Card(uuid="uuid3")]))
+        deck_data = DeckData(uuid="uuid1", cards=exported_deck.cards)
         deck_metadata = DeckMetadata(uuid="uuid1", name="name", number_of_cards=2)
         actual_exported_deck = ExportedDeck.from_deck(deck_data, deck_metadata)
         assert actual_exported_deck == exported_deck
@@ -279,7 +346,11 @@ class TestExportedDeck:
     @staticmethod
     def test_to_deck_metadata(exported_deck: ExportedDeck) -> None:
         deck_metadata = exported_deck.to_deck_metadata()
-        assert deck_metadata == DeckMetadata(uuid="uuid1", name="name", number_of_cards=2)
+        answer_counts = {
+            1: AnswerCounts(correct=1, wrong=2, missing=1),
+            2: AnswerCounts(correct=2, wrong=2, missing=4),
+        }
+        assert deck_metadata == DeckMetadata(uuid="uuid1", name="name", number_of_cards=2, answer_counts=answer_counts)
 
 
 class TestConfiguration:

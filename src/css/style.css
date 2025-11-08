@@ -12,7 +12,7 @@ body {
     font-family: Arial, sans-serif;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
     .disce-btn-text {
         display: none;
     }
@@ -41,12 +41,18 @@ body {
     height: 3rem;
 }
 
-/* edit decks screen */
+/* decks screen */
 #disce-decks-screen .disce-deck-name-label {
-    width: 320px;
+    flex-grow: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    #disce-decks-screen .disce-decks .btn:not(.disce-study-deck-btn) {
+        display: none;
+    }
 }
 
 /* study screen */

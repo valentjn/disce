@@ -95,7 +95,7 @@ class DecksScreen(AbstractScreen):
                 "button",
                 create_element("i", class_="bi bi-lightbulb"),
                 create_element("span", text=" Study", class_="disce-btn-text"),
-                class_="disce-study-deck-btn btn btn-outline-success me-2",
+                class_="disce-study-deck-btn btn btn-outline-success",
                 title=f'Study the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
@@ -105,7 +105,7 @@ class DecksScreen(AbstractScreen):
                 "button",
                 create_element("i", class_="bi bi-pencil"),
                 create_element("span", text=" Edit", class_="disce-btn-text"),
-                class_="disce-edit-deck-btn btn btn-outline-primary me-2",
+                class_="disce-edit-deck-btn btn btn-outline-primary ms-2",
                 title=f'Edit the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
@@ -115,7 +115,7 @@ class DecksScreen(AbstractScreen):
                 "button",
                 create_element("i", class_="bi bi-copy"),
                 create_element("span", text=" Duplicate", class_="disce-btn-text"),
-                class_="disce-duplicate-deck-btn btn btn-outline-primary me-2",
+                class_="disce-duplicate-deck-btn btn btn-outline-primary ms-2",
                 title=f'Duplicate the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )
@@ -125,7 +125,7 @@ class DecksScreen(AbstractScreen):
                 "button",
                 create_element("i", class_="bi bi-trash"),
                 create_element("span", text=" Delete", class_="disce-btn-text"),
-                class_="disce-delete-deck-btn btn btn-outline-danger",
+                class_="disce-delete-deck-btn btn btn-outline-danger ms-2",
                 title=f'Delete the deck "{deck_metadata.name}"',
                 data_deck_uuid=deck_metadata.uuid,
             )

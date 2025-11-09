@@ -10,12 +10,13 @@ from types import SimpleNamespace
 from unittest.mock import ANY, call, patch
 
 import pytest
+from disce.models.cards import AnswerCounts
 from disce.models.configs import Configuration
 from disce.models.deck_data import DeckData
 from disce.models.deck_metadata import DeckMetadata
 from disce.models.exports import DeckExport, ExportedDeck
 from disce.pyscript import EventBinding
-from disce.screens.decks import DecksScreen
+from disce.screens.decks import DecksScreen, SortingKey
 from disce.screens.edit_deck import EditDeckScreen
 from disce.screens.study import StudyScreen
 from disce.storage.base import AbstractStorage
@@ -24,14 +25,67 @@ from disce_tests.injected.screens.tools import assert_decks, assert_event_bindin
 from disce_tests.injected.tools import assert_hidden, assert_visible
 
 
-class TestDecksScreen:
-    @staticmethod
-    @pytest.fixture
-    def screen(storage: AbstractStorage) -> DecksScreen:
-        screen = DecksScreen(storage)
-        screen.show()
-        return screen
+@pytest.fixture
+def screen(storage: AbstractStorage) -> DecksScreen:
+    screen = DecksScreen(storage)
+    screen.show()
+    return screen
 
+
+class TestSortingKey:
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("sorting_key", "expected_selector"),
+        [
+            (SortingKey.NAME, ".disce-sort-decks-by-name-link"),
+            (SortingKey.CARD_COUNT, ".disce-sort-decks-by-card-count-link"),
+            (SortingKey.CORRECT_ANSWERS, ".disce-sort-decks-by-correct-answers-link"),
+            (SortingKey.WRONG_ANSWERS, ".disce-sort-decks-by-wrong-answers-link"),
+            (SortingKey.MISSING_ANSWERS, ".disce-sort-decks-by-missing-answers-link"),
+        ],
+    )
+    def test_get_link(screen: DecksScreen, sorting_key: SortingKey, expected_selector: str) -> None:
+        assert sorting_key.get_link(screen).isSameNode(screen.select_child(expected_selector))
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("sorting_key", "expected_order"),
+        [
+            (SortingKey.NAME, [2, 1, 0]),
+            (SortingKey.CARD_COUNT, [2, 0, 1]),
+            (SortingKey.CORRECT_ANSWERS, [2, 1, 0]),
+            (SortingKey.WRONG_ANSWERS, [1, 0, 2]),
+            (SortingKey.MISSING_ANSWERS, [0, 1, 2]),
+        ],
+    )
+    def test_get_sorting_function(
+        configuration: Configuration, sorting_key: SortingKey, expected_order: list[int]
+    ) -> None:
+        deck_metadata_list = [
+            DeckMetadata(
+                uuid="deck10",
+                name="Deck 10",
+                number_of_cards=10,
+                answer_counts={configuration.history_length: AnswerCounts(correct=0, wrong=1, missing=2)},
+            ),
+            DeckMetadata(
+                uuid="deck2",
+                name="Deck 2",
+                number_of_cards=5,
+                answer_counts={configuration.history_length: AnswerCounts(correct=0, wrong=2, missing=1)},
+            ),
+            DeckMetadata(
+                uuid="deck1",
+                name="Deck 1",
+                number_of_cards=15,
+                answer_counts={configuration.history_length: AnswerCounts(correct=1, wrong=0, missing=0)},
+            ),
+        ]
+        sorted_decks = sorted(deck_metadata_list, key=sorting_key.get_sorting_function(configuration))
+        assert sorted_decks == [deck_metadata_list[idx] for idx in expected_order]
+
+
+class TestDecksScreen:
     @staticmethod
     def test_element(screen: DecksScreen) -> None:
         assert screen.element.id == "disce-decks-screen"
@@ -177,6 +231,30 @@ class TestDecksScreen:
             screen.import_decks()
         TestDecksScreen._assert_rendered_decks(screen, ["deck1_name", "deck2_name"])
         assert_decks(deck_data_list, deck_metadata_list)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("sorting_key", "expected_order"),
+        [
+            (SortingKey.NAME, [0, 1]),
+            (SortingKey.CARD_COUNT, [0, 1]),
+            (SortingKey.CORRECT_ANSWERS, [1, 0]),
+            (SortingKey.WRONG_ANSWERS, [0, 1]),
+            (SortingKey.MISSING_ANSWERS, [0, 1]),
+            (None, [1, 0]),
+        ],
+    )
+    def test_sort_decks(screen: DecksScreen, sorting_key: SortingKey | None, expected_order: list[int]) -> None:
+        screen.sort_decks(
+            SimpleNamespace(
+                currentTarget=sorting_key.get_link(screen)
+                if sorting_key
+                else screen.select_child(".disce-sort-decks-reverse-link")
+            )
+        )
+        deck_names = ["deck1_name", "deck2_name"]
+        deck_names = [deck_names[idx] for idx in expected_order]
+        TestDecksScreen._assert_rendered_decks(screen, deck_names)
 
     @staticmethod
     def test_select_all_decks(screen: DecksScreen) -> None:

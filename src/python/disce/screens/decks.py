@@ -8,6 +8,8 @@
 
 import logging
 import re
+from collections.abc import Callable
+from enum import Enum, auto
 from typing import ClassVar, override
 
 from pydantic import ValidationError
@@ -20,6 +22,7 @@ from disce.models.deck_data import DeckData
 from disce.models.deck_metadata import DeckMetadata
 from disce.models.exports import DeckExport, ExportedDeck
 from disce.pyscript import (
+    Element,
     Event,
     EventBinding,
     alert,
@@ -35,25 +38,91 @@ from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
 from disce.tools import format_plural
 
+_NATURAL_SORT_KEY_PATTERN = re.compile(r"(\d+)")
+"""Pattern for splitting strings into natural sort keys."""
+
 _logger = logging.getLogger(__name__)
+
+
+class SortingKey(Enum):
+    """Keys for sorting decks."""
+
+    NAME = auto()
+    """Sort by deck name."""
+    CARD_COUNT = auto()
+    """Sort by number of cards in the deck."""
+    CORRECT_ANSWERS = auto()
+    """Sort by number of correct answers."""
+    WRONG_ANSWERS = auto()
+    """Sort by number of wrong answers."""
+    MISSING_ANSWERS = auto()
+    """Sort by number of missing answers."""
+
+    def get_link(self, screen: "DecksScreen") -> Element:
+        """Get the link class associated with the sorting key."""
+        selector = {
+            SortingKey.NAME: ".disce-sort-decks-by-name-link",
+            SortingKey.CARD_COUNT: ".disce-sort-decks-by-card-count-link",
+            SortingKey.CORRECT_ANSWERS: ".disce-sort-decks-by-correct-answers-link",
+            SortingKey.WRONG_ANSWERS: ".disce-sort-decks-by-wrong-answers-link",
+            SortingKey.MISSING_ANSWERS: ".disce-sort-decks-by-missing-answers-link",
+        }[self]
+        return screen.select_child(selector)
+
+    def get_sorting_function(
+        self, configuration: Configuration
+    ) -> Callable[[DeckMetadata], tuple[str | int, list[int | str]]]:
+        """Get the sorting function associated with the sorting key."""
+        return {
+            SortingKey.NAME: lambda deck_metadata: (0, SortingKey._natural_sort_key(deck_metadata.name)),
+            SortingKey.CARD_COUNT: lambda deck_metadata: (
+                -deck_metadata.number_of_cards,
+                SortingKey._natural_sort_key(deck_metadata.name),
+            ),
+            SortingKey.CORRECT_ANSWERS: lambda deck_metadata: (
+                -deck_metadata.get_answer_counts(configuration.history_length).correct,
+                SortingKey._natural_sort_key(deck_metadata.name),
+            ),
+            SortingKey.WRONG_ANSWERS: lambda deck_metadata: (
+                -deck_metadata.get_answer_counts(configuration.history_length).wrong,
+                SortingKey._natural_sort_key(deck_metadata.name),
+            ),
+            SortingKey.MISSING_ANSWERS: lambda deck_metadata: (
+                -deck_metadata.get_answer_counts(configuration.history_length).missing,
+                SortingKey._natural_sort_key(deck_metadata.name),
+            ),
+        }[self]
+
+    @staticmethod
+    def _natural_sort_key(name: str) -> list[int | str]:
+        """Generate a natural sort key for a string."""
+        return [int(part) if part.isdigit() else part.casefold() for part in re.split(_NATURAL_SORT_KEY_PATTERN, name)]
 
 
 class DecksScreen(AbstractScreen):
     """Screen for listing and editing decks."""
 
     _MINIMUM_NUMBER_OF_DECKS_TO_MERGE: ClassVar[int] = 2
-    _NATURAL_SORT_KEY_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(\d+)")
+    """Minimum number of decks required to perform a merge."""
 
     def __init__(self, storage: AbstractStorage) -> None:
         """Initialize the screen."""
         super().__init__("#disce-decks-screen")
         self._storage = storage
+        self._sorting_key = SortingKey.NAME
+        self._sorting_reverse = False
 
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
         return [
             EventBinding(self.select_child(".disce-add-deck-btn"), "click", self.add_deck),
             EventBinding(self.select_child(".disce-import-decks-btn"), "click", self.import_decks),
+            EventBinding(self.select_child(".disce-sort-decks-by-name-link"), "click", self.sort_decks),
+            EventBinding(self.select_child(".disce-sort-decks-by-card-count-link"), "click", self.sort_decks),
+            EventBinding(self.select_child(".disce-sort-decks-by-correct-answers-link"), "click", self.sort_decks),
+            EventBinding(self.select_child(".disce-sort-decks-by-wrong-answers-link"), "click", self.sort_decks),
+            EventBinding(self.select_child(".disce-sort-decks-by-missing-answers-link"), "click", self.sort_decks),
+            EventBinding(self.select_child(".disce-sort-decks-reverse-link"), "click", self.sort_decks),
             EventBinding(self.select_child(".disce-select-all-btn"), "click", self.select_all_decks),
             EventBinding(self.select_child(".disce-study-decks-btn"), "click", self.study_decks),
             EventBinding(self.select_child(".disce-merge-decks-btn"), "click", self.merge_decks),
@@ -67,11 +136,30 @@ class DecksScreen(AbstractScreen):
     def render(self) -> None:
         """Render the list of decks."""
         self.unregister_event_bindings(dynamic=True)
+        sorting_key_links = {
+            SortingKey.NAME: self.select_child(".disce-sort-decks-by-name-link"),
+            SortingKey.CARD_COUNT: self.select_child(".disce-sort-decks-by-card-count-link"),
+            SortingKey.CORRECT_ANSWERS: self.select_child(".disce-sort-decks-by-correct-answers-link"),
+            SortingKey.WRONG_ANSWERS: self.select_child(".disce-sort-decks-by-wrong-answers-link"),
+            SortingKey.MISSING_ANSWERS: self.select_child(".disce-sort-decks-by-missing-answers-link"),
+        }
+        for sorting_key, link in sorting_key_links.items():
+            if sorting_key == self._sorting_key:
+                link.classList.add("active")
+            else:
+                link.classList.remove("active")
+        reverse_link = self.select_child(".disce-sort-decks-reverse-link")
+        if self._sorting_reverse:
+            reverse_link.classList.add("active")
+        else:
+            reverse_link.classList.remove("active")
         decks_div = self.select_child(".disce-decks")
         decks_div.innerHTML = ""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         for deck_metadata in sorted(
-            configuration.deck_metadata, key=lambda deck_metadata: DecksScreen._natural_sort_key(deck_metadata.name)
+            configuration.deck_metadata,
+            key=self._sorting_key.get_sorting_function(configuration),
+            reverse=self._sorting_reverse,
         ):
             deck_div = create_element(
                 "div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck_metadata.uuid
@@ -145,14 +233,6 @@ class DecksScreen(AbstractScreen):
             decks_div.appendChild(create_element("p", text="No decks available. Please add a deck."))
         self.update_bulk_buttons()
 
-    @staticmethod
-    def _natural_sort_key(name: str) -> list[int | str]:
-        """Generate a natural sort key for a string."""
-        return [
-            int(part) if part.isdigit() else part.casefold()
-            for part in re.split(DecksScreen._NATURAL_SORT_KEY_PATTERN, name)
-        ]
-
     def add_deck(self, _event: Event | None = None) -> None:
         """Add a new deck."""
         edit_deck_screen.EditDeckScreen(None, self._storage).show()
@@ -186,6 +266,23 @@ class DecksScreen(AbstractScreen):
             self.render()
 
         upload_file(".json,application/json", handle_imported_data)
+
+    def sort_decks(self, event: Event) -> None:
+        """Sort decks based on the selected criteria."""
+        link_class = event.currentTarget.classList
+        if "disce-sort-decks-by-name-link" in link_class:
+            self._sorting_key = SortingKey.NAME
+        elif "disce-sort-decks-by-card-count-link" in link_class:
+            self._sorting_key = SortingKey.CARD_COUNT
+        elif "disce-sort-decks-by-correct-answers-link" in link_class:
+            self._sorting_key = SortingKey.CORRECT_ANSWERS
+        elif "disce-sort-decks-by-wrong-answers-link" in link_class:
+            self._sorting_key = SortingKey.WRONG_ANSWERS
+        elif "disce-sort-decks-by-missing-answers-link" in link_class:
+            self._sorting_key = SortingKey.MISSING_ANSWERS
+        elif "disce-sort-decks-reverse-link" in link_class:
+            self._sorting_reverse = not self._sorting_reverse
+        self.render()
 
     def select_all_decks(self, _event: Event | None = None) -> None:
         """Select or deselect all decks."""

@@ -10,7 +10,7 @@ from typing import override
 
 import disce.screens.decks as decks_screen
 from disce.models.base import UUID, UUIDModelList
-from disce.models.cards import Card
+from disce.models.cards import Card, CardSide
 from disce.models.configs import Configuration
 from disce.models.deck_data import DeckData
 from disce.models.deck_metadata import DeckMetadata
@@ -66,6 +66,7 @@ class EditDeckScreen(AbstractScreen):
 
     def create_card_div(self, card: Card) -> Element:
         """Create a div representing a card for editing."""
+        configuration = Configuration.load_from_storage_or_create(self._storage)
         card_div = create_element("div", class_="disce-card row gx-3 align-items-center mb-2", data_card_uuid=card.uuid)
         selected_checkbox = create_element(
             "input",
@@ -76,24 +77,30 @@ class EditDeckScreen(AbstractScreen):
         )
         self.register_event_binding(EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True)
         append_child(card_div, "div", create_element("div", selected_checkbox, class_="form-check"), class_="col-auto")
+        answer_counts = card.get_answer_counts(CardSide.FRONT, configuration.history_length)
         front_textbox = create_element(
             "input",
             type="text",
             class_="disce-front-textbox form-control",
             value=card.front,
             placeholder="Front",
+            title=f"{answer_counts} in last {format_plural(configuration.history_length, 'review')}",
             data_card_uuid=card.uuid,
         )
+        front_textbox.style.background = answer_counts.gradient
         self.register_event_binding(EventBinding(front_textbox, "input", self.card_text_changed), dynamic=True)
         append_child(card_div, "div", front_textbox, class_="col-sm")
+        answer_counts = card.get_answer_counts(CardSide.BACK, configuration.history_length)
         back_textbox = create_element(
             "input",
             type="text",
             class_="disce-back-textbox form-control",
             value=card.back,
             placeholder="Back",
+            title=f"{answer_counts} in last {format_plural(configuration.history_length, 'review')}",
             data_card_uuid=card.uuid,
         )
+        back_textbox.style.background = answer_counts.gradient
         self.register_event_binding(EventBinding(back_textbox, "input", self.card_text_changed), dynamic=True)
         append_child(card_div, "div", back_textbox, class_="col-sm")
         append_child(

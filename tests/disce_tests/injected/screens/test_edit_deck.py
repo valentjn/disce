@@ -45,14 +45,22 @@ class TestEditDeckScreen:
 
     @staticmethod
     def test_render(
-        screen: EditDeckScreen, deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata], empty_card: Card
+        configuration: Configuration,
+        screen: EditDeckScreen,
+        deck_data_list: list[DeckData],
+        deck_metadata_list: list[DeckMetadata],
+        empty_card: Card,
     ) -> None:
         assert screen.select_child(".disce-deck-name-textbox").value == deck_metadata_list[0].name
         cards_element = screen.select_child(".disce-cards")
         assert len(cards_element.children) == 3
-        TestEditDeckScreen._assert_card_div(cards_element.children[0], deck_data_list[0].cards["deck1_card1"])
-        TestEditDeckScreen._assert_card_div(cards_element.children[1], deck_data_list[0].cards["deck1_card2"])
-        TestEditDeckScreen._assert_card_div(cards_element.children[2], empty_card)
+        TestEditDeckScreen._assert_card_div(
+            configuration, cards_element.children[0], deck_data_list[0].cards["deck1_card1"]
+        )
+        TestEditDeckScreen._assert_card_div(
+            configuration, cards_element.children[1], deck_data_list[0].cards["deck1_card2"]
+        )
+        TestEditDeckScreen._assert_card_div(configuration, cards_element.children[2], empty_card)
         element = cards_element.children[0]
         assert_event_bindings_registered(
             [
@@ -64,7 +72,7 @@ class TestEditDeckScreen:
         )
 
     @staticmethod
-    def test_create_card_div(screen: EditDeckScreen) -> None:
+    def test_create_card_div(configuration: Configuration, screen: EditDeckScreen) -> None:
         card = Card(
             uuid="uuid",
             front="front",
@@ -74,20 +82,22 @@ class TestEditDeckScreen:
             back_answer_history=[False],
         )
         card_div = screen.create_card_div(card)
-        TestEditDeckScreen._assert_card_div(card_div, card)
+        TestEditDeckScreen._assert_card_div(configuration, card_div, card)
 
     @staticmethod
-    def _assert_card_div(card_div: Element, expected_card: Card) -> None:
+    def _assert_card_div(configuration: Configuration, card_div: Element, expected_card: Card) -> None:
         assert card_div.getAttribute("data-card-uuid") == expected_card.uuid
         TestEditDeckScreen._get_card_div_child(card_div, ".disce-selected-checkbox", expected_card.uuid)
-        assert (
-            TestEditDeckScreen._get_card_div_child(card_div, ".disce-front-textbox", expected_card.uuid).value
-            == expected_card.front
-        )
-        assert (
-            TestEditDeckScreen._get_card_div_child(card_div, ".disce-back-textbox", expected_card.uuid).value
-            == expected_card.back
-        )
+        front_textbox = TestEditDeckScreen._get_card_div_child(card_div, ".disce-front-textbox", expected_card.uuid)
+        assert front_textbox.value == expected_card.front
+        answer_counts = expected_card.get_answer_counts(CardSide.FRONT, history_length=configuration.history_length)
+        assert front_textbox.title == f"{answer_counts} in last {configuration.history_length} reviews"
+        assert front_textbox.style.background == answer_counts.gradient
+        back_textbox = TestEditDeckScreen._get_card_div_child(card_div, ".disce-back-textbox", expected_card.uuid)
+        assert back_textbox.value == expected_card.back
+        answer_counts = expected_card.get_answer_counts(CardSide.BACK, history_length=configuration.history_length)
+        assert back_textbox.title == f"{answer_counts} in last {configuration.history_length} reviews"
+        assert back_textbox.style.background == answer_counts.gradient
         assert (
             TestEditDeckScreen._get_card_div_child(card_div, ".disce-enabled-checkbox", expected_card.uuid).checked
             == expected_card.enabled

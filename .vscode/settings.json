@@ -1,0 +1,44 @@
+/* Copyright (C) 2025 Julian Valentin
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+{
+    "editor.formatOnSave": true,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "livePreview.serverRoot": "src",
+    "python.analysis.extraPaths": ["src/python"],
+    "python.autoComplete.extraPaths": ["src/python"],
+    "python.testing.pytestArgs": ["tests"],
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "remote.autoForwardPorts": false,
+    "ruff.configuration": {
+        "target-version": "py313"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "always",
+            "source.organizeImports": "always"
+        }
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}

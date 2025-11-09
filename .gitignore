@@ -7,7 +7,6 @@
 __pycache__/
 *.egg-info/
 /.coverage
-/.vscode/
 /all.json
 /lesson*.json
 /node_modules/

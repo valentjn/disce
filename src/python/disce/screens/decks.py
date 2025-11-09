@@ -108,11 +108,11 @@ class DecksScreen(AbstractScreen):
             )
             deck_name_label.style.background = (
                 "linear-gradient(to right, "
-                f"rgba(var(--bs-success-rgb), 0.3) 0% {correct_percentage:.0f}%, "
+                f"rgba(var(--bs-success-rgb), 0.3) 0% {correct_percentage:.3f}%, "
                 "rgba(var(--bs-danger-rgb), 0.3) "
-                f"{correct_percentage:.0f}% {correct_percentage + wrong_percentage:.0f}%, "
+                f"{correct_percentage:.3f}% {correct_percentage + wrong_percentage:.3f}%, "
                 "rgba(var(--bs-secondary-rgb), 0.3) "
-                f"{correct_percentage + wrong_percentage:.0f}% 100%)"
+                f"{correct_percentage + wrong_percentage:.3f}% 100%)"
             )
             study_deck_button = append_child(
                 deck_div,

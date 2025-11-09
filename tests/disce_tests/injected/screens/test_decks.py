@@ -43,13 +43,13 @@ class TestDecksScreen:
         assert len(deck_name_labels) == 2
         assert deck_name_labels[0].title == "2 cards (15% correct, 35% wrong, 50% missing answers in last 10 reviews)"
         assert deck_name_labels[0].style.background == (
-            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 15%, "
-            "rgba(var(--bs-danger-rgb), 0.3) 15% 50%, rgba(var(--bs-secondary-rgb), 0.3) 50% 100%)"
+            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 15.000%, "
+            "rgba(var(--bs-danger-rgb), 0.3) 15.000% 50.000%, rgba(var(--bs-secondary-rgb), 0.3) 50.000% 100%)"
         )
         assert deck_name_labels[1].title == "1 card (45% correct, 5% wrong, 50% missing answers in last 10 reviews)"
         assert deck_name_labels[1].style.background == (
-            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 45%, "
-            "rgba(var(--bs-danger-rgb), 0.3) 45% 50%, rgba(var(--bs-secondary-rgb), 0.3) 50% 100%)"
+            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 45.000%, "
+            "rgba(var(--bs-danger-rgb), 0.3) 45.000% 50.000%, rgba(var(--bs-secondary-rgb), 0.3) 50.000% 100%)"
         )
         element = screen.select_child(".disce-decks").children[0]
         assert_event_bindings_registered(

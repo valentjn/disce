@@ -10,7 +10,11 @@ from contextlib import contextmanager
 from unittest.mock import ANY, call, patch
 
 import pytest
-from disce.data import UUID, Card, CardSide, Configuration, DeckData, DeckMetadata
+from disce.models.base import UUID
+from disce.models.cards import Card, CardSide
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.deck_metadata import DeckMetadata
 from disce.pyscript import Element, EventBinding
 from disce.screens.decks import DecksScreen
 from disce.screens.edit_deck import EditDeckScreen

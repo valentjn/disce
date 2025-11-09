@@ -6,7 +6,10 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import pytest
-from disce.data import Configuration, DeckData, DeckMetadata, UUIDModelList
+from disce.models.base import UUIDModelList
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.deck_metadata import DeckMetadata
 from disce.screens.decks import DecksScreen
 from disce.screens.edit_deck import EditDeckScreen
 from disce.screens.load import LoadScreen

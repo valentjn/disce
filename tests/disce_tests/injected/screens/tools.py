@@ -8,7 +8,12 @@
 from collections.abc import Sequence
 from types import MethodType
 
-from disce.data import Card, Configuration, DeckData, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
+from disce.models.base import UUIDModel, UUIDModelList
+from disce.models.cards import Card
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.deck_metadata import DeckMetadata
+from disce.models.exports import ExportedDeck
 from disce.pyscript import Event, EventBinding
 from disce.screens.base import AbstractScreen
 from disce.storage.local import LocalStorage

@@ -16,7 +16,9 @@ from typing import Self, override
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from disce.data import Card, DeckExport, ExportedDeck, UUIDModelList
+from disce.models.base import UUIDModelList
+from disce.models.cards import Card
+from disce.models.exports import DeckExport, ExportedDeck
 from disce.tools import format_plural
 from pydantic import BaseModel, ConfigDict, ValidationError
 

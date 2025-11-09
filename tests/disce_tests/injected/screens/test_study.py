@@ -11,9 +11,11 @@ from types import SimpleNamespace
 from typing import cast
 
 import pytest
-from disce.data import CardSide, Configuration, DeckData
 from disce.diffs import Diff
 from disce.furigana import TokenizedString
+from disce.models.cards import CardSide
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
 from disce.screens.decks import DecksScreen
 from disce.screens.study import StudyScreen
 from disce.storage.base import AbstractStorage

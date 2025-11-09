@@ -10,7 +10,10 @@ from types import SimpleNamespace
 from unittest.mock import ANY, call, patch
 
 import pytest
-from disce.data import Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.deck_metadata import DeckMetadata
+from disce.models.exports import DeckExport, ExportedDeck
 from disce.pyscript import EventBinding
 from disce.screens.decks import DecksScreen
 from disce.screens.edit_deck import EditDeckScreen

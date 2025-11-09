@@ -10,9 +10,12 @@ from collections.abc import Sequence
 from typing import override
 
 import disce.screens.decks as decks_screen
-from disce.data import Card, CardSide, Configuration, DeckData, ExportedDeck
 from disce.diffs import Diff
 from disce.furigana import TokenizedString
+from disce.models.cards import Card, CardSide
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.exports import ExportedDeck
 from disce.pyscript import Event, EventBinding, hide_element, show_element
 from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage

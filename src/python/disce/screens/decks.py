@@ -14,7 +14,11 @@ from pydantic import ValidationError
 
 import disce.screens.edit_deck as edit_deck_screen
 import disce.screens.study as study_screen
-from disce.data import UUID, Configuration, DeckData, DeckExport, DeckMetadata, ExportedDeck, UUIDModel, UUIDModelList
+from disce.models.base import UUID, UUIDModel, UUIDModelList
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.deck_metadata import DeckMetadata
+from disce.models.exports import DeckExport, ExportedDeck
 from disce.pyscript import (
     Event,
     EventBinding,

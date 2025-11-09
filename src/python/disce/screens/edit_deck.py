@@ -9,7 +9,12 @@
 from typing import override
 
 import disce.screens.decks as decks_screen
-from disce.data import UUID, Card, Configuration, DeckData, DeckMetadata, ExportedDeck, UUIDModelList
+from disce.models.base import UUID, UUIDModelList
+from disce.models.cards import Card
+from disce.models.configs import Configuration
+from disce.models.deck_data import DeckData
+from disce.models.deck_metadata import DeckMetadata
+from disce.models.exports import ExportedDeck
 from disce.pyscript import (
     Element,
     Event,

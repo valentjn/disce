@@ -91,10 +91,8 @@ class DecksScreen(AbstractScreen):
             if (total := answer_counts.total) > 0:
                 correct_percentage = answer_counts.correct / total * 100.0
                 wrong_percentage = answer_counts.wrong / total * 100.0
-                missing_percentage = answer_counts.missing / total * 100.0
             else:
                 correct_percentage = wrong_percentage = 0.0
-                missing_percentage = 100.0
             deck_name_label = append_child(
                 deck_div,
                 "label",
@@ -104,7 +102,7 @@ class DecksScreen(AbstractScreen):
                 title=(
                     f"{format_plural(deck_metadata.number_of_cards, 'card')} "
                     f"({correct_percentage:.0f}% correct, {wrong_percentage:.0f}% wrong, "
-                    f"{missing_percentage:.0f}% missing answers in last "
+                    f"{100.0 - round(correct_percentage) - round(wrong_percentage):.0f}% missing answers in last "
                     f"{configuration.history_length} reviews)"
                 ),
             )

@@ -19,7 +19,7 @@ class Configuration(AbstractStoredModel):
 
     deck_metadata: UUIDModelList[DeckMetadata] = UUIDModelList()
     """List of metadata for all decks."""
-    history_length: NonNegativeInt = 5
+    history_length: NonNegativeInt = 3
     """Number of recent answers to consider when selecting the next card to learn."""
     typewriter_mode: bool = False
     """Whether to enable typewriter mode (requiring full text input for answers)."""

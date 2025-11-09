@@ -88,11 +88,6 @@ class DecksScreen(AbstractScreen):
                 EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True
             )
             answer_counts = deck_metadata.get_answer_counts(configuration.history_length)
-            if (total := answer_counts.total) > 0:
-                correct_percentage = answer_counts.correct / total * 100.0
-                wrong_percentage = answer_counts.wrong / total * 100.0
-            else:
-                correct_percentage = wrong_percentage = 0.0
             deck_name_label = append_child(
                 deck_div,
                 "label",
@@ -101,19 +96,10 @@ class DecksScreen(AbstractScreen):
                 class_="disce-deck-name-label me-2",
                 title=(
                     f"{format_plural(deck_metadata.number_of_cards, 'card')} "
-                    f"({correct_percentage:.0f}% correct, {wrong_percentage:.0f}% wrong, "
-                    f"{100.0 - round(correct_percentage) - round(wrong_percentage):.0f}% missing answers in last "
-                    f"{configuration.history_length} reviews)"
+                    f"({answer_counts} in last {configuration.history_length} reviews)"
                 ),
             )
-            deck_name_label.style.background = (
-                "linear-gradient(to right, "
-                f"rgba(var(--bs-success-rgb), 0.3) 0% {correct_percentage:.3f}%, "
-                "rgba(var(--bs-danger-rgb), 0.3) "
-                f"{correct_percentage:.3f}% {correct_percentage + wrong_percentage:.3f}%, "
-                "rgba(var(--bs-secondary-rgb), 0.3) "
-                f"{correct_percentage + wrong_percentage:.3f}% 100%)"
-            )
+            deck_name_label.style.background = answer_counts.gradient
             study_deck_button = append_child(
                 deck_div,
                 "button",

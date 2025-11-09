@@ -20,8 +20,44 @@ class TestCardSide:
 class TestAnswerCounts:
     @staticmethod
     def test_total() -> None:
-        answer_counts = AnswerCounts(correct=2, wrong=3, missing=1)
+        answer_counts = AnswerCounts(correct=3, wrong=2, missing=1)
         assert answer_counts.total == 6
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("answer_counts", "expected"),
+        [
+            (AnswerCounts(correct=3, wrong=2, missing=1), "50% correct, 33% wrong, 17% missing answers"),
+            (AnswerCounts(correct=1, wrong=1, missing=1), "33% correct, 33% wrong, 34% missing answers"),
+            (AnswerCounts(correct=0, wrong=0, missing=0), "0% correct, 0% wrong, 100% missing answers"),
+        ],
+    )
+    def test_str(answer_counts: AnswerCounts, expected: str) -> None:
+        assert str(answer_counts) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("answer_counts", "expected"),
+        [
+            (
+                AnswerCounts(correct=3, wrong=2, missing=1),
+                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 50.000%, "
+                "rgba(var(--bs-danger-rgb), 0.3) 50.000% 83.333%, rgba(var(--bs-secondary-rgb), 0.3) 83.333% 100%)",
+            ),
+            (
+                AnswerCounts(correct=1, wrong=1, missing=1),
+                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 33.333%, "
+                "rgba(var(--bs-danger-rgb), 0.3) 33.333% 66.667%, rgba(var(--bs-secondary-rgb), 0.3) 66.667% 100%)",
+            ),
+            (
+                AnswerCounts(correct=0, wrong=0, missing=0),
+                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 0.000%, "
+                "rgba(var(--bs-danger-rgb), 0.3) 0.000% 0.000%, rgba(var(--bs-secondary-rgb), 0.3) 0.000% 100%)",
+            ),
+        ],
+    )
+    def test_gradient(answer_counts: AnswerCounts, expected: str) -> None:
+        assert answer_counts.gradient == expected
 
 
 class TestCard:

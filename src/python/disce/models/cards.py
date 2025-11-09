@@ -7,6 +7,7 @@
 """Data models for flashcards."""
 
 from enum import StrEnum, auto
+from typing import override
 
 from pydantic import BaseModel
 
@@ -41,6 +42,38 @@ class AnswerCounts(BaseModel):
     def total(self) -> int:
         """Get the total number of answers."""
         return self.correct + self.wrong + self.missing
+
+    @property
+    def _percentages(self) -> tuple[float, float]:
+        """Get the percentages of correct and wrong answers."""
+        total = self.total
+        if total > 0:
+            correct_percentage = self.correct / total * 100.0
+            wrong_percentage = self.wrong / total * 100.0
+        else:
+            correct_percentage = wrong_percentage = 0.0
+        return correct_percentage, wrong_percentage
+
+    @override
+    def __str__(self) -> str:
+        correct_percentage, wrong_percentage = self._percentages
+        return (
+            f"{correct_percentage:.0f}% correct, {wrong_percentage:.0f}% wrong, "
+            f"{100.0 - round(correct_percentage) - round(wrong_percentage):.0f}% missing answers"
+        )
+
+    @property
+    def gradient(self) -> str:
+        """Get a CSS gradient representing the answer distribution."""
+        correct_percentage, wrong_percentage = self._percentages
+        return (
+            "linear-gradient(to right, "
+            f"rgba(var(--bs-success-rgb), 0.3) 0% {correct_percentage:.3f}%, "
+            "rgba(var(--bs-danger-rgb), 0.3) "
+            f"{correct_percentage:.3f}% {correct_percentage + wrong_percentage:.3f}%, "
+            "rgba(var(--bs-secondary-rgb), 0.3) "
+            f"{correct_percentage + wrong_percentage:.3f}% 100%)"
+        )
 
 
 class Card(UUIDModel):

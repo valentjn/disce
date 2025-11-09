@@ -68,10 +68,10 @@ class AnswerCounts(BaseModel):
         correct_percentage, wrong_percentage = self._percentages
         return (
             "linear-gradient(to right, "
-            f"rgba(var(--bs-success-rgb), 0.3) 0% {correct_percentage:.3f}%, "
-            "rgba(var(--bs-danger-rgb), 0.3) "
+            f"rgba(var(--bs-success-rgb), 0.4) 0% {correct_percentage:.3f}%, "
+            "rgba(var(--bs-danger-rgb), 0.4) "
             f"{correct_percentage:.3f}% {correct_percentage + wrong_percentage:.3f}%, "
-            "rgba(var(--bs-secondary-rgb), 0.3) "
+            "rgba(var(--bs-secondary-rgb), 0.4) "
             f"{correct_percentage + wrong_percentage:.3f}% 100%)"
         )
 

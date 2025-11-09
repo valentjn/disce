@@ -41,18 +41,18 @@ class TestAnswerCounts:
         [
             (
                 AnswerCounts(correct=3, wrong=2, missing=1),
-                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 50.000%, "
-                "rgba(var(--bs-danger-rgb), 0.3) 50.000% 83.333%, rgba(var(--bs-secondary-rgb), 0.3) 83.333% 100%)",
+                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 50.000%, "
+                "rgba(var(--bs-danger-rgb), 0.4) 50.000% 83.333%, rgba(var(--bs-secondary-rgb), 0.4) 83.333% 100%)",
             ),
             (
                 AnswerCounts(correct=1, wrong=1, missing=1),
-                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 33.333%, "
-                "rgba(var(--bs-danger-rgb), 0.3) 33.333% 66.667%, rgba(var(--bs-secondary-rgb), 0.3) 66.667% 100%)",
+                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 33.333%, "
+                "rgba(var(--bs-danger-rgb), 0.4) 33.333% 66.667%, rgba(var(--bs-secondary-rgb), 0.4) 66.667% 100%)",
             ),
             (
                 AnswerCounts(correct=0, wrong=0, missing=0),
-                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.3) 0% 0.000%, "
-                "rgba(var(--bs-danger-rgb), 0.3) 0.000% 0.000%, rgba(var(--bs-secondary-rgb), 0.3) 0.000% 100%)",
+                "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 0.000%, "
+                "rgba(var(--bs-danger-rgb), 0.4) 0.000% 0.000%, rgba(var(--bs-secondary-rgb), 0.4) 0.000% 100%)",
             ),
         ],
     )

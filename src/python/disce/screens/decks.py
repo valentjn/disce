@@ -341,6 +341,7 @@ class DecksScreen(AbstractScreen):
         configuration.history_length = int(self.select_child(".disce-history-length-input").value)
         configuration.typewriter_mode = self.select_child(".disce-typewriter-mode-checkbox").checked
         configuration.save_to_storage(self._storage)
+        self.render()
 
     def get_deck_uuids(self) -> list[UUID]:
         """Get the UUIDs of all decks."""

@@ -264,8 +264,9 @@ class TestDecksScreen:
         assert download_file_mock.call_args_list == [call("deck1-name.json", "application/json", ANY)]
 
     @staticmethod
-    def test_export_deck_single_deck_invalid_name(storage: AbstractStorage, screen: DecksScreen) -> None:
-        configuration = Configuration.load_from_storage_or_create(storage)
+    def test_export_deck_single_deck_invalid_name(
+        storage: AbstractStorage, configuration: Configuration, screen: DecksScreen
+    ) -> None:
         configuration.deck_metadata["deck1"].name = "???"
         configuration.save_to_storage(storage)
         screen.select_child(".disce-selected-checkbox").checked = True
@@ -377,11 +378,10 @@ class TestDecksScreen:
         assert_decks(deck_data_list, deck_metadata_list)
 
     @staticmethod
-    def test_open_settings_modal(storage: AbstractStorage, screen: DecksScreen) -> None:
+    def test_open_settings_modal(configuration: Configuration, screen: DecksScreen) -> None:
         with patch("disce.screens.decks.show_modal") as show_modal_mock:
             screen.open_settings_modal()
         assert show_modal_mock.call_args_list == [call(screen.select_child(".disce-settings-modal"))]
-        configuration = Configuration.load_from_storage_or_create(storage)
         assert screen.select_child(".disce-history-length-input").value == str(configuration.history_length)
         assert screen.select_child(".disce-typewriter-mode-checkbox").checked == configuration.typewriter_mode
 

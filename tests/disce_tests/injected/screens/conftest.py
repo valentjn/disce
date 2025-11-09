@@ -31,13 +31,17 @@ def deck_metadata_list() -> list[DeckMetadata]:
     return deck_metadata_list.root
 
 
+@pytest.fixture
+def configuration(deck_metadata_list: list[DeckMetadata]) -> Configuration:
+    return Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=10)
+
+
 @pytest.fixture(autouse=True)
 def save_decks_and_configuration(
-    storage: AbstractStorage, deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata]
+    storage: AbstractStorage, deck_data_list: list[DeckData], configuration: Configuration
 ) -> None:
     for deck_data in deck_data_list:
         deck_data.save_to_storage(storage)
-    configuration = Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=10)
     configuration.save_to_storage(storage)
 
 

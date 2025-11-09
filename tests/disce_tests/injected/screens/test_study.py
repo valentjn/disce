@@ -88,8 +88,9 @@ class TestStudyScreen:
 
     @staticmethod
     @pytest.fixture
-    def fill_answer_textbox(storage: AbstractStorage, screen: StudyScreen, user_answer_text: str) -> None:
-        configuration = Configuration.load_from_storage_or_create(storage)
+    def fill_answer_textbox(
+        storage: AbstractStorage, configuration: Configuration, screen: StudyScreen, user_answer_text: str
+    ) -> None:
         configuration.typewriter_mode = True
         configuration.save_to_storage(storage)
         screen.render()
@@ -115,9 +116,13 @@ class TestStudyScreen:
     @staticmethod
     @pytest.mark.parametrize("typewriter_mode", [False, True])
     def test_render(
-        storage: AbstractStorage, screen: StudyScreen, expected_question_stripped: str, *, typewriter_mode: bool
+        storage: AbstractStorage,
+        configuration: Configuration,
+        screen: StudyScreen,
+        expected_question_stripped: str,
+        *,
+        typewriter_mode: bool,
     ) -> None:
-        configuration = Configuration.load_from_storage_or_create(storage)
         configuration.typewriter_mode = typewriter_mode
         configuration.save_to_storage(storage)
         screen.render()

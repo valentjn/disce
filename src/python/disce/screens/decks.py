@@ -95,8 +95,8 @@ class DecksScreen(AbstractScreen):
                 for_=f"disce-selected-checkbox-{deck_metadata.uuid}",
                 class_="disce-deck-name-label me-2",
                 title=(
-                    f"{format_plural(deck_metadata.number_of_cards, 'card')} "
-                    f"({answer_counts} in last {configuration.history_length} reviews)"
+                    f"{format_plural(deck_metadata.number_of_cards, 'card')} ({answer_counts} in last "
+                    f"{format_plural(configuration.history_length, 'review')})"
                 ),
             )
             deck_name_label.style.background = answer_counts.gradient

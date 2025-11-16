@@ -106,15 +106,9 @@ class DecksScreen(AbstractScreen):
 
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
-        return [
+        bindings = [
             EventBinding(self.select_child(".disce-add-deck-btn"), "click", self.add_deck),
             EventBinding(self.select_child(".disce-import-decks-btn"), "click", self.import_decks),
-            EventBinding(self.select_child(".disce-sort-decks-by-name-link"), "click", self.sort_decks),
-            EventBinding(self.select_child(".disce-sort-decks-by-card-count-link"), "click", self.sort_decks),
-            EventBinding(self.select_child(".disce-sort-decks-by-correct-answers-link"), "click", self.sort_decks),
-            EventBinding(self.select_child(".disce-sort-decks-by-wrong-answers-link"), "click", self.sort_decks),
-            EventBinding(self.select_child(".disce-sort-decks-by-missing-answers-link"), "click", self.sort_decks),
-            EventBinding(self.select_child(".disce-sort-decks-reverse-link"), "click", self.sort_decks),
             EventBinding(self.select_child(".disce-select-all-btn"), "click", self.select_all_decks),
             EventBinding(self.select_child(".disce-study-decks-btn"), "click", self.study_decks),
             EventBinding(self.select_child(".disce-merge-decks-btn"), "click", self.merge_decks),
@@ -123,6 +117,11 @@ class DecksScreen(AbstractScreen):
             EventBinding(self.select_child(".disce-settings-btn"), "click", self.open_settings_modal),
             EventBinding(self.select_child(".disce-save-settings-btn"), "click", self.save_settings),
         ]
+        bindings += [
+            EventBinding(element, "click", self.sort_decks)
+            for element in self.select_all_children(".disce-sort-decks-dropdown .dropdown-item")
+        ]
+        return bindings
 
     @override
     def render(self) -> None:

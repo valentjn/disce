@@ -5,12 +5,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from collections.abc import Generator
-from typing import override
+from collections.abc import Callable, Generator
+from enum import auto
+from typing import Any, override
 
 import pytest
-from disce.pyscript import Event, EventBinding, append_child, create_element
-from disce.screens.base import AbstractScreen
+from disce.models.configs import Configuration
+from disce.pyscript import Element, Event, EventBinding, append_child, create_element
+from disce.screens.base import AbstractScreen, AbstractSortingKey
 from pyscript import window
 
 from disce_tests.injected.tools import assert_hidden, assert_visible, insert_element
@@ -39,15 +41,18 @@ class DummyScreen(AbstractScreen):
         assert self._clicked == expected
 
 
-class TestAbstractScreen:
-    @staticmethod
-    @pytest.fixture
-    def screen() -> Generator[DummyScreen]:
-        id_ = "dummy-screen"
-        element = create_element("div", id=id_)
-        with insert_element(element):
-            yield DummyScreen(f"#{id_}")
+@pytest.fixture
+def screen() -> Generator[DummyScreen]:
+    id_ = "dummy-screen"
+    element = create_element("div", id=id_)
+    with insert_element(element):
+        screen = DummyScreen(f"#{id_}")
+        append_child(screen.element, "div", class_="element1")
+        append_child(screen.element, "div", class_="element2")
+        yield screen
 
+
+class TestAbstractScreen:
     @staticmethod
     def test_selector(screen: DummyScreen) -> None:
         assert screen.selector == "#dummy-screen"
@@ -126,3 +131,54 @@ class TestAbstractScreen:
         screen.hide()
         screen.assert_click_works(expected=False)
         assert_hidden(screen)
+
+
+class DummySortingKey(AbstractSortingKey):
+    KEY1 = auto()
+    KEY2 = auto()
+
+    @override
+    def to_link(self, screen: AbstractScreen) -> Element:
+        selector = {DummySortingKey.KEY1: ".element1", DummySortingKey.KEY2: ".element2"}[self]
+        return screen.select_child(selector)
+
+    @override
+    def get_sorting_function(
+        self, configuration: Configuration
+    ) -> Callable[[Any], tuple[int | str | list[int | str], ...]]:
+        raise NotImplementedError
+
+
+class TestAbstractSortingKey:
+    @staticmethod
+    def test_to_link(screen: AbstractScreen) -> None:
+        with pytest.raises(NotImplementedError):
+            AbstractSortingKey.to_link(DummySortingKey.KEY1, screen)
+
+    @staticmethod
+    @pytest.mark.parametrize("sorting_key", DummySortingKey)
+    def test_from_link(screen: AbstractScreen, sorting_key: DummySortingKey) -> None:
+        link = sorting_key.to_link(screen)
+        assert DummySortingKey.from_link(link, screen) == sorting_key
+
+    @staticmethod
+    def test_from_link_not_found(screen: AbstractScreen) -> None:
+        link = create_element("div", class_="nonexistent-link")
+        with pytest.raises(ValueError, match=r"^could not find sorting key for link with class: nonexistent-link$"):
+            DummySortingKey.from_link(link, screen)
+
+    @staticmethod
+    @pytest.mark.parametrize("sorting_key", DummySortingKey)
+    def test_set_active(screen: AbstractScreen, sorting_key: DummySortingKey) -> None:
+        sorting_key.set_active(screen)
+        for key in DummySortingKey:
+            link = key.to_link(screen)
+            if key is sorting_key:
+                assert link.classList.contains("active")
+            else:
+                assert not link.classList.contains("active")
+
+    @staticmethod
+    def test_get_sorting_function(configuration: Configuration) -> None:
+        with pytest.raises(NotImplementedError):
+            AbstractSortingKey.get_sorting_function(DummySortingKey.KEY1, configuration)

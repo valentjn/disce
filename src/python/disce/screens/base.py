@@ -7,8 +7,13 @@
 """Module defining the base class for all screens."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+from enum import Enum
+from typing import Self
 
+from disce.models.configs import Configuration
 from disce.pyscript import Element, EventBinding, hide_element, is_null, select_element, show_element
+from disce.tools import ABCEnumMeta
 
 
 class AbstractScreen(ABC):
@@ -92,3 +97,37 @@ class AbstractScreen(ABC):
         self.unregister_event_bindings(dynamic=True)
         self.unregister_event_bindings(dynamic=False)
         hide_element(self.element)
+
+
+class AbstractSortingKey(Enum, metaclass=ABCEnumMeta):
+    """Abstract base class for sorting key enums."""
+
+    @abstractmethod
+    def to_link(self, screen: AbstractScreen) -> Element:
+        """Get the link class associated with the sorting key."""
+        raise NotImplementedError
+
+    @classmethod
+    def from_link(cls, link: Element, screen: AbstractScreen) -> Self:
+        """Get the sorting key associated with the link class."""
+        key = next((k for k in cls if k.to_link(screen).isSameNode(link)), None)
+        if not key:
+            msg = f"could not find sorting key for link with class: {link.className}"
+            raise ValueError(msg)
+        return key
+
+    def set_active(self, screen: AbstractScreen) -> None:
+        """Set this sorting key as active in the screen."""
+        for key in type(self):
+            link = key.to_link(screen)
+            if key is self:
+                link.classList.add("active")
+            else:
+                link.classList.remove("active")
+
+    @abstractmethod
+    def get_sorting_function(
+        self, configuration: Configuration
+    ) -> Callable[..., tuple[int | str | list[int | str], ...]]:
+        """Get the sorting function associated with the sorting key."""
+        raise NotImplementedError

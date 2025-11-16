@@ -9,7 +9,7 @@
 import logging
 import re
 from collections.abc import Callable
-from enum import Enum, auto
+from enum import auto
 from typing import ClassVar, override
 
 from pydantic import ValidationError
@@ -34,15 +34,15 @@ from disce.pyscript import (
     show_modal,
     upload_file,
 )
-from disce.screens.base import AbstractScreen
+from disce.screens.base import AbstractScreen, AbstractSortingKey
 from disce.storage.base import AbstractStorage
 from disce.tools import format_plural, natural_sort_key
 
 _logger = logging.getLogger(__name__)
 
 
-class SortingKey(Enum):
-    """Keys for sorting decks."""
+class SortingKey(AbstractSortingKey):
+    """Key for sorting decks."""
 
     NAME = auto()
     """Sort by deck name."""
@@ -55,8 +55,8 @@ class SortingKey(Enum):
     MISSING_ANSWERS = auto()
     """Sort by number of missing answers."""
 
-    def get_link(self, screen: "DecksScreen") -> Element:
-        """Get the link class associated with the sorting key."""
+    @override
+    def to_link(self, screen: AbstractScreen) -> Element:
         selector = {
             SortingKey.NAME: ".disce-sort-decks-by-name-link",
             SortingKey.CARD_COUNT: ".disce-sort-decks-by-card-count-link",
@@ -66,10 +66,10 @@ class SortingKey(Enum):
         }[self]
         return screen.select_child(selector)
 
+    @override
     def get_sorting_function(
         self, configuration: Configuration
-    ) -> Callable[[DeckMetadata], tuple[str | int, list[int | str]]]:
-        """Get the sorting function associated with the sorting key."""
+    ) -> Callable[[DeckMetadata], tuple[int | str | list[int | str], ...]]:
         return {
             SortingKey.NAME: lambda deck_metadata: (0, natural_sort_key(deck_metadata.name)),
             SortingKey.CARD_COUNT: lambda deck_metadata: (
@@ -127,18 +127,7 @@ class DecksScreen(AbstractScreen):
     def render(self) -> None:
         """Render the list of decks."""
         self.unregister_event_bindings(dynamic=True)
-        sorting_key_links = {
-            SortingKey.NAME: self.select_child(".disce-sort-decks-by-name-link"),
-            SortingKey.CARD_COUNT: self.select_child(".disce-sort-decks-by-card-count-link"),
-            SortingKey.CORRECT_ANSWERS: self.select_child(".disce-sort-decks-by-correct-answers-link"),
-            SortingKey.WRONG_ANSWERS: self.select_child(".disce-sort-decks-by-wrong-answers-link"),
-            SortingKey.MISSING_ANSWERS: self.select_child(".disce-sort-decks-by-missing-answers-link"),
-        }
-        for sorting_key, link in sorting_key_links.items():
-            if sorting_key == self._sorting_key:
-                link.classList.add("active")
-            else:
-                link.classList.remove("active")
+        self._sorting_key.set_active(self)
         reverse_link = self.select_child(".disce-sort-decks-reverse-link")
         if self._sorting_reverse:
             reverse_link.classList.add("active")
@@ -260,19 +249,10 @@ class DecksScreen(AbstractScreen):
 
     def sort_decks(self, event: Event) -> None:
         """Sort decks based on the selected criteria."""
-        link_class = event.currentTarget.classList
-        if "disce-sort-decks-by-name-link" in link_class:
-            self._sorting_key = SortingKey.NAME
-        elif "disce-sort-decks-by-card-count-link" in link_class:
-            self._sorting_key = SortingKey.CARD_COUNT
-        elif "disce-sort-decks-by-correct-answers-link" in link_class:
-            self._sorting_key = SortingKey.CORRECT_ANSWERS
-        elif "disce-sort-decks-by-wrong-answers-link" in link_class:
-            self._sorting_key = SortingKey.WRONG_ANSWERS
-        elif "disce-sort-decks-by-missing-answers-link" in link_class:
-            self._sorting_key = SortingKey.MISSING_ANSWERS
-        elif "disce-sort-decks-reverse-link" in link_class:
+        if "disce-sort-decks-reverse-link" in event.currentTarget.classList:
             self._sorting_reverse = not self._sorting_reverse
+        else:
+            self._sorting_key = SortingKey.from_link(event.currentTarget, self)
         self.render()
 
     def select_all_decks(self, _event: Event | None = None) -> None:

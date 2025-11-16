@@ -8,8 +8,10 @@
 
 import logging
 import re
+from abc import ABCMeta
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
+from enum import EnumMeta
 from time import perf_counter
 from typing import Any
 
@@ -17,6 +19,22 @@ _NATURAL_SORT_KEY_PATTERN = re.compile(r"(\d+)")
 """Pattern for splitting strings into natural sort keys."""
 
 _logger = logging.getLogger(__name__)
+
+
+class ABCEnumMeta(ABCMeta, EnumMeta):
+    """Metaclass for Enums with abstract methods."""
+
+    def __new__(mcls, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+        """Create a new Enum class, ensuring abstract methods are implemented."""
+        cls = super().__new__(mcls, *args, **kwargs)
+        if cls._member_map_ and (abstract_methods := getattr(cls, "__abstractmethods__", None)):
+            msg = (
+                f"cannot instantiate abstract class {cls.__name__} with "
+                f"{format_plural(len(abstract_methods), 'abstract method', omit_number=True)} "
+                f"{', '.join(str(m) for m in abstract_methods)}"
+            )
+            raise TypeError(msg)
+        return cls
 
 
 def format_plural(

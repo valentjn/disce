@@ -44,8 +44,8 @@ class TestSortingKey:
             (SortingKey.MISSING_ANSWERS, ".disce-sort-decks-by-missing-answers-link"),
         ],
     )
-    def test_get_link(screen: DecksScreen, sorting_key: SortingKey, expected_selector: str) -> None:
-        assert sorting_key.get_link(screen).isSameNode(screen.select_child(expected_selector))
+    def test_to_link(screen: DecksScreen, sorting_key: SortingKey, expected_selector: str) -> None:
+        assert sorting_key.to_link(screen).isSameNode(screen.select_child(expected_selector))
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -247,7 +247,7 @@ class TestDecksScreen:
     def test_sort_decks(screen: DecksScreen, sorting_key: SortingKey | None, expected_order: list[int]) -> None:
         screen.sort_decks(
             SimpleNamespace(
-                currentTarget=sorting_key.get_link(screen)
+                currentTarget=sorting_key.to_link(screen)
                 if sorting_key
                 else screen.select_child(".disce-sort-decks-reverse-link")
             )

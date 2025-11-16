@@ -7,9 +7,31 @@
 
 import logging
 import re
+from abc import abstractmethod
+from enum import Enum, auto
 
 import pytest
-from disce.tools import format_plural, log_time, natural_sort_key
+from disce.tools import ABCEnumMeta, format_plural, log_time, natural_sort_key
+
+
+class TestABCEnumMeta:
+    @staticmethod
+    def test_new() -> None:
+        class DummyEnum(Enum, metaclass=ABCEnumMeta):
+            KEY = auto()
+
+    @staticmethod
+    def test_new_abstract_method() -> None:
+        with pytest.raises(
+            TypeError, match=r"cannot instantiate abstract class DummyAbstractEnum with abstract method some_method"
+        ):
+
+            class DummyAbstractEnum(Enum, metaclass=ABCEnumMeta):
+                KEY = auto()
+
+                @abstractmethod
+                def some_method(self) -> None:
+                    pass
 
 
 @pytest.mark.parametrize(

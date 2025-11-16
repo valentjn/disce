@@ -7,6 +7,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from types import SimpleNamespace
 from unittest.mock import ANY, call, patch
 
 import pytest
@@ -17,21 +18,88 @@ from disce.models.deck_data import DeckData
 from disce.models.deck_metadata import DeckMetadata
 from disce.pyscript import Element, EventBinding
 from disce.screens.decks import DecksScreen
-from disce.screens.edit_deck import EditDeckScreen
+from disce.screens.edit_deck import EditDeckScreen, SortingKey
 from disce.storage.base import AbstractStorage
 
 from disce_tests.injected.screens.tools import assert_event_bindings_registered
 from disce_tests.injected.tools import assert_hidden, assert_visible
 
 
-class TestEditDeckScreen:
-    @staticmethod
-    @pytest.fixture
-    def screen(storage: AbstractStorage) -> EditDeckScreen:
-        screen = EditDeckScreen("deck1", storage)
-        screen.show()
-        return screen
+@pytest.fixture
+def screen(storage: AbstractStorage) -> EditDeckScreen:
+    screen = EditDeckScreen("deck1", storage)
+    screen.show()
+    return screen
 
+
+class TestSortingKey:
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("sorting_key", "expected_selector"),
+        [
+            (SortingKey.ORIGINAL_ORDER, ".disce-sort-cards-by-original-order-link"),
+            (SortingKey.FRONT_SIDE, ".disce-sort-cards-by-front-side-link"),
+            (SortingKey.BACK_SIDE, ".disce-sort-cards-by-back-side-link"),
+            (SortingKey.CORRECT_ANSWERS, ".disce-sort-cards-by-correct-answers-link"),
+            (SortingKey.WRONG_ANSWERS, ".disce-sort-cards-by-wrong-answers-link"),
+            (SortingKey.MISSING_ANSWERS, ".disce-sort-cards-by-missing-answers-link"),
+        ],
+    )
+    def test_to_link(screen: DecksScreen, sorting_key: SortingKey, expected_selector: str) -> None:
+        assert sorting_key.to_link(screen).isSameNode(screen.select_child(expected_selector))
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("sorting_key", "expected_order"),
+        [
+            (SortingKey.ORIGINAL_ORDER, [0, 1, 2]),
+            (SortingKey.FRONT_SIDE, [2, 1, 0]),
+            (SortingKey.BACK_SIDE, [0, 2, 1]),
+            (SortingKey.CORRECT_ANSWERS, [2, 0, 1]),
+            (SortingKey.WRONG_ANSWERS, [1, 0, 2]),
+            (SortingKey.MISSING_ANSWERS, [0, 1, 2]),
+        ],
+    )
+    def test_get_sorting_function(
+        configuration: Configuration, sorting_key: SortingKey, expected_order: list[int]
+    ) -> None:
+        indexed_cards = [
+            (
+                0,
+                Card(
+                    uuid="card1",
+                    front="Cherry",
+                    back="A fruit",
+                    front_answer_history=[True, False, True],
+                    back_answer_history=[True],
+                ),
+            ),
+            (
+                1,
+                Card(
+                    uuid="card2",
+                    front="Banana",
+                    back="Another fruit",
+                    front_answer_history=[False, False],
+                    back_answer_history=[False, True],
+                ),
+            ),
+            (
+                2,
+                Card(
+                    uuid="card3",
+                    front="Apple",
+                    back="Also a fruit",
+                    front_answer_history=[True, True, True],
+                    back_answer_history=[True, True],
+                ),
+            ),
+        ]
+        sorted_cards = sorted(indexed_cards, key=sorting_key.get_sorting_function(configuration))
+        assert sorted_cards == [indexed_cards[idx] for idx in expected_order]
+
+
+class TestEditDeckScreen:
     @staticmethod
     @pytest.fixture
     def empty_card() -> Card:
@@ -55,12 +123,12 @@ class TestEditDeckScreen:
         cards_element = screen.select_child(".disce-cards")
         assert len(cards_element.children) == 3
         TestEditDeckScreen._assert_card_div(
-            configuration, cards_element.children[0], deck_data_list[0].cards["deck1_card1"]
+            configuration, cards_element.children[0], deck_data_list[0].cards["deck1_card1"], 0
         )
         TestEditDeckScreen._assert_card_div(
-            configuration, cards_element.children[1], deck_data_list[0].cards["deck1_card2"]
+            configuration, cards_element.children[1], deck_data_list[0].cards["deck1_card2"], 1
         )
-        TestEditDeckScreen._assert_card_div(configuration, cards_element.children[2], empty_card)
+        TestEditDeckScreen._assert_card_div(configuration, cards_element.children[2], empty_card, 2)
         element = cards_element.children[0]
         assert_event_bindings_registered(
             [
@@ -81,12 +149,15 @@ class TestEditDeckScreen:
             front_answer_history=[True],
             back_answer_history=[False],
         )
-        card_div = screen.create_card_div(card)
-        TestEditDeckScreen._assert_card_div(configuration, card_div, card)
+        card_div = screen.create_card_div(card, 42)
+        TestEditDeckScreen._assert_card_div(configuration, card_div, card, 42)
 
     @staticmethod
-    def _assert_card_div(configuration: Configuration, card_div: Element, expected_card: Card) -> None:
+    def _assert_card_div(
+        configuration: Configuration, card_div: Element, expected_card: Card, expected_index: int
+    ) -> None:
         assert card_div.getAttribute("data-card-uuid") == expected_card.uuid
+        assert card_div.getAttribute("data-card-index") == str(expected_index)
         TestEditDeckScreen._get_card_div_child(card_div, ".disce-selected-checkbox", expected_card.uuid)
         front_textbox = TestEditDeckScreen._get_card_div_child(card_div, ".disce-front-textbox", expected_card.uuid)
         assert front_textbox.value == expected_card.front
@@ -166,6 +237,43 @@ class TestEditDeckScreen:
             front_answer_history=[],
             back_answer_history=[],
         )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("sorting_key", "expected_order"),
+        [
+            (SortingKey.ORIGINAL_ORDER, [0, 1]),
+            (SortingKey.FRONT_SIDE, [0, 1]),
+            (SortingKey.BACK_SIDE, [0, 1]),
+            (SortingKey.CORRECT_ANSWERS, [1, 0]),
+            (SortingKey.WRONG_ANSWERS, [0, 1]),
+            (SortingKey.MISSING_ANSWERS, [0, 1]),
+            (None, [1, 0]),
+        ],
+    )
+    def test_sort_cards(  # noqa: PLR0913
+        configuration: Configuration,
+        screen: EditDeckScreen,
+        deck_data_list: list[DeckData],
+        empty_card: Card,
+        sorting_key: SortingKey | None,
+        expected_order: list[int],
+    ) -> None:
+        screen.sort_cards(
+            SimpleNamespace(
+                currentTarget=sorting_key.to_link(screen)
+                if sorting_key
+                else screen.select_child(".disce-sort-cards-reverse-link")
+            )
+        )
+        cards_element = screen.select_child(".disce-cards")
+        assert len(cards_element.children) == 3
+        card_uuids = ["deck1_card1", "deck1_card2"]
+        for card_idx, card_div in zip(expected_order, cards_element.children, strict=False):
+            TestEditDeckScreen._assert_card_div(
+                configuration, card_div, deck_data_list[0].cards[card_uuids[card_idx]], card_idx
+            )
+        TestEditDeckScreen._assert_card_div(configuration, cards_element.children[2], empty_card, 2)
 
     @staticmethod
     def test_select_all_decks(screen: EditDeckScreen) -> None:

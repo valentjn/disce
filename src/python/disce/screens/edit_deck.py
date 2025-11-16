@@ -6,6 +6,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Screen for editing a single deck."""
 
+from collections.abc import Callable
+from enum import auto
 from typing import override
 
 import disce.screens.decks as decks_screen
@@ -24,9 +26,62 @@ from disce.pyscript import (
     create_element,
     show_toast,
 )
-from disce.screens.base import AbstractScreen
+from disce.screens.base import AbstractScreen, AbstractSortingKey
 from disce.storage.base import AbstractStorage
-from disce.tools import format_plural
+from disce.tools import format_plural, natural_sort_key
+
+
+class SortingKey(AbstractSortingKey):
+    """Key for sorting cards."""
+
+    ORIGINAL_ORDER = auto()
+    """Sort by original order."""
+    FRONT_SIDE = auto()
+    """Sort by front side of the card."""
+    BACK_SIDE = auto()
+    """Sort by back side of the card."""
+    CORRECT_ANSWERS = auto()
+    """Sort by number of correct answers."""
+    WRONG_ANSWERS = auto()
+    """Sort by number of wrong answers."""
+    MISSING_ANSWERS = auto()
+    """Sort by number of missing answers."""
+
+    @override
+    def to_link(self, screen: AbstractScreen) -> Element:
+        """Get the link class associated with the sorting key."""
+        selector = {
+            SortingKey.ORIGINAL_ORDER: ".disce-sort-cards-by-original-order-link",
+            SortingKey.FRONT_SIDE: ".disce-sort-cards-by-front-side-link",
+            SortingKey.BACK_SIDE: ".disce-sort-cards-by-back-side-link",
+            SortingKey.CORRECT_ANSWERS: ".disce-sort-cards-by-correct-answers-link",
+            SortingKey.WRONG_ANSWERS: ".disce-sort-cards-by-wrong-answers-link",
+            SortingKey.MISSING_ANSWERS: ".disce-sort-cards-by-missing-answers-link",
+        }[self]
+        return screen.select_child(selector)
+
+    @override
+    def get_sorting_function(
+        self, configuration: Configuration
+    ) -> Callable[[tuple[int, Card]], tuple[int | str | list[int | str], ...]]:
+        """Get the sorting function associated with the sorting key."""
+        return {
+            SortingKey.ORIGINAL_ORDER: lambda pair: (0, pair[0]),
+            SortingKey.FRONT_SIDE: lambda pair: (natural_sort_key(pair[1].front), pair[0]),
+            SortingKey.BACK_SIDE: lambda pair: (natural_sort_key(pair[1].back), pair[0]),
+            SortingKey.CORRECT_ANSWERS: lambda pair: (
+                -pair[1].get_answer_counts(None, configuration.history_length).correct,
+                pair[0],
+            ),
+            SortingKey.WRONG_ANSWERS: lambda pair: (
+                -pair[1].get_answer_counts(None, configuration.history_length).wrong,
+                pair[0],
+            ),
+            SortingKey.MISSING_ANSWERS: lambda pair: (
+                -pair[1].get_answer_counts(None, configuration.history_length).missing,
+                pair[0],
+            ),
+        }[self]
 
 
 class EditDeckScreen(AbstractScreen):
@@ -37,15 +92,22 @@ class EditDeckScreen(AbstractScreen):
         super().__init__("#disce-edit-deck-screen")
         self._deck_uuid = deck_uuid
         self._storage = storage
+        self._sorting_key = SortingKey.ORIGINAL_ORDER
+        self._sorting_reverse = False
 
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
-        return [
+        bindings = [
             EventBinding(self.select_child(".disce-save-deck-btn"), "click", self.save_deck),
             EventBinding(self.select_child(".disce-select-all-btn"), "click", self.select_all_decks),
             EventBinding(self.select_child(".disce-delete-cards-btn"), "click", self.delete_cards),
             EventBinding(self.select_child(".disce-back-to-decks-screen-btn"), "click", self.back_to_decks_screen),
         ]
+        bindings += [
+            EventBinding(element, "click", self.sort_cards)
+            for element in self.select_all_children(".disce-sort-cards-dropdown .dropdown-item")
+        ]
+        return bindings
 
     @override
     def render(self, deck_data: DeckData | None = None, deck_metadata: DeckMetadata | None = None) -> None:
@@ -56,24 +118,42 @@ class EditDeckScreen(AbstractScreen):
             )
         self.select_child(".disce-deck-name-textbox").value = deck_metadata.name
         self.unregister_event_bindings(dynamic=True)
+        self._sorting_key.set_active(self)
+        reverse_link = self.select_child(".disce-sort-cards-reverse-link")
+        if self._sorting_reverse:
+            reverse_link.classList.add("active")
+        else:
+            reverse_link.classList.remove("active")
         cards_div = self.select_child(".disce-cards")
         cards_div.innerHTML = ""
-        cards = (deck_data if deck_data else self.load_deck_data(uuid=deck_metadata.uuid)).cards.model_copy()
-        cards.set(Card())
-        for card in cards:
-            cards_div.appendChild(self.create_card_div(card))
+        indexed_cards = list(
+            enumerate((deck_data if deck_data else self.load_deck_data(uuid=deck_metadata.uuid)).cards.model_copy())
+        )
+        sorting_function = self._sorting_key.get_sorting_function(
+            Configuration.load_from_storage_or_create(self._storage)
+        )
+        indexed_cards.sort(key=sorting_function, reverse=self._sorting_reverse)
+        indexed_cards.append((len(indexed_cards), Card()))
+        for idx, card in indexed_cards:
+            cards_div.appendChild(self.create_card_div(card, idx))
         self.update_bulk_buttons()
 
-    def create_card_div(self, card: Card) -> Element:
+    def create_card_div(self, card: Card, index: int) -> Element:
         """Create a div representing a card for editing."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
-        card_div = create_element("div", class_="disce-card row gx-3 align-items-center mb-2", data_card_uuid=card.uuid)
+        card_div = create_element(
+            "div",
+            class_="disce-card row gx-3 align-items-center mb-2",
+            data_card_uuid=card.uuid,
+            data_card_index=str(index),
+        )
         selected_checkbox = create_element(
             "input",
             type="checkbox",
             class_="disce-selected-checkbox form-check-input",
             title="Select this card for bulk actions",
             data_card_uuid=card.uuid,
+            data_card_index=str(index),
         )
         self.register_event_binding(EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True)
         append_child(card_div, "div", create_element("div", selected_checkbox, class_="form-check"), class_="col-auto")
@@ -86,6 +166,7 @@ class EditDeckScreen(AbstractScreen):
             placeholder="Front",
             title=f"{answer_counts} in last {format_plural(configuration.history_length, 'review')}",
             data_card_uuid=card.uuid,
+            data_card_index=str(index),
         )
         front_textbox.style.background = answer_counts.gradient
         self.register_event_binding(EventBinding(front_textbox, "input", self.card_text_changed), dynamic=True)
@@ -99,6 +180,7 @@ class EditDeckScreen(AbstractScreen):
             placeholder="Back",
             title=f"{answer_counts} in last {format_plural(configuration.history_length, 'review')}",
             data_card_uuid=card.uuid,
+            data_card_index=str(index),
         )
         back_textbox.style.background = answer_counts.gradient
         self.register_event_binding(EventBinding(back_textbox, "input", self.card_text_changed), dynamic=True)
@@ -114,6 +196,7 @@ class EditDeckScreen(AbstractScreen):
                     type="checkbox",
                     class_="disce-enabled-checkbox form-check-input",
                     data_card_uuid=card.uuid,
+                    data_card_index=str(index),
                     **({"checked": "checked"} if card.enabled else {}),  # type: ignore[arg-type]
                 ),
                 create_element(
@@ -134,7 +217,7 @@ class EditDeckScreen(AbstractScreen):
             or card_divs[-1].querySelector(".disce-back-textbox").value
         ):
             cards_div = self.select_child(".disce-cards")
-            cards_div.appendChild(self.create_card_div(Card()))
+            cards_div.appendChild(self.create_card_div(Card(), len(card_divs)))
         self.update_bulk_buttons()
 
     def save_deck(self, _event: Event | None = None) -> None:
@@ -154,6 +237,15 @@ class EditDeckScreen(AbstractScreen):
         configuration.save_to_storage(self._storage)
         deck_data.save_to_storage(self._storage)
         show_toast(self.select_child(".disce-deck-saved-toast"))
+
+    def sort_cards(self, event: Event) -> None:
+        """Sort cards based on the selected criteria."""
+        link_class = event.currentTarget.classList
+        if "disce-sort-cards-reverse-link" in link_class:
+            self._sorting_reverse = not self._sorting_reverse
+        else:
+            self._sorting_key = SortingKey.from_link(event.currentTarget, self)
+        self.render()
 
     def select_all_decks(self, _event: Event | None = None) -> None:
         """Select or deselect all decks."""
@@ -220,7 +312,7 @@ class EditDeckScreen(AbstractScreen):
     def get_deck(self) -> tuple[DeckData, DeckMetadata]:
         """Get the current deck from the edit deck screen."""
         deck_name = self.select_child(".disce-deck-name-textbox").value
-        cards = UUIDModelList[Card]()
+        cards, card_indices = [], []
         for card_div in self.select_all_children(".disce-card"):
             uuid: UUID = card_div.getAttribute("data-card-uuid")
             card = self.load_deck_data().cards.get(uuid, Card(uuid=uuid))
@@ -231,9 +323,13 @@ class EditDeckScreen(AbstractScreen):
             card.front = front
             card.back = back
             card.enabled = bool(card_div.querySelector(".disce-enabled-checkbox").checked)
-            cards.set(card)
-        deck_data = DeckData(cards=cards)
-        deck_metadata = ExportedDeck(uuid=deck_data.uuid, cards=cards, name=deck_name).to_deck_metadata()
+            cards.append(card)
+            card_indices.append(int(card_div.getAttribute("data-card-index")))
+        cards_list = UUIDModelList(
+            [card for _, card in sorted(zip(card_indices, cards, strict=True), key=lambda pair: pair[0])]
+        )
+        deck_data = DeckData(cards=cards_list)
+        deck_metadata = ExportedDeck(uuid=deck_data.uuid, cards=cards_list, name=deck_name).to_deck_metadata()
         if self._deck_uuid is not None:
             deck_data.uuid = self._deck_uuid
             deck_metadata.uuid = self._deck_uuid

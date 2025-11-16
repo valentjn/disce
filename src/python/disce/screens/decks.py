@@ -36,10 +36,7 @@ from disce.pyscript import (
 )
 from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
-from disce.tools import format_plural
-
-_NATURAL_SORT_KEY_PATTERN = re.compile(r"(\d+)")
-"""Pattern for splitting strings into natural sort keys."""
+from disce.tools import format_plural, natural_sort_key
 
 _logger = logging.getLogger(__name__)
 
@@ -74,29 +71,24 @@ class SortingKey(Enum):
     ) -> Callable[[DeckMetadata], tuple[str | int, list[int | str]]]:
         """Get the sorting function associated with the sorting key."""
         return {
-            SortingKey.NAME: lambda deck_metadata: (0, SortingKey._natural_sort_key(deck_metadata.name)),
+            SortingKey.NAME: lambda deck_metadata: (0, natural_sort_key(deck_metadata.name)),
             SortingKey.CARD_COUNT: lambda deck_metadata: (
                 -deck_metadata.number_of_cards,
-                SortingKey._natural_sort_key(deck_metadata.name),
+                natural_sort_key(deck_metadata.name),
             ),
             SortingKey.CORRECT_ANSWERS: lambda deck_metadata: (
                 -deck_metadata.get_answer_counts(configuration.history_length).correct,
-                SortingKey._natural_sort_key(deck_metadata.name),
+                natural_sort_key(deck_metadata.name),
             ),
             SortingKey.WRONG_ANSWERS: lambda deck_metadata: (
                 -deck_metadata.get_answer_counts(configuration.history_length).wrong,
-                SortingKey._natural_sort_key(deck_metadata.name),
+                natural_sort_key(deck_metadata.name),
             ),
             SortingKey.MISSING_ANSWERS: lambda deck_metadata: (
                 -deck_metadata.get_answer_counts(configuration.history_length).missing,
-                SortingKey._natural_sort_key(deck_metadata.name),
+                natural_sort_key(deck_metadata.name),
             ),
         }[self]
-
-    @staticmethod
-    def _natural_sort_key(name: str) -> list[int | str]:
-        """Generate a natural sort key for a string."""
-        return [int(part) if part.isdigit() else part.casefold() for part in re.split(_NATURAL_SORT_KEY_PATTERN, name)]
 
 
 class DecksScreen(AbstractScreen):

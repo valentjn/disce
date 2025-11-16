@@ -7,10 +7,14 @@
 """Utility functions."""
 
 import logging
+import re
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from time import perf_counter
 from typing import Any
+
+_NATURAL_SORT_KEY_PATTERN = re.compile(r"(\d+)")
+"""Pattern for splitting strings into natural sort keys."""
 
 _logger = logging.getLogger(__name__)
 
@@ -38,3 +42,8 @@ def log_time(message: str) -> Generator[None]:
     finally:
         end = perf_counter()
         _logger.debug("%s in %.2f ms", message, 1000.0 * (end - start))
+
+
+def natural_sort_key(name: str) -> list[int | str]:
+    """Generate a natural sort key for a string."""
+    return [int(part) if part.isdigit() else part.casefold() for part in re.split(_NATURAL_SORT_KEY_PATTERN, name)]

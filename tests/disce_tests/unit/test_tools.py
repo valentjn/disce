@@ -9,7 +9,7 @@ import logging
 import re
 
 import pytest
-from disce.tools import format_plural, log_time
+from disce.tools import format_plural, log_time, natural_sort_key
 
 
 @pytest.mark.parametrize(
@@ -41,3 +41,8 @@ def test_log_time(caplog: pytest.LogCaptureFixture) -> None:
         pass
     pattern = re.compile(rf"{re.escape(msg)} in \d+\.\d{{2}} ms")
     assert any(record.levelno == logging.DEBUG and pattern.match(record.getMessage()) for record in caplog.records)
+
+
+def test_natural_sort_key() -> None:
+    strings = ["item2", "item10", "item1", "item20", "item11", "item3"]
+    assert sorted(strings, key=natural_sort_key) == ["item1", "item2", "item3", "item10", "item11", "item20"]

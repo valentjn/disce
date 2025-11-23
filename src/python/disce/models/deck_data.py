@@ -7,13 +7,11 @@
 """Data model for deck data."""
 
 import random
-from typing import TYPE_CHECKING, override
+from collections.abc import Sequence
+from typing import override
 
 from disce.models.base import UUID, AbstractStoredModel, UUIDModel, UUIDModelList
 from disce.models.cards import Card, CardSide
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 class DeckData(AbstractStoredModel, UUIDModel):
@@ -57,36 +55,26 @@ class DeckData(AbstractStoredModel, UUIDModel):
 
     def get_card_to_study(self, *, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
         """Get the card and side that should be studied next (based on the answer history)."""
-        candidates: list[tuple[Card, CardSide]] = []
-        minimum_relevant_history_length = None
-        minimum_score = None
-        for card in self.cards:
-            if not card.enabled:
-                continue
-            for side in CardSide:
-                append = False
-                answer_history = card.get_answer_history(side)
-                relevant_answer_history = answer_history[-history_length:]
-                score = sum(relevant_answer_history)
-                if (
-                    minimum_relevant_history_length is None
-                    or len(relevant_answer_history) < minimum_relevant_history_length
-                ):
-                    minimum_relevant_history_length = len(relevant_answer_history)
-                    minimum_score = score
-                    candidates.clear()
-                    append = True
-                elif len(relevant_answer_history) == minimum_relevant_history_length:
-                    if minimum_score is None or score < minimum_score:
-                        minimum_score = score
-                        candidates.clear()
-                        append = True
-                    elif score == minimum_score:
-                        append = True
-                if append:
-                    candidates.append((card, side))
+        candidates = self._get_candidate_cards_to_study(self.cards.root, history_length)
         if not candidates:
             msg = "no enabled cards in deck"
             raise ValueError(msg)
         rng = random.Random(seed)
         return rng.choice(candidates)
+
+    @staticmethod
+    def _get_candidate_cards_to_study(cards: Sequence[Card], history_length: int) -> list[tuple[Card, CardSide]]:
+        """Get the list of candidate cards to study based on their scores."""
+        candidates = []
+        minimum_score = None
+        for card in cards:
+            if not card.enabled:
+                continue
+            for side in CardSide:
+                score = card.get_score(side, history_length)
+                if minimum_score is None or score <= minimum_score:
+                    if minimum_score is not None and score < minimum_score:
+                        candidates.clear()
+                    candidates.append((card, side))
+                    minimum_score = score
+        return candidates

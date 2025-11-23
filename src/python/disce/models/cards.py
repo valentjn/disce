@@ -114,6 +114,15 @@ class Card(UUIDModel):
             counts.missing += max(0, history_length - len(relevant_answer_history))
         return counts
 
+    def get_score(self, side: CardSide, history_length: int) -> tuple[int, int]:
+        """Get the score for a specific side of the card.
+
+        The lower the score, the more the card should be studied.
+        """
+        answer_history = self.get_answer_history(side)
+        relevant_answer_history = answer_history[-history_length:] if history_length > 0 else []
+        return (len(relevant_answer_history), sum(relevant_answer_history))
+
     def record_answer(self, side: CardSide, *, correct: bool) -> None:
         """Record an answer for the specified side of the card."""
         self.get_answer_history(side).append(correct)

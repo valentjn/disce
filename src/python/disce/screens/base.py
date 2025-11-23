@@ -11,7 +11,6 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Self
 
-from disce.models.configs import Configuration
 from disce.pyscript import Element, EventBinding, hide_element, is_null, select_element, show_element
 from disce.tools import ABCEnumMeta
 
@@ -126,8 +125,6 @@ class AbstractSortingKey(Enum, metaclass=ABCEnumMeta):
                 link.classList.remove("active")
 
     @abstractmethod
-    def get_sorting_function(
-        self, configuration: Configuration
-    ) -> Callable[..., tuple[int | str | list[int | str], ...]]:
+    def get_sorting_function(self) -> Callable[..., tuple[int | str | list[int | str], ...]]:
         """Get the sorting function associated with the sorting key."""
         raise NotImplementedError

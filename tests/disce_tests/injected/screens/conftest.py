@@ -33,7 +33,7 @@ def deck_metadata_list() -> list[DeckMetadata]:
 
 @pytest.fixture
 def configuration(deck_metadata_list: list[DeckMetadata]) -> Configuration:
-    return Configuration(deck_metadata=UUIDModelList(deck_metadata_list), history_length=10)
+    return Configuration(deck_metadata=UUIDModelList(deck_metadata_list))
 
 
 @pytest.fixture(autouse=True)

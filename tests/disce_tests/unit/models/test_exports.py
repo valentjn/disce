@@ -44,8 +44,6 @@ class TestExportedDeck:
     @staticmethod
     def test_to_deck_metadata(exported_deck: ExportedDeck) -> None:
         deck_metadata = exported_deck.to_deck_metadata()
-        answer_counts = {
-            1: AnswerCounts(correct=1, wrong=2, missing=1),
-            2: AnswerCounts(correct=2, wrong=2, missing=4),
-        }
-        assert deck_metadata == DeckMetadata(uuid="uuid1", name="name", number_of_cards=2, answer_counts=answer_counts)
+        assert deck_metadata == DeckMetadata(
+            uuid="uuid1", name="name", number_of_cards=2, answer_counts_v2=AnswerCounts(correct=1, wrong=3, missing=16)
+        )

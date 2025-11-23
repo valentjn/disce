@@ -10,7 +10,6 @@ from enum import auto
 from typing import Any, override
 
 import pytest
-from disce.models.configs import Configuration
 from disce.pyscript import Element, Event, EventBinding, append_child, create_element
 from disce.screens.base import AbstractScreen, AbstractSortingKey
 from pyscript import window
@@ -143,9 +142,7 @@ class DummySortingKey(AbstractSortingKey):
         return screen.select_child(selector)
 
     @override
-    def get_sorting_function(
-        self, configuration: Configuration
-    ) -> Callable[[Any], tuple[int | str | list[int | str], ...]]:
+    def get_sorting_function(self) -> Callable[[Any], tuple[int | str | list[int | str], ...]]:
         raise NotImplementedError
 
 
@@ -179,6 +176,6 @@ class TestAbstractSortingKey:
                 assert not link.classList.contains("active")
 
     @staticmethod
-    def test_get_sorting_function(configuration: Configuration) -> None:
+    def test_get_sorting_function() -> None:
         with pytest.raises(NotImplementedError):
-            AbstractSortingKey.get_sorting_function(DummySortingKey.KEY1, configuration)
+            AbstractSortingKey.get_sorting_function(DummySortingKey.KEY1)

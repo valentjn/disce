@@ -19,6 +19,11 @@ class TestCardSide:
 
 class TestAnswerCounts:
     @staticmethod
+    def test_add() -> None:
+        answer_counts = AnswerCounts(correct=2, wrong=1, missing=3) + AnswerCounts(correct=1, wrong=2, missing=4)
+        assert answer_counts == AnswerCounts(correct=3, wrong=3, missing=7)
+
+    @staticmethod
     def test_total() -> None:
         answer_counts = AnswerCounts(correct=3, wrong=2, missing=1)
         assert answer_counts.total == 6
@@ -78,41 +83,27 @@ class TestCard:
 
     @staticmethod
     @pytest.mark.parametrize(
-        ("side", "history_length", "expected"),
+        ("side", "expected"),
         [
-            (CardSide.FRONT, 0, AnswerCounts()),
-            (CardSide.FRONT, 1, AnswerCounts(correct=0, wrong=1, missing=0)),
-            (CardSide.FRONT, 2, AnswerCounts(correct=1, wrong=1, missing=0)),
-            (CardSide.FRONT, 3, AnswerCounts(correct=1, wrong=1, missing=1)),
-            (CardSide.BACK, 0, AnswerCounts()),
-            (CardSide.BACK, 1, AnswerCounts(correct=0, wrong=1, missing=0)),
-            (CardSide.BACK, 2, AnswerCounts(correct=0, wrong=1, missing=1)),
-            (CardSide.BACK, 3, AnswerCounts(correct=0, wrong=1, missing=2)),
-            (None, 0, AnswerCounts()),
-            (None, 1, AnswerCounts(correct=0, wrong=2, missing=0)),
-            (None, 2, AnswerCounts(correct=1, wrong=2, missing=1)),
-            (None, 3, AnswerCounts(correct=1, wrong=2, missing=3)),
+            (CardSide.FRONT, AnswerCounts(correct=0, wrong=2, missing=3)),
+            (CardSide.BACK, AnswerCounts(correct=0, wrong=1, missing=4)),
+            (None, AnswerCounts(correct=0, wrong=3, missing=7)),
         ],
     )
-    def test_get_answer_counts(card: Card, side: CardSide | None, history_length: int, expected: AnswerCounts) -> None:
-        assert card.get_answer_counts(side, history_length) == expected
+    def test_get_answer_counts(card: Card, side: CardSide | None, expected: AnswerCounts) -> None:
+        assert card.get_answer_counts(side) == expected
 
     @staticmethod
-    @pytest.mark.parametrize(
-        ("side", "history_length", "expected"),
-        [
-            (CardSide.FRONT, 0, (0, 0)),
-            (CardSide.FRONT, 1, (1, 0)),
-            (CardSide.FRONT, 2, (2, 1)),
-            (CardSide.FRONT, 3, (2, 1)),
-            (CardSide.BACK, 0, (0, 0)),
-            (CardSide.BACK, 1, (1, 0)),
-            (CardSide.BACK, 2, (1, 0)),
-            (CardSide.BACK, 3, (1, 0)),
-        ],
-    )
-    def test_get_score(card: Card, side: CardSide, history_length: int, expected: tuple[int, int]) -> None:
-        assert card.get_score(side, history_length) == expected
+    def test_get_correct_run() -> None:
+        card = Card(
+            front="front", back="back", front_answer_history=[True, True, False, True], back_answer_history=[True, True]
+        )
+        assert card.get_correct_run(CardSide.FRONT) == 1
+        assert card.get_correct_run(CardSide.BACK) == 2
+        card.front_answer_history = [True, True, True, True, True, True]
+        card.back_answer_history = []
+        assert card.get_correct_run(CardSide.FRONT) == 5
+        assert card.get_correct_run(CardSide.BACK) == 0
 
     @staticmethod
     def test_record_answer() -> None:

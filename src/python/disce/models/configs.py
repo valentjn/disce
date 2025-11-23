@@ -8,7 +8,7 @@
 
 from typing import override
 
-from pydantic import NonNegativeInt
+from pydantic import ConfigDict
 
 from disce.models.base import UUID, AbstractStoredModel, UUIDModelList
 from disce.models.deck_metadata import DeckMetadata
@@ -17,10 +17,10 @@ from disce.models.deck_metadata import DeckMetadata
 class Configuration(AbstractStoredModel):
     """Configuration for the application."""
 
+    model_config = ConfigDict(extra="ignore")
+
     deck_metadata: UUIDModelList[DeckMetadata] = UUIDModelList()
     """List of metadata for all decks."""
-    history_length: NonNegativeInt = 3
-    """Number of recent answers to consider when selecting the next card to learn."""
     typewriter_mode: bool = False
     """Whether to enable typewriter mode (requiring full text input for answers)."""
 

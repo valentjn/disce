@@ -61,27 +61,17 @@ class SortingKey(AbstractSortingKey):
         return screen.select_child(selector)
 
     @override
-    def get_sorting_function(
-        self, configuration: Configuration
-    ) -> Callable[[tuple[int, Card]], tuple[int | str | list[int | str], ...]]:
+    def get_sorting_function(self) -> Callable[[tuple[int, Card]], tuple[int | str | list[int | str], ...]]:
         """Get the sorting function associated with the sorting key."""
-        return {
+        functions: dict[SortingKey, Callable[[tuple[int, Card]], tuple[int | str | list[int | str], ...]]] = {
             SortingKey.ORIGINAL_ORDER: lambda pair: (0, pair[0]),
             SortingKey.FRONT_SIDE: lambda pair: (natural_sort_key(pair[1].front), pair[0]),
             SortingKey.BACK_SIDE: lambda pair: (natural_sort_key(pair[1].back), pair[0]),
-            SortingKey.CORRECT_ANSWERS: lambda pair: (
-                -pair[1].get_answer_counts(None, configuration.history_length).correct,
-                pair[0],
-            ),
-            SortingKey.WRONG_ANSWERS: lambda pair: (
-                -pair[1].get_answer_counts(None, configuration.history_length).wrong,
-                pair[0],
-            ),
-            SortingKey.MISSING_ANSWERS: lambda pair: (
-                -pair[1].get_answer_counts(None, configuration.history_length).missing,
-                pair[0],
-            ),
-        }[self]
+            SortingKey.CORRECT_ANSWERS: lambda pair: (-pair[1].get_answer_counts(None).correct, pair[0]),
+            SortingKey.WRONG_ANSWERS: lambda pair: (-pair[1].get_answer_counts(None).wrong, pair[0]),
+            SortingKey.MISSING_ANSWERS: lambda pair: (-pair[1].get_answer_counts(None).missing, pair[0]),
+        }
+        return functions[self]
 
 
 class EditDeckScreen(AbstractScreen):
@@ -129,9 +119,7 @@ class EditDeckScreen(AbstractScreen):
         indexed_cards = list(
             enumerate((deck_data if deck_data else self.load_deck_data(uuid=deck_metadata.uuid)).cards.model_copy())
         )
-        sorting_function = self._sorting_key.get_sorting_function(
-            Configuration.load_from_storage_or_create(self._storage)
-        )
+        sorting_function = self._sorting_key.get_sorting_function()
         indexed_cards.sort(key=sorting_function, reverse=self._sorting_reverse)
         indexed_cards.append((len(indexed_cards), Card()))
         for idx, card in indexed_cards:
@@ -140,7 +128,6 @@ class EditDeckScreen(AbstractScreen):
 
     def create_card_div(self, card: Card, index: int) -> Element:
         """Create a div representing a card for editing."""
-        configuration = Configuration.load_from_storage_or_create(self._storage)
         card_div = create_element(
             "div",
             class_="disce-card row gx-3 align-items-center mb-2",
@@ -157,28 +144,28 @@ class EditDeckScreen(AbstractScreen):
         )
         self.register_event_binding(EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True)
         append_child(card_div, "div", create_element("div", selected_checkbox, class_="form-check"), class_="col-auto")
-        answer_counts = card.get_answer_counts(CardSide.FRONT, configuration.history_length)
+        answer_counts = card.get_answer_counts(CardSide.FRONT)
         front_textbox = create_element(
             "input",
             type="text",
             class_="disce-front-textbox form-control",
             value=card.front,
             placeholder="Front",
-            title=f"{answer_counts} in last {format_plural(configuration.history_length, 'review')}",
+            title=str(answer_counts),
             data_card_uuid=card.uuid,
             data_card_index=str(index),
         )
         front_textbox.style.background = answer_counts.gradient
         self.register_event_binding(EventBinding(front_textbox, "input", self.card_text_changed), dynamic=True)
         append_child(card_div, "div", front_textbox, class_="col-sm")
-        answer_counts = card.get_answer_counts(CardSide.BACK, configuration.history_length)
+        answer_counts = card.get_answer_counts(CardSide.BACK)
         back_textbox = create_element(
             "input",
             type="text",
             class_="disce-back-textbox form-control",
             value=card.back,
             placeholder="Back",
-            title=f"{answer_counts} in last {format_plural(configuration.history_length, 'review')}",
+            title=str(answer_counts),
             data_card_uuid=card.uuid,
             data_card_index=str(index),
         )

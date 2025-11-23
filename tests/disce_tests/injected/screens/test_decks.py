@@ -58,30 +58,28 @@ class TestSortingKey:
             (SortingKey.MISSING_ANSWERS, [0, 1, 2]),
         ],
     )
-    def test_get_sorting_function(
-        configuration: Configuration, sorting_key: SortingKey, expected_order: list[int]
-    ) -> None:
+    def test_get_sorting_function(sorting_key: SortingKey, expected_order: list[int]) -> None:
         deck_metadata_list = [
             DeckMetadata(
                 uuid="deck10",
                 name="Deck 10",
                 number_of_cards=10,
-                answer_counts={configuration.history_length: AnswerCounts(correct=0, wrong=1, missing=2)},
+                answer_counts_v2=AnswerCounts(correct=0, wrong=1, missing=2),
             ),
             DeckMetadata(
                 uuid="deck2",
                 name="Deck 2",
                 number_of_cards=5,
-                answer_counts={configuration.history_length: AnswerCounts(correct=0, wrong=2, missing=1)},
+                answer_counts_v2=AnswerCounts(correct=0, wrong=2, missing=1),
             ),
             DeckMetadata(
                 uuid="deck1",
                 name="Deck 1",
                 number_of_cards=15,
-                answer_counts={configuration.history_length: AnswerCounts(correct=1, wrong=0, missing=0)},
+                answer_counts_v2=AnswerCounts(correct=1, wrong=0, missing=0),
             ),
         ]
-        sorted_decks = sorted(deck_metadata_list, key=sorting_key.get_sorting_function(configuration))
+        sorted_decks = sorted(deck_metadata_list, key=sorting_key.get_sorting_function())
         assert sorted_decks == [deck_metadata_list[idx] for idx in expected_order]
 
 
@@ -95,15 +93,15 @@ class TestDecksScreen:
         TestDecksScreen._assert_rendered_decks(screen, ["deck1_name", "deck2_name"])
         deck_name_labels = screen.select_all_children(".disce-deck-name-label")
         assert len(deck_name_labels) == 2
-        assert deck_name_labels[0].title == "2 cards (15% correct, 35% wrong, 50% missing answers in last 10 reviews)"
+        assert deck_name_labels[0].title == "2 cards (30% correct, 70% wrong, 0% missing answers)"
         assert deck_name_labels[0].style.background == (
-            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 15.000%, "
-            "rgba(var(--bs-danger-rgb), 0.4) 15.000% 50.000%, rgba(var(--bs-secondary-rgb), 0.4) 50.000% 100%)"
+            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 30.000%, "
+            "rgba(var(--bs-danger-rgb), 0.4) 30.000% 100.000%, rgba(var(--bs-secondary-rgb), 0.4) 100.000% 100%)"
         )
-        assert deck_name_labels[1].title == "1 card (45% correct, 5% wrong, 50% missing answers in last 10 reviews)"
+        assert deck_name_labels[1].title == "1 card (90% correct, 10% wrong, 0% missing answers)"
         assert deck_name_labels[1].style.background == (
-            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 45.000%, "
-            "rgba(var(--bs-danger-rgb), 0.4) 45.000% 50.000%, rgba(var(--bs-secondary-rgb), 0.4) 50.000% 100%)"
+            "linear-gradient(to right, rgba(var(--bs-success-rgb), 0.4) 0% 90.000%, "
+            "rgba(var(--bs-danger-rgb), 0.4) 90.000% 100.000%, rgba(var(--bs-secondary-rgb), 0.4) 100.000% 100%)"
         )
         element = screen.select_child(".disce-decks").children[0]
         assert_event_bindings_registered(
@@ -460,16 +458,13 @@ class TestDecksScreen:
         with patch("disce.screens.decks.show_modal") as show_modal_mock:
             screen.open_settings_modal()
         assert show_modal_mock.call_args_list == [call(screen.select_child(".disce-settings-modal"))]
-        assert screen.select_child(".disce-history-length-input").value == str(configuration.history_length)
         assert screen.select_child(".disce-typewriter-mode-checkbox").checked == configuration.typewriter_mode
 
     @staticmethod
     def test_save_settings(storage: AbstractStorage, screen: DecksScreen) -> None:
-        screen.select_child(".disce-history-length-input").value = "5"
         screen.select_child(".disce-typewriter-mode-checkbox").checked = True
         screen.save_settings()
         configuration = Configuration.load_from_storage(storage)
-        assert configuration.history_length == 5
         assert configuration.typewriter_mode
 
     @staticmethod

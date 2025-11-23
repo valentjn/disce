@@ -48,16 +48,7 @@ class TestDeckData:
         assert merge_decks[1].cards.root == old_cards1
 
     @staticmethod
-    def test_get_card_to_study_prefer_short_answer_history() -> None:
-        deck = DeckData(
-            cards=UUIDModelList([Card(uuid="uuid0", front_answer_history=[True], back_answer_history=[False, True])])
-        )
-        card, side = deck.get_card_to_study(history_length=2)
-        assert card.uuid == "uuid0"
-        assert side is CardSide.FRONT
-
-    @staticmethod
-    def test_get_card_to_study_prefer_low_score() -> None:
+    def test_get_card_to_study_prefer_short_run() -> None:
         deck = DeckData(
             cards=UUIDModelList(
                 [
@@ -66,7 +57,7 @@ class TestDeckData:
                 ]
             )
         )
-        _, side = deck.get_card_to_study(history_length=1)
+        _, side = deck.get_card_to_study()
         assert side is CardSide.BACK
 
     @staticmethod
@@ -79,7 +70,7 @@ class TestDeckData:
                 ]
             )
         )
-        card, _ = deck.get_card_to_study(history_length=1)
+        card, _ = deck.get_card_to_study()
         assert card.uuid == "uuid1"
 
     @staticmethod
@@ -92,7 +83,7 @@ class TestDeckData:
                 ]
             )
         )
-        card, _ = deck.get_card_to_study(history_length=1, exclude=[deck.cards["uuid0"]])
+        card, _ = deck.get_card_to_study(exclude=[deck.cards["uuid0"]])
         assert card.uuid == "uuid1"
 
     @staticmethod
@@ -105,11 +96,11 @@ class TestDeckData:
                 ]
             )
         )
-        card, _ = deck.get_card_to_study(history_length=1, exclude=deck.cards.root)
+        card, _ = deck.get_card_to_study(exclude=deck.cards.root)
         assert card.uuid == "uuid0"
 
     @staticmethod
     def test_get_card_to_study_no_enabled_cards() -> None:
         deck = DeckData(cards=UUIDModelList([Card(enabled=False)]))
         with pytest.raises(ValueError, match=r"^no enabled cards in deck$"):
-            deck.get_card_to_study(history_length=1)
+            deck.get_card_to_study()

@@ -67,28 +67,27 @@ class SortingKey(AbstractSortingKey):
         return screen.select_child(selector)
 
     @override
-    def get_sorting_function(
-        self, configuration: Configuration
-    ) -> Callable[[DeckMetadata], tuple[int | str | list[int | str], ...]]:
-        return {
+    def get_sorting_function(self) -> Callable[[DeckMetadata], tuple[int | str | list[int | str], ...]]:
+        functions: dict[SortingKey, Callable[[DeckMetadata], tuple[int | str | list[int | str], ...]]] = {
             SortingKey.NAME: lambda deck_metadata: (0, natural_sort_key(deck_metadata.name)),
             SortingKey.CARD_COUNT: lambda deck_metadata: (
                 -deck_metadata.number_of_cards,
                 natural_sort_key(deck_metadata.name),
             ),
             SortingKey.CORRECT_ANSWERS: lambda deck_metadata: (
-                -deck_metadata.get_answer_counts(configuration.history_length).correct,
+                -deck_metadata.answer_counts_v2.correct,
                 natural_sort_key(deck_metadata.name),
             ),
             SortingKey.WRONG_ANSWERS: lambda deck_metadata: (
-                -deck_metadata.get_answer_counts(configuration.history_length).wrong,
+                -deck_metadata.answer_counts_v2.wrong,
                 natural_sort_key(deck_metadata.name),
             ),
             SortingKey.MISSING_ANSWERS: lambda deck_metadata: (
-                -deck_metadata.get_answer_counts(configuration.history_length).missing,
+                -deck_metadata.answer_counts_v2.missing,
                 natural_sort_key(deck_metadata.name),
             ),
-        }[self]
+        }
+        return functions[self]
 
 
 class DecksScreen(AbstractScreen):
@@ -137,9 +136,7 @@ class DecksScreen(AbstractScreen):
         decks_div.innerHTML = ""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         for deck_metadata in sorted(
-            configuration.deck_metadata,
-            key=self._sorting_key.get_sorting_function(configuration),
-            reverse=self._sorting_reverse,
+            configuration.deck_metadata, key=self._sorting_key.get_sorting_function(), reverse=self._sorting_reverse
         ):
             deck_div = create_element(
                 "div", class_="disce-deck d-flex align-items-center mb-2", data_deck_uuid=deck_metadata.uuid
@@ -155,19 +152,15 @@ class DecksScreen(AbstractScreen):
             self.register_event_binding(
                 EventBinding(selected_checkbox, "change", self.update_bulk_buttons), dynamic=True
             )
-            answer_counts = deck_metadata.get_answer_counts(configuration.history_length)
             deck_name_label = append_child(
                 deck_div,
                 "label",
                 text=deck_metadata.name,
                 for_=f"disce-selected-checkbox-{deck_metadata.uuid}",
                 class_="disce-deck-name-label me-2",
-                title=(
-                    f"{format_plural(deck_metadata.number_of_cards, 'card')} ({answer_counts} in last "
-                    f"{format_plural(configuration.history_length, 'review')})"
-                ),
+                title=f"{format_plural(deck_metadata.number_of_cards, 'card')} ({deck_metadata.answer_counts_v2})",
             )
-            deck_name_label.style.background = answer_counts.gradient
+            deck_name_label.style.background = deck_metadata.answer_counts_v2.gradient
             study_deck_button = append_child(
                 deck_div,
                 "button",
@@ -399,14 +392,12 @@ class DecksScreen(AbstractScreen):
     def open_settings_modal(self, _event: Event | None = None) -> None:
         """Open the settings modal and populate fields from configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
-        self.select_child(".disce-history-length-input").value = str(configuration.history_length)
         self.select_child(".disce-typewriter-mode-checkbox").checked = configuration.typewriter_mode
         show_modal(self.select_child(".disce-settings-modal"))
 
     def save_settings(self, _event: Event | None = None) -> None:
         """Save settings from the modal dialog to configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
-        configuration.history_length = int(self.select_child(".disce-history-length-input").value)
         configuration.typewriter_mode = self.select_child(".disce-typewriter-mode-checkbox").checked
         configuration.save_to_storage(self._storage)
         self.render()

@@ -43,9 +43,8 @@ class StudyScreen(AbstractScreen):
 
     def set_current_card(self) -> None:
         """Set the current card to study."""
-        configuration = Configuration.load_from_storage_or_create(self._storage)
         self._current_card, self._current_card_side = self._merged_deck_data.get_card_to_study(
-            exclude=[card for card, _ in self._card_history], history_length=configuration.history_length
+            exclude=[card for card, _ in self._card_history]
         )
         self._card_history.append((self._current_card, self._current_card_side))
         self._card_history = self._card_history[-self._CARD_HISTORY_LIMIT :]

@@ -7,7 +7,7 @@
 """Data models for flashcards."""
 
 from enum import StrEnum, auto
-from typing import override
+from typing import ClassVar, override
 
 from pydantic import BaseModel
 
@@ -37,6 +37,12 @@ class AnswerCounts(BaseModel):
     """Number of wrong answers."""
     missing: int = 0
     """Number of missing answers."""
+
+    def __add__(self, other: "AnswerCounts") -> "AnswerCounts":
+        """Add two instances."""
+        return AnswerCounts(
+            correct=self.correct + other.correct, wrong=self.wrong + other.wrong, missing=self.missing + other.missing
+        )
 
     @property
     def total(self) -> int:
@@ -90,6 +96,9 @@ class Card(UUIDModel):
     back_answer_history: list[bool] = []  # noqa: RUF012
     """History of answers when asked for back (correct/wrong, most recent last, reset when card is edited)."""
 
+    RELEVANT_HISTORY_LENGTH: ClassVar[int] = 5
+    """Number of most recent answers to consider for scoring."""
+
     def get_side(self, side: CardSide) -> str:
         """Get the text on the specified side of the card."""
         return self.front if side is CardSide.FRONT else self.back
@@ -98,30 +107,27 @@ class Card(UUIDModel):
         """Get the answer history for the specified side of the card."""
         return self.front_answer_history if side is CardSide.FRONT else self.back_answer_history
 
-    def get_answer_counts(self, side: CardSide | None, history_length: int) -> AnswerCounts:
+    def get_answer_counts(self, side: CardSide | None) -> AnswerCounts:
         """Get the answer counts for the specified side of the card, or for both sides if side is None."""
         counts = AnswerCounts()
-        if history_length == 0:
-            return counts
         for current_side in [side] if side else list(CardSide):
-            answer_history = self.get_answer_history(current_side)
-            relevant_answer_history = answer_history[-history_length:]
-            for answer in relevant_answer_history:
-                if answer:
-                    counts.correct += 1
-                else:
-                    counts.wrong += 1
-            counts.missing += max(0, history_length - len(relevant_answer_history))
+            correct_run = self.get_correct_run(current_side)
+            number_of_answers = min(len(self.get_answer_history(current_side)), self.RELEVANT_HISTORY_LENGTH)
+            counts.correct += correct_run
+            counts.wrong += number_of_answers - correct_run
+            counts.missing += self.RELEVANT_HISTORY_LENGTH - number_of_answers
         return counts
 
-    def get_score(self, side: CardSide, history_length: int) -> tuple[int, int]:
-        """Get the score for a specific side of the card.
-
-        The lower the score, the more the card should be studied.
-        """
+    def get_correct_run(self, side: CardSide) -> int:
+        """Get the number of consecutive correct answers for the specified side."""
         answer_history = self.get_answer_history(side)
-        relevant_answer_history = answer_history[-history_length:] if history_length > 0 else []
-        return (len(relevant_answer_history), sum(relevant_answer_history))
+        correct_run = 0
+        for answer in reversed(answer_history[-self.RELEVANT_HISTORY_LENGTH :]):
+            if answer:
+                correct_run += 1
+            else:
+                break
+        return correct_run
 
     def record_answer(self, side: CardSide, *, correct: bool) -> None:
         """Record an answer for the specified side of the card."""

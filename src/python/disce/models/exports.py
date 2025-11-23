@@ -8,7 +8,7 @@
 
 from pydantic import BaseModel
 
-from disce.models.cards import AnswerCounts, CardSide
+from disce.models.cards import AnswerCounts
 from disce.models.deck_data import DeckData
 from disce.models.deck_metadata import BaseDeckMetadata, DeckMetadata
 
@@ -27,24 +27,9 @@ class ExportedDeck(DeckData, BaseDeckMetadata):
 
     def to_deck_metadata(self) -> "DeckMetadata":
         """Create deck metadata from the exported deck."""
-        answer_counts: dict[int, AnswerCounts] = {}
-        if self.cards:
-            maximum_history_length = max(
-                max(len(card.front_answer_history), len(card.back_answer_history)) for card in self.cards
-            )
-            current_counts = AnswerCounts()
-            for history_length in range(1, maximum_history_length + 1):
-                for card in self.cards:
-                    for side in CardSide:
-                        if len(answer_history := card.get_answer_history(side)) < history_length:
-                            current_counts.missing += 1
-                        elif answer_history[-history_length]:
-                            current_counts.correct += 1
-                        else:
-                            current_counts.wrong += 1
-                answer_counts[history_length] = current_counts.model_copy()
+        answer_counts = sum((card.get_answer_counts(None) for card in self.cards), AnswerCounts())
         return DeckMetadata(
-            uuid=self.uuid, name=self.name, number_of_cards=len(self.cards), answer_counts=answer_counts
+            uuid=self.uuid, name=self.name, number_of_cards=len(self.cards), answer_counts_v2=answer_counts
         )
 
 

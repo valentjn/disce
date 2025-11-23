@@ -60,9 +60,7 @@ class TestSortingKey:
             (SortingKey.MISSING_ANSWERS, [0, 1, 2]),
         ],
     )
-    def test_get_sorting_function(
-        configuration: Configuration, sorting_key: SortingKey, expected_order: list[int]
-    ) -> None:
+    def test_get_sorting_function(sorting_key: SortingKey, expected_order: list[int]) -> None:
         indexed_cards = [
             (
                 0,
@@ -95,7 +93,7 @@ class TestSortingKey:
                 ),
             ),
         ]
-        sorted_cards = sorted(indexed_cards, key=sorting_key.get_sorting_function(configuration))
+        sorted_cards = sorted(indexed_cards, key=sorting_key.get_sorting_function())
         assert sorted_cards == [indexed_cards[idx] for idx in expected_order]
 
 
@@ -113,22 +111,14 @@ class TestEditDeckScreen:
 
     @staticmethod
     def test_render(
-        configuration: Configuration,
-        screen: EditDeckScreen,
-        deck_data_list: list[DeckData],
-        deck_metadata_list: list[DeckMetadata],
-        empty_card: Card,
+        screen: EditDeckScreen, deck_data_list: list[DeckData], deck_metadata_list: list[DeckMetadata], empty_card: Card
     ) -> None:
         assert screen.select_child(".disce-deck-name-textbox").value == deck_metadata_list[0].name
         cards_element = screen.select_child(".disce-cards")
         assert len(cards_element.children) == 3
-        TestEditDeckScreen._assert_card_div(
-            configuration, cards_element.children[0], deck_data_list[0].cards["deck1_card1"], 0
-        )
-        TestEditDeckScreen._assert_card_div(
-            configuration, cards_element.children[1], deck_data_list[0].cards["deck1_card2"], 1
-        )
-        TestEditDeckScreen._assert_card_div(configuration, cards_element.children[2], empty_card, 2)
+        TestEditDeckScreen._assert_card_div(cards_element.children[0], deck_data_list[0].cards["deck1_card1"], 0)
+        TestEditDeckScreen._assert_card_div(cards_element.children[1], deck_data_list[0].cards["deck1_card2"], 1)
+        TestEditDeckScreen._assert_card_div(cards_element.children[2], empty_card, 2)
         element = cards_element.children[0]
         assert_event_bindings_registered(
             [
@@ -140,7 +130,7 @@ class TestEditDeckScreen:
         )
 
     @staticmethod
-    def test_create_card_div(configuration: Configuration, screen: EditDeckScreen) -> None:
+    def test_create_card_div(screen: EditDeckScreen) -> None:
         card = Card(
             uuid="uuid",
             front="front",
@@ -150,24 +140,22 @@ class TestEditDeckScreen:
             back_answer_history=[False],
         )
         card_div = screen.create_card_div(card, 42)
-        TestEditDeckScreen._assert_card_div(configuration, card_div, card, 42)
+        TestEditDeckScreen._assert_card_div(card_div, card, 42)
 
     @staticmethod
-    def _assert_card_div(
-        configuration: Configuration, card_div: Element, expected_card: Card, expected_index: int
-    ) -> None:
+    def _assert_card_div(card_div: Element, expected_card: Card, expected_index: int) -> None:
         assert card_div.getAttribute("data-card-uuid") == expected_card.uuid
         assert card_div.getAttribute("data-card-index") == str(expected_index)
         TestEditDeckScreen._get_card_div_child(card_div, ".disce-selected-checkbox", expected_card.uuid)
         front_textbox = TestEditDeckScreen._get_card_div_child(card_div, ".disce-front-textbox", expected_card.uuid)
         assert front_textbox.value == expected_card.front
-        answer_counts = expected_card.get_answer_counts(CardSide.FRONT, history_length=configuration.history_length)
-        assert front_textbox.title == f"{answer_counts} in last {configuration.history_length} reviews"
+        answer_counts = expected_card.get_answer_counts(CardSide.FRONT)
+        assert front_textbox.title == str(answer_counts)
         assert front_textbox.style.background == answer_counts.gradient
         back_textbox = TestEditDeckScreen._get_card_div_child(card_div, ".disce-back-textbox", expected_card.uuid)
         assert back_textbox.value == expected_card.back
-        answer_counts = expected_card.get_answer_counts(CardSide.BACK, history_length=configuration.history_length)
-        assert back_textbox.title == f"{answer_counts} in last {configuration.history_length} reviews"
+        answer_counts = expected_card.get_answer_counts(CardSide.BACK)
+        assert back_textbox.title == str(answer_counts)
         assert back_textbox.style.background == answer_counts.gradient
         assert (
             TestEditDeckScreen._get_card_div_child(card_div, ".disce-enabled-checkbox", expected_card.uuid).checked
@@ -208,16 +196,14 @@ class TestEditDeckScreen:
         assert show_toast_mock.call_args_list == [call(screen.select_child(".disce-deck-saved-toast"))]
         configuration = Configuration.load_from_storage(storage)
         assert len(configuration.deck_metadata) == 2
+        answer_counts = deck_metadata_list[0].answer_counts_v2
         assert configuration.deck_metadata["deck1"] == deck_metadata_list[0].model_copy(
             update={
                 "name": "deck1_name_modified",
                 "number_of_cards": 3,
-                "answer_counts": {
-                    history_length: answer_counts.model_copy(
-                        update={"missing": answer_counts.missing + history_length * len(CardSide)}
-                    )
-                    for history_length, answer_counts in deck_metadata_list[0].answer_counts.items()
-                },
+                "answer_counts_v2": answer_counts.model_copy(
+                    update={"missing": answer_counts.missing + 5 * len(CardSide)}
+                ),
             }
         )
         deck_data = DeckData.load_from_storage(storage, "deck1")
@@ -251,8 +237,7 @@ class TestEditDeckScreen:
             (None, [1, 0]),
         ],
     )
-    def test_sort_cards(  # noqa: PLR0913
-        configuration: Configuration,
+    def test_sort_cards(
         screen: EditDeckScreen,
         deck_data_list: list[DeckData],
         empty_card: Card,
@@ -270,10 +255,8 @@ class TestEditDeckScreen:
         assert len(cards_element.children) == 3
         card_uuids = ["deck1_card1", "deck1_card2"]
         for card_idx, card_div in zip(expected_order, cards_element.children, strict=False):
-            TestEditDeckScreen._assert_card_div(
-                configuration, card_div, deck_data_list[0].cards[card_uuids[card_idx]], card_idx
-            )
-        TestEditDeckScreen._assert_card_div(configuration, cards_element.children[2], empty_card, 2)
+            TestEditDeckScreen._assert_card_div(card_div, deck_data_list[0].cards[card_uuids[card_idx]], card_idx)
+        TestEditDeckScreen._assert_card_div(cards_element.children[2], empty_card, 2)
 
     @staticmethod
     def test_select_all_decks(screen: EditDeckScreen) -> None:

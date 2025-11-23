@@ -53,9 +53,15 @@ class DeckData(AbstractStoredModel, UUIDModel):
                 existing_card = card
             existing_cards[(card.front, card.back)] = existing_card
 
-    def get_card_to_study(self, *, history_length: int, seed: int | None = None) -> tuple[Card, CardSide]:
+    def get_card_to_study(
+        self, *, history_length: int, exclude: Sequence[Card] = (), seed: int | None = None
+    ) -> tuple[Card, CardSide]:
         """Get the card and side that should be studied next (based on the answer history)."""
-        candidates = self._get_candidate_cards_to_study(self.cards.root, history_length)
+        excluded_card_uuids = {card.uuid for card in exclude}
+        included_cards = [card for card in self.cards if card.uuid not in excluded_card_uuids]
+        candidates = self._get_candidate_cards_to_study(included_cards, history_length)
+        if not candidates and exclude:
+            candidates = self._get_candidate_cards_to_study(self.cards.root, history_length)
         if not candidates:
             msg = "no enabled cards in deck"
             raise ValueError(msg)

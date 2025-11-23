@@ -73,6 +73,11 @@ class TestStudyScreen:
 
     @staticmethod
     @pytest.fixture
+    def expected_next_question_text() -> str:
+        return "deck1_card2_front"
+
+    @staticmethod
+    @pytest.fixture
     def expected_answer_text(with_furigana: WithFurigana, furigana_string: str) -> str:
         return furigana_string if with_furigana is WithFurigana.ANSWER else "deck1_card1_back"
 
@@ -108,10 +113,10 @@ class TestStudyScreen:
         assert screen.element.id == "disce-study-screen"
 
     @staticmethod
-    def test_get_card_to_study(screen: StudyScreen, expected_question_text: str) -> None:
-        card, card_side = screen.get_card_to_study()
-        assert card.front == expected_question_text
-        assert card_side is CardSide.FRONT
+    def test_set_current_card(screen: StudyScreen, expected_next_question_text: str) -> None:
+        screen.set_current_card()
+        assert screen._current_card.front == expected_next_question_text  # noqa: SLF001
+        assert screen._current_card_side is CardSide.FRONT  # noqa: SLF001
 
     @staticmethod
     @pytest.mark.parametrize("typewriter_mode", [False, True])
@@ -152,12 +157,14 @@ class TestStudyScreen:
         deck_data = DeckData.load_from_storage(storage, "deck1")
         card = deck_data.cards["deck1_card1"]
         assert card.front_answer_history == [False, False, False, False, False, is_correct]
-        TestStudyScreen._assert_render(screen, str(TokenizedString.from_string(card.back).strip_furigana()))
+        TestStudyScreen._assert_render(
+            screen, str(TokenizedString.from_string(deck_data.cards["deck1_card2"].front).strip_furigana())
+        )
 
     @staticmethod
-    def test_skip_card(screen: StudyScreen, expected_question_stripped: str) -> None:
+    def test_skip_card(screen: StudyScreen, expected_next_question_text: str) -> None:
         screen.skip_card()
-        TestStudyScreen._assert_render(screen, expected_question_stripped)
+        TestStudyScreen._assert_render(screen, expected_next_question_text)
 
     @staticmethod
     def test_show_answer(screen: StudyScreen, expected_answer_html: str) -> None:

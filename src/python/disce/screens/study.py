@@ -7,12 +7,11 @@
 """Screen for studying a deck."""
 
 from collections.abc import Sequence
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import disce.screens.decks as decks_screen
 from disce.diffs import Diff
 from disce.furigana import TokenizedString
-from disce.models.cards import Card, CardSide
 from disce.models.configs import Configuration
 from disce.models.deck_data import DeckData
 from disce.models.exports import ExportedDeck
@@ -20,9 +19,15 @@ from disce.pyscript import Event, EventBinding, hide_element, show_element
 from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
 
+if TYPE_CHECKING:
+    from disce.models.cards import Card, CardSide
+
 
 class StudyScreen(AbstractScreen):
     """Screen for studying a deck."""
+
+    _CARD_HISTORY_LIMIT = 5
+    """Maximum number of previously studied cards to remember."""
 
     def __init__(self, deck_uuids: Sequence[str], storage: AbstractStorage) -> None:
         """Initialize the screen."""
@@ -33,12 +38,17 @@ class StudyScreen(AbstractScreen):
         self._card_uuid_to_deck_uuid = {
             card.uuid: deck_data.uuid for deck_data in deck_data_list for card in deck_data.cards
         }
-        self._current_card, self._current_card_side = self.get_card_to_study()
+        self._card_history: list[tuple[Card, CardSide]] = []
+        self.set_current_card()
 
-    def get_card_to_study(self) -> tuple[Card, CardSide]:
-        """Get the card and side that should be studied next (based on the answer history)."""
+    def set_current_card(self) -> None:
+        """Set the current card to study."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
-        return self._merged_deck_data.get_card_to_study(history_length=configuration.history_length)
+        self._current_card, self._current_card_side = self._merged_deck_data.get_card_to_study(
+            exclude=[card for card, _ in self._card_history], history_length=configuration.history_length
+        )
+        self._card_history.append((self._current_card, self._current_card_side))
+        self._card_history = self._card_history[-self._CARD_HISTORY_LIMIT :]
 
     @override
     def get_static_event_bindings(self) -> list[EventBinding]:
@@ -86,7 +96,7 @@ class StudyScreen(AbstractScreen):
 
     def skip_card(self, _event: Event | None = None) -> None:
         """Skip the current card and go to the next one."""
-        self._current_card, self._current_card_side = self.get_card_to_study()
+        self.set_current_card()
         self.render()
 
     def show_answer(self, _event: Event | None = None) -> None:

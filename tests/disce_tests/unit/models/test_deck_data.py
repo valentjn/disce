@@ -83,6 +83,32 @@ class TestDeckData:
         assert card.uuid == "uuid1"
 
     @staticmethod
+    def test_get_card_to_study_skip_excluded() -> None:
+        deck = DeckData(
+            cards=UUIDModelList(
+                [
+                    Card(uuid="uuid0", front_answer_history=[False], back_answer_history=[False]),
+                    Card(uuid="uuid1", front_answer_history=[True], back_answer_history=[True]),
+                ]
+            )
+        )
+        card, _ = deck.get_card_to_study(history_length=1, exclude=[deck.cards["uuid0"]])
+        assert card.uuid == "uuid1"
+
+    @staticmethod
+    def test_get_card_to_study_all_excluded() -> None:
+        deck = DeckData(
+            cards=UUIDModelList(
+                [
+                    Card(uuid="uuid0", front_answer_history=[False], back_answer_history=[False]),
+                    Card(uuid="uuid1", front_answer_history=[True], back_answer_history=[True]),
+                ]
+            )
+        )
+        card, _ = deck.get_card_to_study(history_length=1, exclude=deck.cards.root)
+        assert card.uuid == "uuid0"
+
+    @staticmethod
     def test_get_card_to_study_no_enabled_cards() -> None:
         deck = DeckData(cards=UUIDModelList([Card(enabled=False)]))
         with pytest.raises(ValueError, match=r"^no enabled cards in deck$"):

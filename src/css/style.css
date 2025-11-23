@@ -56,6 +56,14 @@ body {
 }
 
 /* study screen */
+#disce-study-screen .disce-correct-answer-btn,
+#disce-study-screen .disce-wrong-answer-btn,
+#disce-study-screen .disce-skip-card-btn,
+#disce-study-screen .disce-show-answer-btn {
+    padding: 9px 18px;
+    font-size: 1.5rem;
+}
+
 #disce-study-screen .disce-study-card,
 #disce-study-screen .disce-answer-textbox,
 #disce-study-screen .disce-submit-answer-btn {

@@ -31,3 +31,4 @@ packages = ["pydantic"]
 "disce/storage/base.py" = "./disce/storage/"
 "disce/storage/local.py" = "./disce/storage/"
 "disce/tools.py" = "./disce/"
+"disce/tts.py" = "./disce/"

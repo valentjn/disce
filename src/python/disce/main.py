@@ -20,9 +20,12 @@ def main() -> None:  # pragma: no cover
     from disce.screens.decks import DecksScreen  # noqa: PLC0415
     from disce.screens.load import LoadScreen  # noqa: PLC0415
     from disce.storage.local import LocalStorage  # noqa: PLC0415
+    from disce.tts import get_available_voices  # noqa: PLC0415
 
     set_up_logging()
     _logger.info("Disce started, source hash: %s", compute_source_hash()[:8])
+    # make browser initialize TTS, might return an empty list without this
+    get_available_voices()
     set_theme()
     DecksScreen(LocalStorage()).show()
     LoadScreen().hide()

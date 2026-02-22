@@ -19,6 +19,7 @@ from disce.screens.decks import DecksScreen, SortingKey
 from disce.screens.edit_deck import EditDeckScreen
 from disce.screens.study import StudyScreen
 from disce.storage.base import AbstractStorage
+from disce.tts import Voice
 
 from disce_tests.injected.screens.tools import assert_decks, assert_event_bindings_registered, create_decks
 from disce_tests.injected.tools import assert_hidden, assert_visible
@@ -453,18 +454,41 @@ class TestDecksScreen:
         assert_decks(deck_data_list, deck_metadata_list)
 
     @staticmethod
-    def test_open_settings_modal(configuration: Configuration, screen: DecksScreen) -> None:
-        with patch("disce.screens.decks.show_modal") as show_modal_mock:
+    @pytest.mark.parametrize("tts_voice_available", [True, False])
+    def test_open_settings_modal(
+        configuration: Configuration, screen: DecksScreen, *, tts_voice_available: bool
+    ) -> None:
+        assert configuration.front_side_tts_voice
+        available_voices = (
+            [Voice(name=configuration.front_side_tts_voice, language="en-US")] if tts_voice_available else []
+        )
+        with (
+            patch("disce.screens.decks.show_modal") as show_modal_mock,
+            patch("disce.screens.decks.get_available_voices", return_value=available_voices),
+        ):
             screen.open_settings_modal()
         assert show_modal_mock.call_args_list == [call(screen.select_child(".disce-settings-modal"))]
         assert screen.select_child(".disce-typewriter-mode-checkbox").checked == configuration.typewriter_mode
+        expected_tts_voice_name = configuration.front_side_tts_voice if tts_voice_available else ""
+        assert screen.select_child(".disce-front-side-tts-voice-select").value == expected_tts_voice_name
+        assert screen.select_child(".disce-tts-pitch-input").value == str(configuration.tts_pitch)
+        assert screen.select_child(".disce-tts-rate-input").value == str(configuration.tts_rate)
+        assert screen.select_child(".disce-tts-volume-input").value == str(configuration.tts_volume)
 
     @staticmethod
     def test_save_settings(storage: AbstractStorage, screen: DecksScreen) -> None:
         screen.select_child(".disce-typewriter-mode-checkbox").checked = True
+        screen.select_child(".disce-front-side-tts-voice-select").value = ""
+        screen.select_child(".disce-tts-pitch-input").value = "0.5"
+        screen.select_child(".disce-tts-rate-input").value = "1.5"
+        screen.select_child(".disce-tts-volume-input").value = "0.5"
         screen.save_settings()
         configuration = Configuration.load_from_storage(storage)
         assert configuration.typewriter_mode
+        assert configuration.front_side_tts_voice is None
+        assert configuration.tts_pitch == 0.5
+        assert configuration.tts_rate == 1.5
+        assert configuration.tts_volume == 0.5
 
     @staticmethod
     def test_get_deck_uuids(screen: DecksScreen) -> None:

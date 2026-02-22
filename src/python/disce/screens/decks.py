@@ -36,6 +36,7 @@ from disce.pyscript import (
 from disce.screens.base import AbstractScreen, AbstractSortingKey
 from disce.storage.base import AbstractStorage
 from disce.tools import format_plural, natural_sort_key
+from disce.tts import get_available_voices
 
 _logger = logging.getLogger(__name__)
 
@@ -392,12 +393,31 @@ class DecksScreen(AbstractScreen):
         """Open the settings modal and populate fields from configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         self.select_child(".disce-typewriter-mode-checkbox").checked = configuration.typewriter_mode
+        front_side_tts_voice_select = self.select_child(".disce-front-side-tts-voice-select")
+        available_voices = get_available_voices()
+        front_side_tts_voice_select.innerHTML = ""
+        none_option = append_child(front_side_tts_voice_select, "option", text="None", value="")
+        voice_found = False
+        for voice in available_voices:
+            option = append_child(front_side_tts_voice_select, "option", text=str(voice), value=voice.name)
+            if configuration.front_side_tts_voice == voice.name:
+                option.selected = True
+                voice_found = True
+        if not voice_found:
+            none_option.selected = True
+        self.select_child(".disce-tts-pitch-input").value = str(configuration.tts_pitch)
+        self.select_child(".disce-tts-rate-input").value = str(configuration.tts_rate)
+        self.select_child(".disce-tts-volume-input").value = str(configuration.tts_volume)
         show_modal(self.select_child(".disce-settings-modal"))
 
     def save_settings(self, _event: Event | None = None) -> None:
         """Save settings from the modal dialog to configuration."""
         configuration = Configuration.load_from_storage_or_create(self._storage)
         configuration.typewriter_mode = self.select_child(".disce-typewriter-mode-checkbox").checked
+        configuration.front_side_tts_voice = self.select_child(".disce-front-side-tts-voice-select").value or None
+        configuration.tts_pitch = float(self.select_child(".disce-tts-pitch-input").value)
+        configuration.tts_rate = float(self.select_child(".disce-tts-rate-input").value)
+        configuration.tts_volume = float(self.select_child(".disce-tts-volume-input").value)
         configuration.save_to_storage(self._storage)
         self.render()
 

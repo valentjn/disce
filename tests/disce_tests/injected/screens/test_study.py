@@ -3,11 +3,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
-
 from enum import StrEnum, auto
 from types import SimpleNamespace
 from typing import cast
+from unittest.mock import call, patch
 
 import pytest
 from disce.diffs import Diff
@@ -167,12 +166,14 @@ class TestStudyScreen:
 
     @staticmethod
     def test_show_answer(screen: StudyScreen, expected_answer_html: str) -> None:
-        screen.show_answer()
+        with patch.object(screen, "read_front_side") as read_front_side_mock:
+            screen.show_answer()
         assert (
             screen.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML
             == expected_answer_html
         )
         assert_hidden(screen.select_child(".disce-show-answer-btn"))
+        assert read_front_side_mock.call_args_list == [call()]
 
     @staticmethod
     def test_handle_textbox_keydown(
@@ -182,8 +183,10 @@ class TestStudyScreen:
     ) -> None:
         event = window.Event.new("keydown")
         event.key = "Enter"
-        screen.handle_textbox_keydown(event)
+        with patch.object(screen, "read_front_side") as read_front_side_mock:
+            screen.handle_textbox_keydown(event)
         TestStudyScreen._assert_submit_answer(screen, expected_diff_html)
+        assert read_front_side_mock.call_args_list == [call()]
 
     @staticmethod
     def test_handle_textbox_keydown_no_enter(screen: StudyScreen, fill_answer_textbox: None) -> None:  # noqa: ARG004
@@ -198,8 +201,10 @@ class TestStudyScreen:
         fill_answer_textbox: None,  # noqa: ARG004
         expected_diff_html: str,
     ) -> None:
-        screen.submit_answer()
+        with patch.object(screen, "read_front_side") as read_front_side_mock:
+            screen.submit_answer()
         TestStudyScreen._assert_submit_answer(screen, expected_diff_html)
+        assert read_front_side_mock.call_args_list == [call()]
 
     @staticmethod
     def _assert_submit_answer(screen: StudyScreen, expected_diff_html: str) -> None:
@@ -209,6 +214,39 @@ class TestStudyScreen:
         )
         assert_hidden(screen.select_child(".disce-answer-textbox"))
         assert_hidden(screen.select_child(".disce-submit-answer-btn"))
+
+    @staticmethod
+    def test_read_front_side(
+        configuration: Configuration, screen: StudyScreen, expected_question_stripped: str
+    ) -> None:
+        with patch("disce.screens.study.speak") as speak_mock:
+            screen.read_front_side()
+        assert speak_mock.call_args_list == [
+            call(
+                expected_question_stripped,
+                configuration.front_side_tts_voice,
+                pitch=configuration.tts_pitch,
+                rate=configuration.tts_rate,
+                volume=configuration.tts_volume,
+            )
+        ]
+
+    @staticmethod
+    def test_read_front_side_no_voice(
+        storage: AbstractStorage, configuration: Configuration, screen: StudyScreen
+    ) -> None:
+        configuration.front_side_tts_voice = None
+        configuration.save_to_storage(storage)
+        with patch("disce.screens.study.speak") as speak_mock:
+            screen.read_front_side()
+        assert speak_mock.call_args_list == []
+
+    @staticmethod
+    def test_read_front_side_empty_text(screen: StudyScreen) -> None:
+        screen._current_card.front = ""  # noqa: SLF001
+        with patch("disce.screens.study.speak") as speak_mock:
+            screen.read_front_side()
+        assert speak_mock.call_args_list == []
 
     @staticmethod
     def test_back_to_decks_screen(storage: AbstractStorage, screen: StudyScreen) -> None:

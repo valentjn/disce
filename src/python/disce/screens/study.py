@@ -11,15 +11,17 @@ from typing import TYPE_CHECKING, override
 import disce.screens.decks as decks_screen
 from disce.diffs import Diff
 from disce.furigana import TokenizedString
+from disce.models.cards import CardSide
 from disce.models.configs import Configuration
 from disce.models.deck_data import DeckData
 from disce.models.exports import ExportedDeck
 from disce.pyscript import Event, EventBinding, hide_element, show_element
 from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
+from disce.tts import speak
 
 if TYPE_CHECKING:
-    from disce.models.cards import Card, CardSide
+    from disce.models.cards import Card
 
 
 class StudyScreen(AbstractScreen):
@@ -106,6 +108,7 @@ class StudyScreen(AbstractScreen):
             ".disce-study-card-answer-side .disce-study-card-side-content"
         ).innerHTML = self.get_tokenized_side(question=False).html
         hide_element(self.select_child(".disce-show-answer-btn"))
+        self.read_front_side()
 
     def handle_textbox_keydown(self, event: Event) -> None:
         """Handle keydown events in the answer textbox."""
@@ -123,6 +126,23 @@ class StudyScreen(AbstractScreen):
         self.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML = diff.to_html()
         hide_element(self.select_child(".disce-answer-textbox"))
         hide_element(self.select_child(".disce-submit-answer-btn"))
+        self.read_front_side()
+
+    def read_front_side(self) -> None:
+        """Read the front side of the current card aloud if TTS is enabled in the configuration."""
+        configuration = Configuration.load_from_storage_or_create(self._storage)
+        if not configuration.front_side_tts_voice:
+            return
+        text_to_speak = str(TokenizedString.from_string(self._current_card.get_side(CardSide.FRONT)).strip_furigana())
+        if not text_to_speak:
+            return
+        speak(
+            text_to_speak,
+            configuration.front_side_tts_voice,
+            pitch=configuration.tts_pitch,
+            rate=configuration.tts_rate,
+            volume=configuration.tts_volume,
+        )
 
     def back_to_decks_screen(self, _event: Event | None = None) -> None:
         """Go back to the decks screen."""

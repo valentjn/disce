@@ -32,7 +32,13 @@ def deck_metadata_list() -> list[DeckMetadata]:
 
 @pytest.fixture
 def configuration(deck_metadata_list: list[DeckMetadata]) -> Configuration:
-    return Configuration(deck_metadata=UUIDModelList(deck_metadata_list))
+    return Configuration(
+        deck_metadata=UUIDModelList(deck_metadata_list),
+        front_side_tts_voice="test_front_side_tts_voice",
+        tts_pitch=0.5,
+        tts_rate=1.5,
+        tts_volume=0.5,
+    )
 
 
 @pytest.fixture(autouse=True)

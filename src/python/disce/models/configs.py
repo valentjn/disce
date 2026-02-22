@@ -5,9 +5,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Data model for the application configuration."""
 
-from typing import override
+from typing import Annotated, override
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 from disce.models.base import UUID, AbstractStoredModel, UUIDModelList
 from disce.models.deck_metadata import DeckMetadata
@@ -22,6 +22,14 @@ class Configuration(AbstractStoredModel):
     """List of metadata for all decks."""
     typewriter_mode: bool = False
     """Whether to enable typewriter mode (requiring full text input for answers)."""
+    front_side_tts_voice: str | None = None
+    """Speech synthesis/text-to-speech (TTS) voice to use for reading front sides aloud, or ``None`` to disable."""
+    tts_pitch: Annotated[float, Field(ge=0.0, le=2.0)] = 1.0
+    """Pitch of speech synthesis."""
+    tts_rate: Annotated[float, Field(ge=0.1, le=10.0)] = 1.0
+    """Rate (speed) of speech synthesis."""
+    tts_volume: Annotated[float, Field(ge=0.0, le=1.0)] = 1.0
+    """Volume of speech synthesis."""
 
     @staticmethod
     @override

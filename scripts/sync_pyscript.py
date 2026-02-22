@@ -52,7 +52,7 @@ def get_python_dir() -> Path:
 
 def read_config_toml() -> str:
     """Read the pyscript.toml file."""
-    return (get_python_dir() / "pyscript.toml").read_text()
+    return (get_python_dir() / "pyscript.toml").read_text(encoding="utf-8")
 
 
 def update_files(config: tomlkit.TOMLDocument) -> None:
@@ -68,7 +68,7 @@ def update_files(config: tomlkit.TOMLDocument) -> None:
 
 def update_packages(config: tomlkit.TOMLDocument) -> None:
     """Update the [packages] section of the pyscript.toml file."""
-    pyproject_toml = tomlkit.parse((get_root_dir() / "pyproject.toml").read_text())
+    pyproject_toml = tomlkit.parse((get_root_dir() / "pyproject.toml").read_text(encoding="utf-8"))
     project = pyproject_toml["project"]
     if not isinstance(project, tomlkit.items.Table):
         msg = "project section is not a table"
@@ -86,7 +86,7 @@ def write_config(config: tomlkit.TOMLDocument, old_toml: str, *, check: bool = F
     if check:
         _logger.error("pyscript.toml is out of date")
         sys.exit(1)
-    (get_python_dir() / "pyscript.toml").write_text(new_toml)
+    (get_python_dir() / "pyscript.toml").write_text(new_toml, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

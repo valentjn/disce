@@ -116,9 +116,7 @@ class EditDeckScreen(AbstractScreen):
             reverse_link.classList.remove("active")
         cards_div = self.select_child(".disce-cards")
         cards_div.innerHTML = ""
-        indexed_cards = list(
-            enumerate((deck_data if deck_data else self.load_deck_data(uuid=deck_metadata.uuid)).cards.model_copy())
-        )
+        indexed_cards = list(enumerate((deck_data or self.load_deck_data(uuid=deck_metadata.uuid)).cards.model_copy()))
         sorting_function = self._sorting_key.get_sorting_function()
         indexed_cards.sort(key=sorting_function, reverse=self._sorting_reverse)
         indexed_cards.append((len(indexed_cards), Card()))

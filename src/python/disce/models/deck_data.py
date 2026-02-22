@@ -43,7 +43,7 @@ class DeckData(AbstractStoredModel, UUIDModel):
         """
         existing_cards = {(card.front, card.back): card for card in self.cards}
         for card in other.cards:
-            existing_card = existing_cards.get((card.front, card.back), None)
+            existing_card = existing_cards.get((card.front, card.back))
             if existing_card is not None:
                 existing_card.enabled = existing_card.enabled or card.enabled
                 existing_card.front_answer_history += card.front_answer_history

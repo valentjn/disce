@@ -38,7 +38,7 @@ class TestStoredModel:
     @staticmethod
     def test_get_storage_key() -> None:
         with pytest.raises(NotImplementedError):
-            assert AbstractStoredModel.get_storage_key(None)
+            assert AbstractStoredModel.get_storage_key(None)  # ty: ignore[call-abstract-method]
 
     @staticmethod
     @pytest.mark.parametrize(("uuid", "expected"), [("uuid0", True), ("uuid2", False)])

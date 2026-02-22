@@ -121,13 +121,13 @@ def assert_event_bindings_registered(bindings: Sequence[EventBinding]) -> None:
             raise TypeError(msg)
         listener_self, listener_func = binding.listener.__self__, binding.listener.__func__
         original_code = binding.listener.__code__
-        listener_func.__code__ = _dummy_event_listener.__code__
+        listener_func.__code__ = _dummy_event_listener.__code__  # ty: ignore[unresolved-attribute]
         listener_self.dummy_event_listener_called = False  # type: ignore[attr-defined]
         try:
             binding.element.dispatchEvent(window.Event.new(binding.event_name))
             assert listener_self.dummy_event_listener_called  # type: ignore[attr-defined]
         finally:
-            del listener_self.dummy_event_listener_called  # type: ignore[attr-defined]
+            del listener_self.dummy_event_listener_called  # type: ignore[attr-defined]  # ty: ignore[unused-ignore-comment]
             listener_func.__code__ = original_code
 
 

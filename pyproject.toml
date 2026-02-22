@@ -28,6 +28,7 @@ dev = [
     "ruff>=0.12.11",
     "selenium>=4.35.0",
     "tomlkit>=0.13.3",
+    "ty>=0.0.18",
 ]
 
 [tool.coverage.report]

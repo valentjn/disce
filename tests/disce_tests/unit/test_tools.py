@@ -26,7 +26,7 @@ class TestABCEnumMeta:
             TypeError, match=r"cannot instantiate abstract class DummyAbstractEnum with abstract method some_method"
         ):
 
-            class DummyAbstractEnum(Enum, metaclass=ABCEnumMeta):
+            class DummyAbstractEnum(Enum, metaclass=ABCEnumMeta):  # ty: ignore[abstract-method-in-final-class]
                 KEY = auto()
 
                 @abstractmethod

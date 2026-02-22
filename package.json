@@ -17,7 +17,8 @@
         "lint:misc": "uv run python scripts/sync_pyscript.py --check",
         "lint:mypy": "uv run mypy",
         "lint:ruff": "uv run ruff check",
-        "lint": "npm run lint:mypy && npm run lint:ruff && npm run lint:misc",
+        "lint:ty": "uv run ty check",
+        "lint": "npm run lint:mypy && npm run lint:ruff && npm run lint:ty && npm run lint:misc",
         "test": "uv run pytest --copy-coverage -k injected --no-cov && uv run pytest --cov-append -k 'not injected'"
     }
 }

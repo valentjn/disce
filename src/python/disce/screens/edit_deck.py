@@ -317,6 +317,8 @@ class EditDeckScreen(AbstractScreen):
         if self._deck_uuid is not None:
             deck_data.uuid = self._deck_uuid
             deck_metadata.uuid = self._deck_uuid
+        else:
+            self._deck_uuid = deck_data.uuid
         return deck_data, deck_metadata
 
     def get_card_uuids(self) -> list[UUID]:

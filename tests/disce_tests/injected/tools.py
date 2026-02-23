@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (C) 2025 Julian Valentin
 #
 # This Source Code Form is subject to the terms of the Mozilla Public

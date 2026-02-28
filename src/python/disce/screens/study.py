@@ -133,7 +133,9 @@ class StudyScreen(AbstractScreen):
         configuration = Configuration.load_from_storage_or_create(self._storage)
         if not configuration.front_side_tts_voice:
             return
-        text_to_speak = TokenizedString.from_string(self._current_card.get_side(CardSide.FRONT)).string_without_ruby
+        text_to_speak = TokenizedString.from_string(
+            self._current_card.get_side(CardSide.FRONT)
+        ).string_without_logograms
         if not text_to_speak:
             return
         speak(

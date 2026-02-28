@@ -71,6 +71,11 @@ class TestStudyScreen:
 
     @staticmethod
     @pytest.fixture
+    def expected_question_without_logograms(with_ruby: WithRuby, string_without_logograms: str) -> str:
+        return string_without_logograms if with_ruby is WithRuby.QUESTION else "deck1_card1_front"
+
+    @staticmethod
+    @pytest.fixture
     def expected_next_question_text() -> str:
         return "deck1_card2_front"
 
@@ -217,13 +222,13 @@ class TestStudyScreen:
 
     @staticmethod
     def test_read_front_side(
-        configuration: Configuration, screen: StudyScreen, expected_question_without_ruby: str
+        configuration: Configuration, screen: StudyScreen, expected_question_without_logograms: str
     ) -> None:
         with patch("disce.screens.study.speak") as speak_mock:
             screen.read_front_side()
         assert speak_mock.call_args_list == [
             call(
-                expected_question_without_ruby,
+                expected_question_without_logograms,
                 configuration.front_side_tts_voice,
                 pitch=configuration.tts_pitch,
                 rate=configuration.tts_rate,

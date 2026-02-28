@@ -9,7 +9,7 @@ import html
 import re
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 
 class TokenType(Enum):
@@ -48,7 +48,7 @@ class TokenizedString:
     tokens: tuple[Token, ...]
     """List of tokens in the string."""
 
-    _PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+    _PATTERN: ClassVar[Final[re.Pattern[str]]] = re.compile(
         r"(?P<logogram>[\u4e00-\u9fff])(?P<ruby_start>\[)(?P<ruby>[\u3040-\u309f]+)(?P<ruby_end>\])"
     )
     """Regex pattern to match ruby annotations."""

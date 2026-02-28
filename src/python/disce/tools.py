@@ -12,9 +12,9 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from enum import EnumMeta
 from time import perf_counter
-from typing import Any
+from typing import Any, Final
 
-_NATURAL_SORT_KEY_PATTERN = re.compile(r"(\d+)")
+_NATURAL_SORT_KEY_PATTERN: Final[re.Pattern[str]] = re.compile(r"(\d+)")
 """Pattern for splitting strings into natural sort keys."""
 
 _logger = logging.getLogger(__name__)

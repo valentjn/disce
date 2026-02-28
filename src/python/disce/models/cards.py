@@ -6,7 +6,7 @@
 """Data models for flashcards."""
 
 from enum import StrEnum, auto
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from pydantic import BaseModel
 
@@ -95,7 +95,7 @@ class Card(UUIDModel):
     back_answer_history: list[bool] = []  # noqa: RUF012
     """History of answers when asked for back (correct/wrong, most recent last, reset when card is edited)."""
 
-    RELEVANT_HISTORY_LENGTH: ClassVar[int] = 5
+    RELEVANT_HISTORY_LENGTH: ClassVar[Final[int]] = 5
     """Number of most recent answers to consider for scoring."""
 
     def get_side(self, side: CardSide) -> str:

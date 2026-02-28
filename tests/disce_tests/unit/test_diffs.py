@@ -4,12 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from typing import Final
+
 import pytest
 from disce.diffs import Diff, Opcode, Tag
 
 
 class TestOpcode:
-    EXPECTED_RUBY_HTML = "<ruby>\u6f22<rp>\uff08</rp><rt>\u304b\u3093</rt><rp>\uff09</rp></ruby>"
+    EXPECTED_RUBY_HTML: Final[str] = "<ruby>\u6f22<rp>\uff08</rp><rt>\u304b\u3093</rt><rp>\uff09</rp></ruby>"
 
     @staticmethod
     @pytest.mark.parametrize(

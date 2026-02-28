@@ -9,7 +9,7 @@ import logging
 import re
 from collections.abc import Callable
 from enum import auto
-from typing import ClassVar, override
+from typing import Final, override
 
 from pydantic import ValidationError
 
@@ -93,7 +93,7 @@ class SortingKey(AbstractSortingKey):
 class DecksScreen(AbstractScreen):
     """Screen for listing and editing decks."""
 
-    _MINIMUM_NUMBER_OF_DECKS_TO_MERGE: ClassVar[int] = 2
+    _MINIMUM_NUMBER_OF_DECKS_TO_MERGE: Final[int] = 2
     """Minimum number of decks required to perform a merge."""
 
     def __init__(self, storage: AbstractStorage) -> None:

@@ -6,7 +6,7 @@
 """Screen for studying a deck."""
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Final, override
 
 import disce.screens.decks as decks_screen
 from disce.diffs import Diff
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 class StudyScreen(AbstractScreen):
     """Screen for studying a deck."""
 
-    _CARD_HISTORY_LIMIT = 5
+    _CARD_HISTORY_LIMIT: Final[int] = 5
     """Maximum number of previously studied cards to remember."""
 
     def __init__(self, deck_uuids: Sequence[str], storage: AbstractStorage) -> None:

@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from difflib import SequenceMatcher
 from enum import Enum
 from pathlib import Path
-from typing import Self, override
+from typing import Final, Self, override
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
@@ -128,12 +128,12 @@ class MarugotoResponse(BaseModel):
     """List of words."""
 
 
-DEFAULT_LANGUAGE = Language.ENGLISH
-DEFAULT_LEVEL = Level.A1
-DEFAULT_TEXTBOOKS = [TextbookType.KATSUDOO, TextbookType.RIKAI]
-DEFAULT_EXCLUDED_WORD_TYPES: list[WordType] = []
-NUMBER_OF_LESSONS_PER_LEVEL = 18
-NUMBER_OF_LESSONS_PER_TOPIC = 2
+DEFAULT_LANGUAGE: Final[Language] = Language.ENGLISH
+DEFAULT_LEVEL: Final[Level] = Level.A1
+DEFAULT_TEXTBOOKS: Final[tuple[TextbookType, ...]] = (TextbookType.KATSUDOO, TextbookType.RIKAI)
+DEFAULT_EXCLUDED_WORD_TYPES: Final[tuple[WordType, ...]] = ()
+NUMBER_OF_LESSONS_PER_LEVEL: Final[int] = 18
+NUMBER_OF_LESSONS_PER_TOPIC: Final[int] = 2
 
 
 def main() -> None:
@@ -161,7 +161,7 @@ def parse_arguments() -> argparse.Namespace:
         nargs="+",
         type=WordType.parse,
         choices=WordType,
-        default=DEFAULT_EXCLUDED_WORD_TYPES,
+        default=list(DEFAULT_EXCLUDED_WORD_TYPES),
         help="types of words to exclude (default: %(default)s)",
     )
     parser.add_argument(
@@ -183,7 +183,7 @@ def parse_arguments() -> argparse.Namespace:
         nargs="+",
         type=TextbookType.parse,
         choices=TextbookType,
-        default=DEFAULT_TEXTBOOKS,
+        default=list(DEFAULT_TEXTBOOKS),
         help="type of textbook (default: %(default)s)",
     )
     parser.add_argument("-v", "--verbose", action=argparse.BooleanOptionalAction, help="enable verbose output")

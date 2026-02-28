@@ -1,15 +1,22 @@
 arrayAutoCollapse: false
 attributeGroups:
-    - ^(id|name)$
-    - ^class$
-    - ^(href|src)$
-    - $DEFAULT
-    - ^aria-
+  - ^(id|name)$
+  - ^class$
+  - ^(href|src)$
+  - $DEFAULT
+  - ^aria-
 attributeSort: ASC
 cssDeclarationSorterKeepOverrides: false
+overrides:
+  - files:
+      - .prettierrc
+      - "*.md"
+      - "*.yml"
+    options:
+      tabWidth: 2
 plugins:
-    - prettier-plugin-css-order
-    - prettier-plugin-organize-attributes
-    - prettier-plugin-toml
+  - prettier-plugin-css-order
+  - prettier-plugin-organize-attributes
+  - prettier-plugin-toml
 printWidth: 120
 tabWidth: 4

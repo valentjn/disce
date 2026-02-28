@@ -6,56 +6,56 @@
 
 name: CI/CD
 on:
-    push:
-    pull_request:
-    workflow_dispatch:
+  push:
+  pull_request:
+  workflow_dispatch:
 permissions:
-    contents: read
-    pages: write
-    id-token: write
+  contents: read
+  pages: write
+  id-token: write
 concurrency:
-    group: pages
-    cancel-in-progress: false
+  group: pages
+  cancel-in-progress: false
 jobs:
-    ci:
-        name: CI
-        runs-on: ubuntu-latest
-        env:
-            FORCE_COLOR: 1
-        steps:
-            - &checkout
-              name: checkout
-              uses: actions/checkout@v5
-            - name: set up Node.js
-              uses: actions/setup-node@v4
-            - name: install Firefox
-              run: sudo python scripts/install_firefox.py
-            - name: install npm deps
-              run: npm install
-            - name: install uv
-              run: curl --fail --location https://astral.sh/uv/install.sh | sh
-            - name: lint
-              run: npm run lint
-            - name: check formatting
-              run: npm run fmt:check
-            - name: run tests
-              run: npm run test
-    cd:
-        name: CD
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        needs: ci
-        runs-on: ubuntu-latest
-        environment:
-            name: github-pages
-            url: ${{ steps.deploy_pages.outputs.page_url }}
-        steps:
-            - *checkout
-            - name: configure Pages
-              uses: actions/configure-pages@v5
-            - name: upload Pages artifact
-              uses: actions/upload-pages-artifact@v4
-              with:
-                  path: src
-            - name: deploy Pages
-              id: deploy_pages
-              uses: actions/deploy-pages@v4
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    env:
+      FORCE_COLOR: 1
+    steps:
+      - &checkout
+        name: checkout
+        uses: actions/checkout@v5
+      - name: set up Node.js
+        uses: actions/setup-node@v4
+      - name: install Firefox
+        run: sudo python scripts/install_firefox.py
+      - name: install npm deps
+        run: npm install
+      - name: install uv
+        run: curl --fail --location https://astral.sh/uv/install.sh | sh
+      - name: lint
+        run: npm run lint
+      - name: check formatting
+        run: npm run fmt:check
+      - name: run tests
+        run: npm run test
+  cd:
+    name: CD
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy_pages.outputs.page_url }}
+    steps:
+      - *checkout
+      - name: configure Pages
+        uses: actions/configure-pages@v5
+      - name: upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: src
+      - name: deploy Pages
+        id: deploy_pages
+        uses: actions/deploy-pages@v4

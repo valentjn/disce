@@ -8,17 +8,17 @@ import pytest
 
 
 @pytest.fixture
-def furigana_string() -> str:
+def ruby_string() -> str:
     return 2 * "\u6f22[\u304b\u3093]\u5b57[\u3058]\u30c6\u30b9\u30c8"
 
 
 @pytest.fixture
-def furigana_stripped() -> str:
+def string_without_ruby() -> str:
     return 2 * "\u6f22\u5b57\u30c6\u30b9\u30c8"
 
 
 @pytest.fixture
-def furigana_html() -> str:
+def ruby_html() -> str:
     return 2 * (
         "<ruby>\u6f22<rp>\uff08</rp><rt>\u304b\u3093</rt><rp>\uff09</rp></ruby>"
         "<ruby>\u5b57<rp>\uff08</rp><rt>\u3058</rt><rp>\uff09</rp></ruby>\u30c6\u30b9\u30c8"

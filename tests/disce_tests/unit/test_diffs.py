@@ -48,7 +48,7 @@ class TestDiff:
         )
 
     @staticmethod
-    def test_from_strings_furigana() -> None:
+    def test_from_strings_ruby() -> None:
         source = 2 * "\u6f22\u5b57\u30c6\u30b9\u30c8"
         target = 2 * "\u6f22[\u304b\u3093]\u30c6\u30b9\u30c8\u5b57[\u3058]"
         assert Diff.from_strings(source, target) == Diff(

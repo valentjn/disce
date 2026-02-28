@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 
-from disce.furigana import TokenizedString, TokenType
+from disce.ruby import TokenizedString, TokenType
 
 
 class Tag(StrEnum):
@@ -71,20 +71,20 @@ class Diff:
     def from_strings(source: str, target: str) -> "Diff":
         """Compute the diff between two strings."""
         tokenized_target = TokenizedString.from_string(target)
-        stripped_target = str(tokenized_target.strip_furigana())
+        stripped_target = str(tokenized_target.strip_ruby())
         matcher = SequenceMatcher(a=source, b=stripped_target)
         token_idx = 0
         token_start = 0
         opcodes = []
         for tag, source_start, source_end, target_start, target_end in matcher.get_opcodes():
-            target_substring, token_idx, token_start = Diff._insert_furigana(
+            target_substring, token_idx, token_start = Diff._insert_ruby(
                 stripped_target, target_start, target_end, tokenized_target, token_idx, token_start
             )
             opcodes.append(Opcode(Tag(tag), source[source_start:source_end], target_substring))
         return Diff(source, target, tuple(opcodes))
 
     @staticmethod
-    def _insert_furigana(  # noqa: PLR0913
+    def _insert_ruby(  # noqa: PLR0913
         target: str,
         target_start: int,
         target_end: int,
@@ -92,22 +92,22 @@ class Diff:
         token_idx: int,
         token_start: int,
     ) -> tuple[str, int, int]:
-        """Insert furigana annotations into a target substring.
+        """Insert ruby annotations into a target substring.
 
-        :param target: The target string without furigana annotations.
+        :param target: The target string without ruby annotations.
         :param target_start: Start index (inclusive) in ``target``.
         :param target_end: End index (exclusive) in ``target``.
         :param tokenized_target: Tokenized representation of the target string.
         :param token_idx: Index of the current token in ``tokenized_target``.
         :param token_start: Start index (inclusive) of the current token in ``target``.
-        :return: A tuple of the target substring with furigana annotations, the updated token index, and the
+        :return: A tuple of the target substring with ruby annotations, the updated token index, and the
             updated token start index in ``target``.
         """
         parts = []
         last_index = target_start
         while last_index < target_end and token_idx < len(tokenized_target.tokens) and token_start < target_end:
             token = tokenized_target.tokens[token_idx]
-            if token_start < last_index or token.type is not TokenType.KANJI:
+            if token_start < last_index or token.type is not TokenType.LOGOGRAM:
                 token_idx += 1
                 token_start += len(token.string)
             else:

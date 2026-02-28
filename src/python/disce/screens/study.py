@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING, override
 
 import disce.screens.decks as decks_screen
 from disce.diffs import Diff
-from disce.furigana import TokenizedString
 from disce.models.cards import CardSide
 from disce.models.configs import Configuration
 from disce.models.deck_data import DeckData
 from disce.models.exports import ExportedDeck
 from disce.pyscript import Event, EventBinding, hide_element, show_element
+from disce.ruby import TokenizedString
 from disce.screens.base import AbstractScreen
 from disce.storage.base import AbstractStorage
 from disce.tts import speak
@@ -67,7 +67,7 @@ class StudyScreen(AbstractScreen):
         configuration = Configuration.load_from_storage_or_create(self._storage)
         typewriter_mode = configuration.typewriter_mode
         self.select_child(".disce-study-card-question-side .disce-study-card-side-content").innerText = str(
-            self.get_tokenized_side(question=True).strip_furigana()
+            self.get_tokenized_side(question=True).strip_ruby()
         )
         self.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML = ""
         answer_textbox = self.select_child(".disce-answer-textbox")
@@ -133,7 +133,7 @@ class StudyScreen(AbstractScreen):
         configuration = Configuration.load_from_storage_or_create(self._storage)
         if not configuration.front_side_tts_voice:
             return
-        text_to_speak = str(TokenizedString.from_string(self._current_card.get_side(CardSide.FRONT)).strip_furigana())
+        text_to_speak = str(TokenizedString.from_string(self._current_card.get_side(CardSide.FRONT)).strip_ruby())
         if not text_to_speak:
             return
         speak(

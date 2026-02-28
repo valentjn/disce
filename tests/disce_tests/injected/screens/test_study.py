@@ -10,10 +10,10 @@ from unittest.mock import call, patch
 
 import pytest
 from disce.diffs import Diff
-from disce.furigana import TokenizedString
 from disce.models.cards import CardSide
 from disce.models.configs import Configuration
 from disce.models.deck_data import DeckData
+from disce.ruby import TokenizedString
 from disce.screens.decks import DecksScreen
 from disce.screens.study import StudyScreen
 from disce.storage.base import AbstractStorage
@@ -23,7 +23,7 @@ from disce_tests.injected.screens.tools import assert_event_bindings_registered
 from disce_tests.injected.tools import assert_hidden, assert_visible
 
 
-class WithFurigana(StrEnum):
+class WithRuby(StrEnum):
     NONE = auto()
     QUESTION = auto()
     ANSWER = auto()
@@ -31,29 +31,29 @@ class WithFurigana(StrEnum):
 
 class TestStudyScreen:
     @staticmethod
-    @pytest.fixture(params=WithFurigana)
-    def with_furigana(request: pytest.FixtureRequest, storage: AbstractStorage, furigana_string: str) -> WithFurigana:
-        with_furigana = cast("WithFurigana", request.param)
-        if with_furigana is not WithFurigana.NONE:
+    @pytest.fixture(params=WithRuby)
+    def with_ruby(request: pytest.FixtureRequest, storage: AbstractStorage, ruby_string: str) -> WithRuby:
+        with_ruby = cast("WithRuby", request.param)
+        if with_ruby is not WithRuby.NONE:
             deck_data = DeckData.load_from_storage(storage, "deck1")
             card = deck_data.cards["deck1_card1"]
-            match with_furigana:
-                case WithFurigana.QUESTION:
-                    card.front = furigana_string
-                case WithFurigana.ANSWER:
-                    card.back = furigana_string
+            match with_ruby:
+                case WithRuby.QUESTION:
+                    card.front = ruby_string
+                case WithRuby.ANSWER:
+                    card.back = ruby_string
                 case _:
-                    msg = f"invalid with_furigana value: {with_furigana}"
+                    msg = f"invalid with_ruby value: {with_ruby}"
                     raise ValueError(msg)
             deck_data.save_to_storage(storage)
-        return with_furigana
+        return with_ruby
 
     @staticmethod
     @pytest.fixture
     def screen(
         storage: AbstractStorage,
         deck_data_list: list[DeckData],
-        with_furigana: WithFurigana,  # noqa: ARG004
+        with_ruby: WithRuby,  # noqa: ARG004
     ) -> StudyScreen:
         screen = StudyScreen([deck_data.uuid for deck_data in deck_data_list], storage)
         screen.show()
@@ -61,13 +61,13 @@ class TestStudyScreen:
 
     @staticmethod
     @pytest.fixture
-    def expected_question_text(with_furigana: WithFurigana, furigana_string: str) -> str:
-        return furigana_string if with_furigana is WithFurigana.QUESTION else "deck1_card1_front"
+    def expected_question_string(with_ruby: WithRuby, ruby_string: str) -> str:
+        return ruby_string if with_ruby is WithRuby.QUESTION else "deck1_card1_front"
 
     @staticmethod
     @pytest.fixture
-    def expected_question_stripped(with_furigana: WithFurigana, furigana_stripped: str) -> str:
-        return furigana_stripped if with_furigana is WithFurigana.QUESTION else "deck1_card1_front"
+    def expected_question_without_ruby(with_ruby: WithRuby, string_without_ruby: str) -> str:
+        return string_without_ruby if with_ruby is WithRuby.QUESTION else "deck1_card1_front"
 
     @staticmethod
     @pytest.fixture
@@ -76,13 +76,13 @@ class TestStudyScreen:
 
     @staticmethod
     @pytest.fixture
-    def expected_answer_text(with_furigana: WithFurigana, furigana_string: str) -> str:
-        return furigana_string if with_furigana is WithFurigana.ANSWER else "deck1_card1_back"
+    def expected_answer_string(with_ruby: WithRuby, ruby_string: str) -> str:
+        return ruby_string if with_ruby is WithRuby.ANSWER else "deck1_card1_back"
 
     @staticmethod
     @pytest.fixture
-    def expected_answer_html(with_furigana: WithFurigana, furigana_html: str) -> str:
-        return furigana_html if with_furigana is WithFurigana.ANSWER else "deck1_card1_back"
+    def expected_answer_html(with_ruby: WithRuby, ruby_html: str) -> str:
+        return ruby_html if with_ruby is WithRuby.ANSWER else "deck1_card1_back"
 
     @staticmethod
     @pytest.fixture
@@ -102,8 +102,8 @@ class TestStudyScreen:
 
     @staticmethod
     @pytest.fixture
-    def expected_diff_html(user_answer_text: str, expected_answer_text: str) -> str:
-        diff = Diff.from_strings(user_answer_text, expected_answer_text)
+    def expected_diff_html(user_answer_text: str, expected_answer_string: str) -> str:
+        diff = Diff.from_strings(user_answer_text, expected_answer_string)
         return diff.to_html()
 
     @staticmethod
@@ -122,22 +122,22 @@ class TestStudyScreen:
         storage: AbstractStorage,
         configuration: Configuration,
         screen: StudyScreen,
-        expected_question_stripped: str,
+        expected_question_without_ruby: str,
         *,
         typewriter_mode: bool,
     ) -> None:
         configuration.typewriter_mode = typewriter_mode
         configuration.save_to_storage(storage)
         screen.render()
-        TestStudyScreen._assert_render(screen, expected_question_stripped, expected_typewriter_mode=typewriter_mode)
+        TestStudyScreen._assert_render(screen, expected_question_without_ruby, expected_typewriter_mode=typewriter_mode)
 
     @staticmethod
     def _assert_render(
-        screen: StudyScreen, expected_question_text: str, *, expected_typewriter_mode: bool = False
+        screen: StudyScreen, expected_question_string: str, *, expected_typewriter_mode: bool = False
     ) -> None:
         assert (
             screen.select_child(".disce-study-card-question-side .disce-study-card-side-content").innerText
-            == expected_question_text
+            == expected_question_string
         )
         assert screen.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML == ""
         answer_textbox = screen.select_child(".disce-answer-textbox")
@@ -156,7 +156,7 @@ class TestStudyScreen:
         card = deck_data.cards["deck1_card1"]
         assert card.front_answer_history == [False, False, False, False, False, is_correct]
         TestStudyScreen._assert_render(
-            screen, str(TokenizedString.from_string(deck_data.cards["deck1_card2"].front).strip_furigana())
+            screen, str(TokenizedString.from_string(deck_data.cards["deck1_card2"].front).strip_ruby())
         )
 
     @staticmethod
@@ -217,13 +217,13 @@ class TestStudyScreen:
 
     @staticmethod
     def test_read_front_side(
-        configuration: Configuration, screen: StudyScreen, expected_question_stripped: str
+        configuration: Configuration, screen: StudyScreen, expected_question_without_ruby: str
     ) -> None:
         with patch("disce.screens.study.speak") as speak_mock:
             screen.read_front_side()
         assert speak_mock.call_args_list == [
             call(
-                expected_question_stripped,
+                expected_question_without_ruby,
                 configuration.front_side_tts_voice,
                 pitch=configuration.tts_pitch,
                 rate=configuration.tts_rate,
@@ -255,6 +255,8 @@ class TestStudyScreen:
         assert_visible(DecksScreen(storage))
 
     @staticmethod
-    def test_get_tokenized_side(screen: StudyScreen, expected_question_text: str, expected_answer_text: str) -> None:
-        assert screen.get_tokenized_side(question=True) == TokenizedString.from_string(expected_question_text)
-        assert screen.get_tokenized_side(question=False) == TokenizedString.from_string(expected_answer_text)
+    def test_get_tokenized_side(
+        screen: StudyScreen, expected_question_string: str, expected_answer_string: str
+    ) -> None:
+        assert screen.get_tokenized_side(question=True) == TokenizedString.from_string(expected_question_string)
+        assert screen.get_tokenized_side(question=False) == TokenizedString.from_string(expected_answer_string)

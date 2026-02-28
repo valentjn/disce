@@ -55,7 +55,13 @@ class TokenizedString:
 
     @override
     def __str__(self) -> str:
+        """Original ruby-annotated string."""
         return "".join(token.string for token in self.tokens)
+
+    @property
+    def string_without_ruby(self) -> str:
+        """String without ruby annotations."""
+        return "".join(token.string for token in self.tokens if token.type in {TokenType.LOGOGRAM, TokenType.TEXT})
 
     @property
     def html(self) -> str:
@@ -74,12 +80,6 @@ class TokenizedString:
                     part = "<rp>\uff09</rp></ruby>"
             parts.append(part)
         return "".join(parts)
-
-    def strip_ruby(self) -> "TokenizedString":
-        """Return a new TokenizedString with ruby annotations removed."""
-        return TokenizedString(
-            tuple(token for token in self.tokens if token.type in {TokenType.LOGOGRAM, TokenType.TEXT})
-        )
 
     @staticmethod
     def from_string(string: str) -> "TokenizedString":

@@ -156,7 +156,7 @@ class TestStudyScreen:
         card = deck_data.cards["deck1_card1"]
         assert card.front_answer_history == [False, False, False, False, False, is_correct]
         TestStudyScreen._assert_render(
-            screen, str(TokenizedString.from_string(deck_data.cards["deck1_card2"].front).strip_ruby())
+            screen, TokenizedString.from_string(deck_data.cards["deck1_card2"].front).string_without_ruby
         )
 
     @staticmethod

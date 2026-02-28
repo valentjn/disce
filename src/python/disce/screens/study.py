@@ -66,9 +66,9 @@ class StudyScreen(AbstractScreen):
     def render(self) -> None:
         configuration = Configuration.load_from_storage_or_create(self._storage)
         typewriter_mode = configuration.typewriter_mode
-        self.select_child(".disce-study-card-question-side .disce-study-card-side-content").innerText = str(
-            self.get_tokenized_side(question=True).strip_ruby()
-        )
+        self.select_child(
+            ".disce-study-card-question-side .disce-study-card-side-content"
+        ).innerText = self.get_tokenized_side(question=True).string_without_ruby
         self.select_child(".disce-study-card-answer-side .disce-study-card-side-content").innerHTML = ""
         answer_textbox = self.select_child(".disce-answer-textbox")
         answer_textbox.value = ""
@@ -133,7 +133,7 @@ class StudyScreen(AbstractScreen):
         configuration = Configuration.load_from_storage_or_create(self._storage)
         if not configuration.front_side_tts_voice:
             return
-        text_to_speak = str(TokenizedString.from_string(self._current_card.get_side(CardSide.FRONT)).strip_ruby())
+        text_to_speak = TokenizedString.from_string(self._current_card.get_side(CardSide.FRONT)).string_without_ruby
         if not text_to_speak:
             return
         speak(

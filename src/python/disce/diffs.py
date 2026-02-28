@@ -71,7 +71,7 @@ class Diff:
     def from_strings(source: str, target: str) -> "Diff":
         """Compute the diff between two strings."""
         tokenized_target = TokenizedString.from_string(target)
-        stripped_target = str(tokenized_target.strip_ruby())
+        stripped_target = tokenized_target.string_without_ruby
         matcher = SequenceMatcher(a=source, b=stripped_target)
         token_idx = 0
         token_start = 0

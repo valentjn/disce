@@ -4,37 +4,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import pytest
 from disce.ruby import Token, TokenizedString, TokenType
 
 
 class TestTokenizedString:
     @staticmethod
-    def test_str(ruby_string: str) -> None:
-        assert str(TokenizedString.from_string(ruby_string)) == ruby_string
+    @pytest.fixture
+    def tokenized_string(ruby_string: str) -> TokenizedString:
+        return TokenizedString.from_string(ruby_string)
 
     @staticmethod
-    def test_html(ruby_string: str, ruby_html: str) -> None:
-        tokenized = TokenizedString.from_string(ruby_string)
-        assert tokenized.html == ruby_html
+    def test_str(tokenized_string: TokenizedString, ruby_string: str) -> None:
+        assert str(tokenized_string) == ruby_string
 
     @staticmethod
-    def test_strip_ruby(ruby_string: str, string_without_ruby: str) -> None:
-        stripped = TokenizedString.from_string(ruby_string).strip_ruby()
-        assert stripped == TokenizedString(
-            (
-                Token(TokenType.LOGOGRAM, "\u6f22", 0, 1),
-                Token(TokenType.LOGOGRAM, "\u5b57", 5, 6),
-                Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 9, 12),
-                Token(TokenType.LOGOGRAM, "\u6f22", 12, 13),
-                Token(TokenType.LOGOGRAM, "\u5b57", 17, 18),
-                Token(TokenType.TEXT, "\u30c6\u30b9\u30c8", 21, 24),
-            )
-        )
-        assert str(stripped) == string_without_ruby
+    def test_string_without_ruby(tokenized_string: TokenizedString, string_without_ruby: str) -> None:
+        assert tokenized_string.string_without_ruby == string_without_ruby
 
     @staticmethod
-    def test_from_string(ruby_string: str) -> None:
-        assert TokenizedString.from_string(ruby_string) == TokenizedString(
+    def test_html(tokenized_string: TokenizedString, ruby_html: str) -> None:
+        assert tokenized_string.html == ruby_html
+
+    @staticmethod
+    def test_from_string(tokenized_string: TokenizedString) -> None:
+        assert tokenized_string == TokenizedString(
             (
                 Token(TokenType.LOGOGRAM, "\u6f22", 0, 1),
                 Token(TokenType.RUBY_START, "[", 1, 2),

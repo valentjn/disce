@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import json
 import logging
 import os
 import platform
@@ -23,6 +22,7 @@ from pathlib import Path
 from threading import Event, Thread
 
 import pytest
+from pydantic import BaseModel
 from selenium.webdriver import Firefox, FirefoxService
 from selenium.webdriver.firefox.options import Options
 
@@ -60,6 +60,15 @@ class _Architecture(Enum):
         return _Architecture.X86
 
 
+class _GitHubReleaseAsset(BaseModel):
+    browser_download_url: str
+
+
+class _GitHubRelease(BaseModel):
+    tag_name: str
+    assets: list[_GitHubReleaseAsset]
+
+
 @pytest.fixture(scope="session")
 def driver_path(pytestconfig: pytest.Config) -> Path:
     operating_system, architecture = _OperatingSystem.current(), _Architecture.current()
@@ -70,7 +79,7 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
         _logger.info("using cached geckodriver from %s", geckodriver_path)
         return geckodriver_path
     with urllib.request.urlopen("https://api.github.com/repos/mozilla/geckodriver/releases/latest") as response:
-        release_info = json.load(response)
+        release = _GitHubRelease.model_validate_json(response.read())
     suffix = {
         (_OperatingSystem.LINUX, _Architecture.AARCH64): "linux-aarch64.tar.gz",
         (_OperatingSystem.LINUX, _Architecture.X86_64): "linux64.tar.gz",
@@ -82,9 +91,7 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
         (_OperatingSystem.WINDOWS, _Architecture.X86): "win32.zip",
     }[(operating_system, architecture)]
     asset_url = next(
-        asset["browser_download_url"]
-        for asset in release_info["assets"]
-        if asset["browser_download_url"].endswith(suffix)
+        asset.browser_download_url for asset in release.assets if asset.browser_download_url.endswith(suffix)
     )
     _logger.info("downloading geckodriver from %s", asset_url)
     with urllib.request.urlopen(asset_url) as response:

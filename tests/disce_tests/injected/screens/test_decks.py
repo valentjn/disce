@@ -474,6 +474,21 @@ class TestDecksScreen:
         assert screen.select_child(".disce-tts-pitch-input").value == str(configuration.tts_pitch)
         assert screen.select_child(".disce-tts-rate-input").value == str(configuration.tts_rate)
         assert screen.select_child(".disce-tts-volume-input").value == str(configuration.tts_volume)
+        assert screen.select_child(".disce-tts-pitch-label").innerText == f"Speech pitch: {configuration.tts_pitch:.0%}"
+        assert screen.select_child(".disce-tts-rate-label").innerText == f"Speech speed: {configuration.tts_rate:.1f}x"
+        assert (
+            screen.select_child(".disce-tts-volume-label").innerText == f"Speech volume: {configuration.tts_volume:.0%}"
+        )
+
+    @staticmethod
+    def test_update_settings_modal_labels(screen: DecksScreen) -> None:
+        screen.select_child(".disce-tts-pitch-input").value = "1.1"
+        screen.select_child(".disce-tts-rate-input").value = "1.2"
+        screen.select_child(".disce-tts-volume-input").value = "0.3"
+        screen.update_settings_modal_labels()
+        assert screen.select_child(".disce-tts-pitch-label").innerText == "Speech pitch: 110%"
+        assert screen.select_child(".disce-tts-rate-label").innerText == "Speech speed: 1.2x"
+        assert screen.select_child(".disce-tts-volume-label").innerText == "Speech volume: 30%"
 
     @staticmethod
     def test_save_settings(storage: AbstractStorage, screen: DecksScreen) -> None:

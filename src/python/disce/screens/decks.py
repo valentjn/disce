@@ -114,6 +114,9 @@ class DecksScreen(AbstractScreen):
             EventBinding(self.select_child(".disce-export-decks-btn"), "click", self.export_decks),
             EventBinding(self.select_child(".disce-delete-decks-btn"), "click", self.delete_decks),
             EventBinding(self.select_child(".disce-settings-btn"), "click", self.open_settings_modal),
+            EventBinding(self.select_child(".disce-tts-pitch-input"), "input", self.update_settings_modal_labels),
+            EventBinding(self.select_child(".disce-tts-rate-input"), "input", self.update_settings_modal_labels),
+            EventBinding(self.select_child(".disce-tts-volume-input"), "input", self.update_settings_modal_labels),
             EventBinding(self.select_child(".disce-save-settings-btn"), "click", self.save_settings),
         ]
         bindings += [
@@ -408,7 +411,17 @@ class DecksScreen(AbstractScreen):
         self.select_child(".disce-tts-pitch-input").value = str(configuration.tts_pitch)
         self.select_child(".disce-tts-rate-input").value = str(configuration.tts_rate)
         self.select_child(".disce-tts-volume-input").value = str(configuration.tts_volume)
+        self.update_settings_modal_labels()
         show_modal(self.select_child(".disce-settings-modal"))
+
+    def update_settings_modal_labels(self, _event: Event | None = None) -> None:
+        """Update the labels in the settings modal to show current values."""
+        pitch = float(self.select_child(".disce-tts-pitch-input").value)
+        rate = float(self.select_child(".disce-tts-rate-input").value)
+        volume = float(self.select_child(".disce-tts-volume-input").value)
+        self.select_child(".disce-tts-pitch-label").innerText = f"Speech pitch: {pitch:.0%}"
+        self.select_child(".disce-tts-rate-label").innerText = f"Speech speed: {rate:.1f}x"
+        self.select_child(".disce-tts-volume-label").innerText = f"Speech volume: {volume:.0%}"
 
     def save_settings(self, _event: Event | None = None) -> None:
         """Save settings from the modal dialog to configuration."""

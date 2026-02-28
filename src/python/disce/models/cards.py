@@ -96,7 +96,7 @@ class Card(UUIDModel):
     """History of answers when asked for back (correct/wrong, most recent last, reset when card is edited)."""
 
     RELEVANT_HISTORY_LENGTH: ClassVar[Final[int]] = 5
-    """Number of most recent answers to consider for scoring."""
+    """Number of most recent answers to consider for answer counts and runs."""
 
     def get_side(self, side: CardSide) -> str:
         """Get the text on the specified side of the card."""

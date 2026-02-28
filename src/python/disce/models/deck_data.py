@@ -67,7 +67,7 @@ class DeckData(AbstractStoredModel, UUIDModel):
 
     @staticmethod
     def _get_candidate_cards_to_study(cards: Sequence[Card]) -> list[tuple[Card, CardSide]]:
-        """Get the list of candidate cards to study based on their scores."""
+        """Get the list of candidate cards and sides to study, sorted by the minimum run of correct answers."""
         candidates = []
         minimum_run = None
         for card in cards:

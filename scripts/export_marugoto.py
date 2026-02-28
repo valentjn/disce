@@ -20,7 +20,7 @@ from disce.models.base import UUIDModelList
 from disce.models.cards import Card
 from disce.models.exports import DeckExport, ExportedDeck
 from disce.tools import format_plural
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -113,8 +113,6 @@ class WordType(ArgumentEnum):
 class MarugotoWord(BaseModel):
     """A word from Marugoto API."""
 
-    model_config = ConfigDict(extra="ignore")
-
     KANA: str
     """Kana reading of the word."""
     KANJI: str
@@ -125,8 +123,6 @@ class MarugotoWord(BaseModel):
 
 class MarugotoResponse(BaseModel):
     """Response from Marugoto API."""
-
-    model_config = ConfigDict(extra="ignore")
 
     DATA: list[MarugotoWord]
     """List of words."""

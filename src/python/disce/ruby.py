@@ -64,6 +64,11 @@ class TokenizedString:
         return "".join(token.string for token in self.tokens if token.type in {TokenType.LOGOGRAM, TokenType.TEXT})
 
     @property
+    def string_without_logograms(self) -> str:
+        """String with logograms replaced by their ruby annotations."""
+        return "".join(token.string for token in self.tokens if token.type in {TokenType.RUBY, TokenType.TEXT})
+
+    @property
     def html(self) -> str:
         """HTML representation of the tokenized string with ruby annotations."""
         parts = []

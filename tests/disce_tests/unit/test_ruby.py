@@ -23,6 +23,10 @@ class TestTokenizedString:
         assert tokenized_string.string_without_ruby == string_without_ruby
 
     @staticmethod
+    def test_string_without_logograms(tokenized_string: TokenizedString, string_without_logograms: str) -> None:
+        assert tokenized_string.string_without_logograms == string_without_logograms
+
+    @staticmethod
     def test_html(tokenized_string: TokenizedString, ruby_html: str) -> None:
         assert tokenized_string.html == ruby_html
 

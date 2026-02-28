@@ -18,6 +18,11 @@ def string_without_ruby() -> str:
 
 
 @pytest.fixture
+def string_without_logograms() -> str:
+    return 2 * "\u304b\u3093\u3058\u30c6\u30b9\u30c8"
+
+
+@pytest.fixture
 def ruby_html() -> str:
     return 2 * (
         "<ruby>\u6f22<rp>\uff08</rp><rt>\u304b\u3093</rt><rp>\uff09</rp></ruby>"

@@ -72,8 +72,7 @@ def tee_output(
                 transformed_output = transformer(transformed_output)
             if transformed_output:
                 with capsys.disabled() if always_print else _suspend_capsys(capsys):
-                    file = sys.stdout if output_type == "stdout" else sys.stderr
-                    print(transformed_output, end="", file=file)
+                    print(transformed_output, end="", file=getattr(sys, output_type))
     return stdout, stderr
 
 

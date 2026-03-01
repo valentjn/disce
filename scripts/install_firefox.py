@@ -52,6 +52,8 @@ def install_firefox() -> None:
             Components: main
             Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc
         """),
+        encoding="utf-8",
+        newline="\n",
     )
     Path("/etc/apt/preferences.d/mozilla").write_text(
         dedent("""\
@@ -59,6 +61,8 @@ def install_firefox() -> None:
             Pin: origin packages.mozilla.org
             Pin-Priority: 1000
         """),
+        encoding="utf-8",
+        newline="\n",
     )
     run(["apt-get", "update"], check=True)
     run(["apt-get", "install", "--no-install-recommends", "--yes", "firefox"], check=True)

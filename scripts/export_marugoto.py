@@ -319,7 +319,7 @@ def process_target_word(word: str, language: Language) -> str:
 def save_exported_decks(export: DeckExport, output_path: Path) -> None:
     """Save exported decks to a file."""
     _logger.info("saving exported decks to %s", output_path)
-    output_path.write_text(export.model_dump_json(exclude_defaults=True, indent=4))
+    output_path.write_text(export.model_dump_json(exclude_defaults=True, indent=4), encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

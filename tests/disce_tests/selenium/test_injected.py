@@ -60,12 +60,16 @@ def _copy_disce_with_tests(server_root_dir: Path) -> Path:
 
 
 def _inject_tests_into_index_html(path: Path) -> None:
-    path.write_text(path.read_text().replace("python/disce/__main__.py", "python/disce_tests/injected/__main__.py"))
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("python/disce/__main__.py", "python/disce_tests/injected/__main__.py"),
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def _inject_tests_into_pyscript_toml(python_dir: Path) -> None:
     config_toml_path = python_dir / "pyscript.toml"
-    config_toml = tomlkit.parse(config_toml_path.read_text())
+    config_toml = tomlkit.parse(config_toml_path.read_text(encoding="utf-8"))
     packages = config_toml["packages"]
     if not isinstance(packages, tomlkit.items.Array):
         msg = "packages is not an array"
@@ -79,7 +83,7 @@ def _inject_tests_into_pyscript_toml(python_dir: Path) -> None:
         if entry.is_file() and entry.suffix != ".pyc":
             relative_file = entry.relative_to(python_dir)
             files[relative_file.as_posix()] = f"./{relative_file.parent.as_posix()}/"
-    config_toml_path.write_text(tomlkit.dumps(config_toml))
+    config_toml_path.write_text(tomlkit.dumps(config_toml), encoding="utf-8", newline="\n")
 
 
 @pytest.fixture(scope="module")
@@ -261,4 +265,4 @@ def test_run_injected_tests(
 
 @pytest.mark.order(1)
 def test_pyscript_download_file(download_dir: Path) -> None:
-    assert (download_dir / "test_pyscript_test_download_file.json").read_text() == '{"key": "value"}'
+    assert (download_dir / "test_pyscript_test_download_file.json").read_text(encoding="utf-8") == '{"key": "value"}'

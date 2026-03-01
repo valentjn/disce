@@ -7,7 +7,7 @@
 [project]
 name = "disce"
 version = "1.0.0"
-description = "Learn flashcards by heart, in the browser, without server state."
+description = "Simple serverless web application for studying flashcards"
 readme = "README.md"
 requires-python = "~=3.13.0"
 dependencies = [

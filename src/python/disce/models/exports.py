@@ -26,7 +26,7 @@ class ExportedDeck(DeckData, BaseDeckMetadata):
 
     def to_deck_metadata(self) -> "DeckMetadata":
         """Create deck metadata from the exported deck."""
-        answer_counts = sum((card.get_answer_counts(None) for card in self.cards), AnswerCounts())
+        answer_counts = sum((card.get_answer_counts(None) for card in self.cards if card.enabled), AnswerCounts())
         return DeckMetadata(
             uuid=self.uuid, name=self.name, number_of_cards=len(self.cards), answer_counts_v2=answer_counts
         )

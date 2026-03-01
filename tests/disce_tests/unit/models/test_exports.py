@@ -24,6 +24,7 @@ class TestExportedDeck:
                 [
                     Card(uuid="uuid2", front_answer_history=[True, False], back_answer_history=[False]),
                     Card(uuid="uuid3", front_answer_history=[True]),
+                    Card(uuid="uuid4", front_answer_history=[True], enabled=False),
                 ]
             ),
         )
@@ -44,5 +45,5 @@ class TestExportedDeck:
     def test_to_deck_metadata(exported_deck: ExportedDeck) -> None:
         deck_metadata = exported_deck.to_deck_metadata()
         assert deck_metadata == DeckMetadata(
-            uuid="uuid1", name="name", number_of_cards=2, answer_counts_v2=AnswerCounts(correct=1, wrong=3, missing=16)
+            uuid="uuid1", name="name", number_of_cards=3, answer_counts_v2=AnswerCounts(correct=1, wrong=3, missing=16)
         )

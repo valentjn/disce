@@ -1,0 +1,32 @@
+{
+    "automerge": true,
+    "automergeStrategy": "squash",
+    "automergeType": "branch",
+    "commitMessageTopic": "{{depName}}",
+    "gitAuthor": "Renovate <renovate@example.com>",
+    "minimumReleaseAge": "14 days",
+    "packageRules": [
+        {
+            "groupName": "CDN",
+            "matchDatasources": ["cdnjs"]
+        },
+        {
+            "groupName": "GitHub Actions",
+            "matchDatasources": ["github-tags"]
+        },
+        {
+            "groupName": "npm",
+            "matchDatasources": ["npm"]
+        },
+        {
+            "groupName": "PyPI",
+            "matchDatasources": ["pypi"]
+        },
+        {
+            // disable updating Python as it is tied to the Pyodide version used by PyScript
+            "enabled": false,
+            "groupName": "Python",
+            "matchPackageNames": ["python"]
+        }
+    ]
+}

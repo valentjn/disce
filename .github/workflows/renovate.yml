@@ -1,0 +1,27 @@
+# Copyright (C) 2025 Julian Valentin
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+name: Renovate
+on:
+  schedule:
+    # run twice: once for creating branches, and then again for automerging after the CI checks have passed
+    - cron: 24,54 8 * * 6
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+      - name: Renovate
+        uses: renovatebot/github-action@v46.1.2
+        with:
+          configurationFile: .github/renovate-admin.json
+          token: ${{ secrets.DISCE_RENOVATE_PAT }}
+        env:
+          LOG_LEVEL: debug

@@ -71,7 +71,7 @@ On each push to the `main` branch, a GitHub Action will build the project and de
 
 Tests are written using pytest and split into native and injected tests:
 
-- Native tests run in the normal Python environment and currently comprise unit tests for the modules that do not depend on the browser environment. There is also the possibility to run end-to-end (E2E) tests in a headless browser environment using Selenium, but there are currently none implemented.
-- Injected tests run directly in the browser by calling pytest inside Pyodide. They are used to test the UI and other browser-specific functionality.
+- Native tests run in the normal Python environment and currently comprise unit tests for the modules that do not depend on the browser environment.
+- Injected tests run directly in the browser by calling pytest inside Pyodide. They are used to test the UI and other browser-specific functionality. The browser is controlled using Selenium.
 
 Running `npm test` automatically runs first the injected tests and then the native tests, and combines the coverage reports to ensure that the entire codebase is covered. You can also run the tests separately using `npm run test:injected` and `npm run test:native`.

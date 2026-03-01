@@ -22,12 +22,14 @@ class Voice:
 
     @override
     def __str__(self) -> str:
-        return f"{self.name} ({self.language})"
+        return f"{self.language}: {self.name}"
 
 
 def get_available_voices() -> list[Voice]:
     """Get the list of available speech synthesis voices."""
-    return [Voice(voice.name, voice.lang) for voice in window.speechSynthesis.getVoices()]
+    voices = [Voice(voice.name, voice.lang) for voice in window.speechSynthesis.getVoices()]
+    voices.sort(key=lambda v: (v.language, v.name))
+    return voices
 
 
 def speak(text: str, voice_name: str | None, *, pitch: float = 1.0, rate: float = 1.0, volume: float = 1.0) -> None:

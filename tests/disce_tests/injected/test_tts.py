@@ -11,7 +11,7 @@ class TestVoice:
     @staticmethod
     def test_str() -> None:
         voice = Voice(name="test_name", language="test_language")
-        assert str(voice) == "test_name (test_language)"
+        assert str(voice) == "test_language: test_name"
 
 
 def test_get_available_voices() -> None:

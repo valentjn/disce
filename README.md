@@ -5,7 +5,7 @@
    - file, You can obtain one at https://mozilla.org/MPL/2.0/.
    -->
 
-# Disce
+# ![Disce](src/images/logo.svg)
 
 Disce (Latin for &ldquo;learn!&rdquo;) is a lightweight flashcard application that runs entirely in the browser. There is no server component, and all data is stored locally on the user's device.
 

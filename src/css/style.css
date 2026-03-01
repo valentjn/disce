@@ -44,6 +44,8 @@ body {
 /* decks screen */
 #disce-decks-screen .disce-deck-name-label {
     flex-grow: 1;
+    padding-right: 5px;
+    padding-left: 5px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

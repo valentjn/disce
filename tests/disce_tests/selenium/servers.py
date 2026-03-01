@@ -11,7 +11,6 @@ from pathlib import Path
 from socket import socket
 from threading import Thread
 
-import disce
 import pytest
 
 
@@ -26,8 +25,8 @@ def _get_http_request_handler_type(server_root_dir: Path) -> type[SimpleHTTPRequ
 
 
 @pytest.fixture(scope="session")
-def server_url() -> Generator[str]:
-    with start_server(Path(disce.__file__).parent.parent.parent) as url:
+def server_url(src_dir: Path) -> Generator[str]:
+    with start_server(src_dir) as url:
         yield url
 
 

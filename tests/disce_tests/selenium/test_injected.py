@@ -18,7 +18,6 @@ from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING, Final
 
-import disce
 import pytest
 import tomlkit
 import tomlkit.items
@@ -43,15 +42,14 @@ _logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
-def injected_server_root_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_dir = _copy_disce_with_tests(tmp_path_factory.mktemp("server_root_dir") / "root")
+def injected_server_root_dir(src_dir: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    root_dir = _copy_disce_with_tests(src_dir, tmp_path_factory.mktemp("server_root_dir") / "root")
     _inject_tests_into_index_html(root_dir / "index.html")
     _inject_tests_into_pyscript_toml(root_dir / "python")
     return root_dir
 
 
-def _copy_disce_with_tests(server_root_dir: Path) -> Path:
-    src_dir = Path(disce.__file__).parent.parent.parent
+def _copy_disce_with_tests(src_dir: Path, server_root_dir: Path) -> Path:
     disce_tests_dir = Path(__file__).parent.parent
     shutil.copytree(src_dir, server_root_dir)
     shutil.copytree(disce_tests_dir, server_root_dir / "python/disce_tests")

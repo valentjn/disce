@@ -25,9 +25,9 @@ jobs:
     steps:
       - &checkout
         name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
       - name: install Firefox
         run: sudo python scripts/install_firefox.py
       - name: install npm deps

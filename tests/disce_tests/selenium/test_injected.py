@@ -244,8 +244,7 @@ def test_run_injected_tests(
         periodic_callback=freeze_detector.assert_no_freeze,
     )
     assert matches[0] is not None
-    exit_code = int(matches[0]["exit_code"])
-    assert exit_code == 0
+    assert int(matches[0]["exit_code"]) == 0
     if request.config.getoption("--copy-coverage"):
         assert matches[1] is not None
         (request.config.rootpath / ".coverage").write_bytes(

@@ -7,23 +7,20 @@
 import re
 import sys
 import time
-from collections.abc import Callable, Generator, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Sequence
+from contextlib import nullcontext
 from datetime import timedelta
-from typing import TYPE_CHECKING, Literal
+from typing import TextIO
 
 import pytest
 
-if TYPE_CHECKING:
-    from _pytest.capture import CaptureManager
-
 
 def watch_output(  # noqa: PLR0913
+    file: TextIO,
     capsys: pytest.CaptureFixture[str],
-    output_type: Literal["stdout", "stderr"],
     *,
     timeout: timedelta,
-    interval: timedelta = timedelta(seconds=0.1),
+    interval: timedelta = timedelta(milliseconds=100.0),
     start_pattern: re.Pattern[str] | None = None,
     end_pattern: re.Pattern[str],
     return_patterns: Sequence[re.Pattern[str]] = (),
@@ -31,28 +28,23 @@ def watch_output(  # noqa: PLR0913
     transformers: Sequence[Callable[[str], str]] = (),
     periodic_callback: Callable[[], None] | None = None,
 ) -> list[re.Match[str] | None]:
-    stdout, stderr = tee_output(capsys, transformers=transformers)
+    output = tee_output(file, capsys, transformers=transformers)
     start_time = time.monotonic()
     found_start_match = start_pattern is None
     result: list[re.Match[str] | None] = [None] * len(return_patterns)
     while time.monotonic() - start_time < timeout.total_seconds():
         if periodic_callback:
             periodic_callback()
-        output_to_search = {"stdout": stdout, "stderr": stderr}[output_type]
-        if not found_start_match and start_pattern and start_pattern.search(output_to_search):
+        if not found_start_match and start_pattern and start_pattern.search(output):
             found_start_match = True
         if found_start_match:
             for idx, pattern in enumerate(return_patterns):
-                if not result[idx] and (match := pattern.search(output_to_search)):
+                if not result[idx] and (match := pattern.search(output)):
                     result[idx] = match
-            if end_pattern.search(output_to_search):
+            if end_pattern.search(output):
                 return result
         time.sleep(interval.total_seconds())
-        new_stdout, new_stderr = tee_output(
-            capsys, always_print=always_print and found_start_match, transformers=transformers
-        )
-        stdout += new_stdout
-        stderr += new_stderr
+        output += tee_output(file, capsys, always_print=always_print and found_start_match, transformers=transformers)
     msg = (
         f"timeout waiting for start pattern: {start_pattern.pattern}"
         if not found_start_match and start_pattern
@@ -62,25 +54,23 @@ def watch_output(  # noqa: PLR0913
 
 
 def tee_output(
-    capsys: pytest.CaptureFixture[str], *, always_print: bool = False, transformers: Sequence[Callable[[str], str]] = ()
-) -> tuple[str, str]:
-    stdout, stderr = capsys.readouterr()
-    for output, output_type in ((stdout, "stdout"), (stderr, "stderr")):
-        if output:
-            transformed_output = output
-            for transformer in transformers:
-                transformed_output = transformer(transformed_output)
-            if transformed_output:
-                with capsys.disabled() if always_print else _suspend_capsys(capsys):
-                    print(transformed_output, end="", file=getattr(sys, output_type))
-    return stdout, stderr
-
-
-@contextmanager
-def _suspend_capsys(capsys: pytest.CaptureFixture[str]) -> Generator[None]:
-    capture_manager: CaptureManager = capsys.request.config.pluginmanager.getplugin("capturemanager")
-    capture_manager.suspend_fixture()
-    try:
-        yield
-    finally:
-        capture_manager.resume_fixture()
+    file: TextIO,
+    capsys: pytest.CaptureFixture[str],
+    *,
+    all_output: bool = False,
+    always_print: bool = False,
+    transformers: Sequence[Callable[[str], str]] = (),
+) -> str:
+    if all_output:
+        file.seek(0)
+        output = file.read()
+    else:
+        output = "".join(file.readlines())
+    if output:
+        transformed_output = output
+        for transformer in transformers:
+            transformed_output = transformer(transformed_output)
+        if transformed_output:
+            with capsys.disabled() if always_print else nullcontext():
+                print(transformed_output, end="", file=sys.stderr)  # noqa: T201
+    return output

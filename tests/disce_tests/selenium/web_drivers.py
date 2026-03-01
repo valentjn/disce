@@ -3,9 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 import logging
-import os
 import platform
 import re
 import sys
@@ -14,12 +12,13 @@ import time
 import urllib.request
 import zipfile
 from collections.abc import Generator, Mapping
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from datetime import timedelta
 from enum import Enum, auto
-from io import BufferedWriter, BytesIO, TextIOWrapper
+from io import BytesIO
 from pathlib import Path
-from threading import Event, Thread
+from threading import Thread
+from typing import TextIO
 
 import pytest
 from pydantic import BaseModel
@@ -73,14 +72,14 @@ class _GitHubRelease(BaseModel):
 
 
 @pytest.fixture(scope="session")
-def driver_path(pytestconfig: pytest.Config) -> Path:
+def web_driver_path(pytestconfig: pytest.Config) -> Path:
     operating_system, architecture = _OperatingSystem.current(), _Architecture.current()
-    geckodriver_dir = pytestconfig.cache.mkdir("geckodriver")
-    geckodriver_filename = "geckodriver.exe" if operating_system is _OperatingSystem.WINDOWS else "geckodriver"
-    geckodriver_path = geckodriver_dir / geckodriver_filename
-    if geckodriver_path.exists():
-        _logger.info("using cached geckodriver from %s", geckodriver_path)
-        return geckodriver_path
+    web_driver_dir = pytestconfig.cache.mkdir("geckodriver")
+    web_driver_filename = "geckodriver.exe" if operating_system is _OperatingSystem.WINDOWS else "geckodriver"
+    web_driver_path = web_driver_dir / web_driver_filename
+    if web_driver_path.exists():
+        _logger.info("using cached geckodriver from %s", web_driver_path)
+        return web_driver_path
     with urllib.request.urlopen("https://api.github.com/repos/mozilla/geckodriver/releases/latest") as response:
         release = _GitHubRelease.model_validate_json(response.read())
     suffix = {
@@ -102,27 +101,21 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
     with BytesIO(archive) as archive_file:
         if suffix.endswith(".zip"):
             with zipfile.ZipFile(archive_file) as zip_file:
-                zip_file.extract(geckodriver_filename, path=geckodriver_dir)
+                zip_file.extract(web_driver_filename, path=web_driver_dir)
         else:
             with tarfile.open(fileobj=archive_file) as tar_file:
-                tar_file.extract("geckodriver", filter="data", path=geckodriver_dir)
-    return geckodriver_path
-
-
-@pytest.fixture(scope="session")
-def general_web_driver(driver_path: Path) -> Generator[WebDriver]:
-    with create_web_driver(driver_path) as web_driver:
-        yield web_driver
+                tar_file.extract("geckodriver", filter="data", path=web_driver_dir)
+    return web_driver_path
 
 
 @contextmanager
 def create_web_driver(
-    driver_path: Path, preferences: Mapping[str, str | int | bool] | None = None
+    web_driver_path: Path, log_file_path: Path, preferences: Mapping[str, str | int | bool] | None = None
 ) -> Generator[WebDriver]:
     options = Options()
     options.add_argument("--headless")
     default_preferences: dict[str, str | int | bool] = {
-        # enable logging from the browser console to stderr
+        # enable logging from the browser console
         "devtools.console.stdout.content": True,
         # disable beforeunload dialogs
         "dom.disable_beforeunload": True,
@@ -130,57 +123,23 @@ def create_web_driver(
     preferences = default_preferences | (dict(preferences) if preferences else {})
     for key, value in preferences.items():
         options.set_preference(key, value)
-    with _forward_to_stderr() as forwarded_stderr:
-        service = Service(executable_path=str(driver_path), log_output=forwarded_stderr)
-        web_driver = WebDriver(options=options, service=service)
-        try:
-            yield web_driver
-        finally:
-            thread = Thread(target=web_driver.quit, daemon=True)
-            thread.start()
-            thread.join(timeout=5.0)
-            if thread.is_alive():
-                _logger.warning("timed out waiting for browser to quit, killing the process")
-                web_driver.service.process.kill()
-
-
-@contextmanager
-def _forward_to_stderr() -> Generator[BufferedWriter]:
-    def forward_loop() -> None:
-        reader_wrapper = TextIOWrapper(reader)
-        try:
-            while not exit_thread_event.is_set():
-                chunk = reader_wrapper.readline()
-                if chunk:
-                    print(chunk, end="", file=sys.stderr)  # noqa: T201
-                else:
-                    time.sleep(0.1)
-        finally:
-            with suppress(Exception):
-                reader_wrapper.close()
-
-    read_fd, write_fd = os.pipe()
-    os.set_blocking(read_fd, False)
-    os.set_inheritable(write_fd, True)  # noqa: FBT003
-    with os.fdopen(read_fd, "rb") as reader, os.fdopen(write_fd, "wb") as writer:
-        exit_thread_event = Event()
-        thread = Thread(target=forward_loop, daemon=True)
+    service = Service(executable_path=str(web_driver_path), log_output=str(log_file_path))
+    web_driver = WebDriver(options=options, service=service)
+    try:
+        yield web_driver
+    finally:
+        thread = Thread(target=web_driver.quit, daemon=True)
         thread.start()
-        try:
-            yield writer
-        finally:
-            exit_thread_event.set()
-            thread.join(timeout=1.0)
+        thread.join(timeout=5.0)
+        if thread.is_alive():
+            _logger.warning("timed out waiting for browser to quit, killing the process")
+            web_driver.service.process.kill()
 
 
-@pytest.fixture
-def web_driver(general_web_driver: WebDriver, server_url: str, capsys: pytest.CaptureFixture[str]) -> WebDriver:
-    prepare_web_driver(general_web_driver, server_url, capsys)
-    return general_web_driver
-
-
-def prepare_web_driver(web_driver: WebDriver, server_url: str, capsys: pytest.CaptureFixture[str]) -> WebDriver:
+def prepare_web_driver(
+    web_driver: WebDriver, server_url: str, log_file: TextIO, capsys: pytest.CaptureFixture[str]
+) -> WebDriver:
     web_driver.get(server_url)
-    watch_output(capsys, "stderr", timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
+    watch_output(log_file, capsys, timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
     time.sleep(0.5)
     return web_driver

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import sleep
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TextIO
 
 import pytest
 import tomlkit
@@ -95,8 +95,26 @@ def download_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture
-def web_driver(
-    driver_path: Path, server_url: str, capsys: pytest.CaptureFixture[str], download_dir: Path
+def log_file_path(tmp_path: Path) -> Path:
+    path = tmp_path / "web_driver.log"
+    path.touch()
+    return path
+
+
+@pytest.fixture
+def log_file(log_file_path: Path) -> Generator[TextIO]:
+    with log_file_path.open("r", encoding="utf-8") as log_file:
+        yield log_file
+
+
+@pytest.fixture
+def web_driver(  # noqa: PLR0913
+    web_driver_path: Path,
+    server_url: str,
+    download_dir: Path,
+    log_file_path: Path,
+    log_file: TextIO,
+    capsys: pytest.CaptureFixture[str],
 ) -> Generator[WebDriver]:
     preferences: dict[str, str | int | bool] = {
         # don't open download dialog
@@ -104,8 +122,8 @@ def web_driver(
         "browser.download.folderList": 2,
         "browser.helperApps.neverAsk.saveToDisk": "application/json",
     }
-    with create_web_driver(driver_path, preferences=preferences) as web_driver:
-        prepare_web_driver(web_driver, server_url, capsys)
+    with create_web_driver(web_driver_path, log_file_path, preferences=preferences) as web_driver:
+        prepare_web_driver(web_driver, server_url, log_file, capsys)
         yield web_driver
 
 
@@ -227,15 +245,15 @@ def _wait_for_alert(
 
 @pytest.mark.order(0)
 def test_run_injected_tests(
-    web_driver: WebDriver, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
+    web_driver: WebDriver, log_file: TextIO, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
 ) -> None:
     freeze_detector = FreezeDetector()
     signals = _create_signals(web_driver)
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
     matches = watch_output(
+        log_file,
         capsys,
-        "stderr",
         timeout=timedelta(minutes=2.0),
         start_pattern=re.compile(r"running injected tests"),
         end_pattern=_END_PATTERN,
@@ -258,7 +276,7 @@ def test_run_injected_tests(
         )
     if not signals.check_all_received():
         sleep(1.0)
-        tee_output(capsys, transformers=[signals.output_transformer])
+        tee_output(log_file, capsys, transformers=[signals.output_transformer])
     signals.assert_all_received()
 
 

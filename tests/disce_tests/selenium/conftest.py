@@ -9,8 +9,8 @@ from pathlib import Path
 import disce
 import pytest
 
-from disce_tests.selenium.browsers import browser, driver_path, general_browser  # noqa: F401
 from disce_tests.selenium.servers import server_url  # noqa: F401
+from disce_tests.selenium.web_drivers import driver_path, general_web_driver, web_driver  # noqa: F401
 
 
 @pytest.fixture(scope="session")

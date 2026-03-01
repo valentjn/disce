@@ -21,13 +21,12 @@ from typing import TYPE_CHECKING, Final
 import pytest
 import tomlkit
 import tomlkit.items
-from selenium.webdriver import Firefox
 from selenium.webdriver.support.expected_conditions import alert_is_present
 from selenium.webdriver.support.ui import WebDriverWait
 
-from disce_tests.selenium.browsers import create_browser, prepare_browser
 from disce_tests.selenium.outputs import tee_output, watch_output
 from disce_tests.selenium.servers import start_server
+from disce_tests.selenium.web_drivers import WebDriver, create_web_driver, prepare_web_driver
 
 if TYPE_CHECKING:
     from selenium.webdriver.common.alert import Alert
@@ -96,18 +95,18 @@ def download_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture
-def browser(
+def web_driver(
     driver_path: Path, server_url: str, capsys: pytest.CaptureFixture[str], download_dir: Path
-) -> Generator[Firefox]:
+) -> Generator[WebDriver]:
     preferences: dict[str, str | int | bool] = {
         # don't open download dialog
         "browser.download.dir": str(download_dir),
         "browser.download.folderList": 2,
         "browser.helperApps.neverAsk.saveToDisk": "application/json",
     }
-    with create_browser(driver_path, preferences=preferences) as browser:
-        prepare_browser(browser, server_url, capsys)
-        yield browser
+    with create_web_driver(driver_path, preferences=preferences) as web_driver:
+        prepare_web_driver(web_driver, server_url, capsys)
+        yield web_driver
 
 
 @dataclass
@@ -167,53 +166,55 @@ class Signals:
             raise AssertionError(msg)
 
 
-def _create_signals(browser: Firefox) -> Signals:
+def _create_signals(web_driver: WebDriver) -> Signals:
     return Signals(
         [
             Signal(
                 "test_pyscript.py",
                 "test_alert",
                 "before_alert",
-                lambda: _wait_for_alert(browser, "test_alert_message"),
+                lambda: _wait_for_alert(web_driver, "test_alert_message"),
             ),
             Signal(
                 "test_pyscript.py",
                 "test_confirm_accepted",
                 "before_confirm",
-                lambda: _wait_for_alert(browser, "test_confirm_accepted_message"),
+                lambda: _wait_for_alert(web_driver, "test_confirm_accepted_message"),
             ),
             Signal(
                 "test_pyscript.py",
                 "test_confirm_dismissed",
                 "before_confirm",
-                lambda: _wait_for_alert(browser, "test_confirm_dismissed_message", accept=False),
+                lambda: _wait_for_alert(web_driver, "test_confirm_dismissed_message", accept=False),
             ),
             Signal(
                 "test_pyscript.py",
                 "test_prompt_accepted",
                 "before_prompt",
-                lambda: _wait_for_alert(browser, "test_prompt_accepted_message", input_="user_value"),
+                lambda: _wait_for_alert(web_driver, "test_prompt_accepted_message", input_="user_value"),
             ),
             Signal(
                 "test_pyscript.py",
                 "test_prompt_default",
                 "before_prompt",
-                lambda: _wait_for_alert(browser, "test_prompt_default_message"),
+                lambda: _wait_for_alert(web_driver, "test_prompt_default_message"),
             ),
             Signal(
                 "test_pyscript.py",
                 "test_prompt_dismissed",
                 "before_prompt",
-                lambda: _wait_for_alert(browser, "test_prompt_dismissed_message", accept=False),
+                lambda: _wait_for_alert(web_driver, "test_prompt_dismissed_message", accept=False),
             ),
             Signal("test_pyscript.py", "test_upload_file", "listener_called_correctly", None),
         ]
     )
 
 
-def _wait_for_alert(browser: Firefox, expected_message: str, *, accept: bool = True, input_: str | None = None) -> None:
+def _wait_for_alert(
+    web_driver: WebDriver, expected_message: str, *, accept: bool = True, input_: str | None = None
+) -> None:
     _logger.info("waiting for alert with message: %s", expected_message)
-    alert: Alert = WebDriverWait(browser, 1.0).until(alert_is_present())
+    alert: Alert = WebDriverWait(web_driver, 1.0).until(alert_is_present())
     _logger.info("alert present, reacting")
     assert alert.text == expected_message
     if input_ is not None:
@@ -226,10 +227,10 @@ def _wait_for_alert(browser: Firefox, expected_message: str, *, accept: bool = T
 
 @pytest.mark.order(0)
 def test_run_injected_tests(
-    browser: Firefox, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
+    web_driver: WebDriver, capsys: pytest.CaptureFixture[str], request: pytest.FixtureRequest
 ) -> None:
     freeze_detector = FreezeDetector()
-    signals = _create_signals(browser)
+    signals = _create_signals(web_driver)
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
     matches = watch_output(

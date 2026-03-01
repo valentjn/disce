@@ -23,10 +23,13 @@ from threading import Event, Thread
 
 import pytest
 from pydantic import BaseModel
-from selenium.webdriver import Firefox, FirefoxService
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.webdriver import WebDriver as _WebDriver
 
 from disce_tests.selenium.outputs import watch_output
+
+WebDriver = _WebDriver
 
 _logger = logging.getLogger(__name__)
 
@@ -107,13 +110,15 @@ def driver_path(pytestconfig: pytest.Config) -> Path:
 
 
 @pytest.fixture(scope="session")
-def general_browser(driver_path: Path) -> Generator[Firefox]:
-    with create_browser(driver_path) as browser:
-        yield browser
+def general_web_driver(driver_path: Path) -> Generator[WebDriver]:
+    with create_web_driver(driver_path) as web_driver:
+        yield web_driver
 
 
 @contextmanager
-def create_browser(driver_path: Path, preferences: Mapping[str, str | int | bool] | None = None) -> Generator[Firefox]:
+def create_web_driver(
+    driver_path: Path, preferences: Mapping[str, str | int | bool] | None = None
+) -> Generator[WebDriver]:
     options = Options()
     options.add_argument("--headless")
     default_preferences: dict[str, str | int | bool] = {
@@ -126,17 +131,17 @@ def create_browser(driver_path: Path, preferences: Mapping[str, str | int | bool
     for key, value in preferences.items():
         options.set_preference(key, value)
     with _forward_to_stderr() as forwarded_stderr:
-        service = FirefoxService(executable_path=str(driver_path), log_output=forwarded_stderr)
-        browser = Firefox(options=options, service=service)
+        service = Service(executable_path=str(driver_path), log_output=forwarded_stderr)
+        web_driver = WebDriver(options=options, service=service)
         try:
-            yield browser
+            yield web_driver
         finally:
-            thread = Thread(target=browser.quit, daemon=True)
+            thread = Thread(target=web_driver.quit, daemon=True)
             thread.start()
             thread.join(timeout=5.0)
             if thread.is_alive():
                 _logger.warning("timed out waiting for browser to quit, killing the process")
-                browser.service.process.kill()
+                web_driver.service.process.kill()
 
 
 @contextmanager
@@ -169,13 +174,13 @@ def _forward_to_stderr() -> Generator[BufferedWriter]:
 
 
 @pytest.fixture
-def browser(general_browser: Firefox, server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
-    prepare_browser(general_browser, server_url, capsys)
-    return general_browser
+def web_driver(general_web_driver: WebDriver, server_url: str, capsys: pytest.CaptureFixture[str]) -> WebDriver:
+    prepare_web_driver(general_web_driver, server_url, capsys)
+    return general_web_driver
 
 
-def prepare_browser(browser: Firefox, server_url: str, capsys: pytest.CaptureFixture[str]) -> Firefox:
-    browser.get(server_url)
+def prepare_web_driver(web_driver: WebDriver, server_url: str, capsys: pytest.CaptureFixture[str]) -> WebDriver:
+    web_driver.get(server_url)
     watch_output(capsys, "stderr", timeout=timedelta(seconds=20.0), end_pattern=re.compile(r"Disce started"))
     time.sleep(0.5)
-    return browser
+    return web_driver

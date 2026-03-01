@@ -230,7 +230,7 @@ def test_run_injected_tests(
     matches = watch_output(
         capsys,
         "stderr",
-        timeout=timedelta(hours=1.0),
+        timeout=timedelta(minutes=2.0),
         start_pattern=re.compile(r"running injected tests"),
         end_pattern=end_pattern,
         return_patterns=[end_pattern, coverage_pattern],

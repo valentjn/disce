@@ -214,14 +214,7 @@ class TestEditDeckScreen:
         new_card_uuid = next(
             uuid for card in deck_data.cards if (uuid := card.uuid) not in {"deck1_card1", "deck1_card2"}
         )
-        assert deck_data.cards[new_card_uuid] == Card(
-            uuid=new_card_uuid,
-            front="new_card_front",
-            back="new_card_back",
-            enabled=True,
-            front_answer_history=[],
-            back_answer_history=[],
-        )
+        assert deck_data.cards[new_card_uuid] == Card(uuid=new_card_uuid, front="new_card_front", back="new_card_back")
 
     @staticmethod
     @pytest.mark.parametrize(

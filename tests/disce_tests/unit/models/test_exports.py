@@ -23,7 +23,7 @@ class TestExportedDeck:
             cards=UUIDModelList(
                 [
                     Card(uuid="uuid2", front_answer_history=[True, False], back_answer_history=[False]),
-                    Card(uuid="uuid3", front_answer_history=[True], back_answer_history=[]),
+                    Card(uuid="uuid3", front_answer_history=[True]),
                 ]
             ),
         )

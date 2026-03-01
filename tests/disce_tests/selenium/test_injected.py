@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import sleep
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import disce
 import pytest
@@ -32,6 +32,12 @@ from disce_tests.selenium.servers import start_server
 
 if TYPE_CHECKING:
     from selenium.webdriver.common.alert import Alert
+
+_END_PATTERN: Final[re.Pattern[str]] = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
+_CONSOLE_LOG_PATTERN: Final[re.Pattern[str]] = re.compile(r'^console.log: (?P<string>".*")$', re.MULTILINE)
+_COVERAGE_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r".*\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*).*\n?"
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -222,9 +228,6 @@ def test_run_injected_tests(
 ) -> None:
     freeze_detector = FreezeDetector()
     signals = _create_signals(browser)
-    end_pattern = re.compile(r"finished injected tests, exit code: (?P<exit_code>-?[0-9]+)")
-    console_log_pattern = re.compile(r'^console.log: (?P<string>".*")$', flags=re.MULTILINE)
-    coverage_pattern = re.compile(r".*\.coverage file of injected tests: (?P<coverage_file>[A-Za-z0-9+/=]*).*\n?")
     with capsys.disabled():
         print(file=sys.stderr)  # noqa: T201
     matches = watch_output(
@@ -232,12 +235,12 @@ def test_run_injected_tests(
         "stderr",
         timeout=timedelta(minutes=2.0),
         start_pattern=re.compile(r"running injected tests"),
-        end_pattern=end_pattern,
-        return_patterns=[end_pattern, coverage_pattern],
+        end_pattern=_END_PATTERN,
+        return_patterns=[_END_PATTERN, _COVERAGE_PATTERN],
         always_print=True,
         transformers=[
-            lambda output: coverage_pattern.sub("", output),
-            lambda output: console_log_pattern.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
+            lambda output: _COVERAGE_PATTERN.sub("", output),
+            lambda output: _CONSOLE_LOG_PATTERN.sub(lambda match: f"| {ast.literal_eval(match['string'])}", output),
             freeze_detector.output_transformer,
             signals.output_transformer,
         ],

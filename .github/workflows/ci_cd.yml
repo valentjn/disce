@@ -51,11 +51,11 @@ jobs:
     steps:
       - *checkout
       - name: configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: src
       - name: deploy Pages
         id: deploy_pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

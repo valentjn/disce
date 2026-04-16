@@ -33,7 +33,7 @@ jobs:
       - name: install npm deps
         run: npm install
       - name: install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.6.0
       - name: lint
         run: npm run lint
       - name: check formatting
